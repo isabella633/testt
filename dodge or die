@@ -1,0 +1,2475 @@
+--- DODGE OR DIE 
+
+----- DODGE OR DIE 
+
+--==================================================
+-- DODGE OR DIE - CM HUB v2.5 (DYNAMIC ANTI-DETECTED & DYNAMIC ANTI-CHEAT)
+-- UI Library: CM UI Library v1.3 (Captain Manjiro)
+-- Features:
+--   1. Auto Win & Auto Dodge with No-Hit Failsafe & Dynamic Ball Threat ESP
+--   2. Dynamic Anti-Cheat Engine (Auto-detects new Anticheats, Remotes, & Checks)
+--   3. Dynamic Anti-Ability & Anti-Debuff Engine (Auto-detects new Ability Tags & Debuffs)
+--   4. Dynamic Auto Upgrades (Auto-detects newly added upgrade stats in game updates)
+--   5. Auto Pick Gamemode, Auto Spin Wheel, Auto Quests, Auto Battle Pass, Auto Redeem Codes
+--   6. Instant Tool Crates & Dynamic Auto Crate Purchase
+--   7. Player ESP, Fullbright, FPS Boost, Movement Modifiers, Auto Hop & Rejoin
+--==================================================
+
+local LIBRARY_URL = "https://raw.githubusercontent.com/isabella633/testt/refs/heads/main/lekaed%20library"
+local Library
+for cm_attempt = 1, 9 do
+    local cm_ok, cm_result = pcall(function() return loadstring(__CMHUB_GET_TEXT_V1(LIBRARY_URL))() end)
+    if cm_ok and type(cm_result) == "table" then
+        Library = cm_result
+        break
+    end
+    task.wait(1)
+end
+if not Library then
+    error("CM UI Library failed to load (network issue). Please rejoin and run the script again.")
+end
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local ScriptContext = game:GetService("ScriptContext")
+
+local LocalPlayer = Players.LocalPlayer
+local gameIsA = game.IsA
+local gameIsDescendantOf = game.IsDescendantOf
+
+-- Environment disguise
+local env = typeof(getgenv) == "function" and getgenv() or _G
+env.__CM_DODGE_OR_DIE_BOOT = "start"
+if env.__CM_DODGE_OR_DIE_CLEANUP then
+    pcall(env.__CM_DODGE_OR_DIE_CLEANUP)
+end
+
+-- Modules
+local SafeNet = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("safe-net"))
+local UpgradesShared = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("UpgradesSharedModule"))
+local BattlePassConfig = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("BattlePassConfig"))
+local ToolsShared = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ToolsSharedModule"))
+
+local function resolveSafeRemote(remoteName)
+    local ok, upvalues = pcall(debug.getupvalues, SafeNet.get)
+    if not ok or not upvalues then return nil end
+    local registry = nil
+    local decoder = nil
+    for _, value in pairs(upvalues) do
+        if typeof(value) == "table" then
+            local remoteCount = 0
+            for _, entry in pairs(value) do
+                if typeof(entry) == "Instance" and (entry:IsA("RemoteEvent") or entry:IsA("RemoteFunction") or entry:IsA("UnreliableRemoteEvent")) then
+                    remoteCount += 1
+                end
+            end
+            if remoteCount > 10 then registry = value end
+        elseif typeof(value) == "function" and string.find(debug.info(value, "s"), "safe-net.enc", 1, true) then
+            decoder = value
+        end
+    end
+    if not registry or not decoder then return nil end
+    for encodedName, remote in pairs(registry) do
+        local okDec, decodedName = pcall(decoder, encodedName)
+        if okDec and decodedName == remoteName then return remote end
+    end
+    return nil
+end
+
+local balls = workspace:FindFirstChild("Balls")
+env.__CM_DODGE_OR_DIE_CODE_ATTEMPTS = env.__CM_DODGE_OR_DIE_CODE_ATTEMPTS or {}
+
+-- Destroy duplicates
+local function destroyDuplicateHubs()
+    local removed = 0
+    for _, root in ipairs({game:GetService("CoreGui"), LocalPlayer:FindFirstChild("PlayerGui")}) do
+        if root then
+            for _, gui in ipairs(root:GetChildren()) do
+                if gui.Name == "CM_UI_LIBRARY" or gui:GetAttribute("DodgeOrDieCMHub") then
+                    gui:Destroy()
+                    removed += 1
+                end
+            end
+        end
+    end
+    return removed
+end
+
+local duplicatesRemoved = destroyDuplicateHubs()
+
+-- Main State
+local State = {
+    -- Survival
+    enabled = false,
+    autoWin = true,
+    autoWinActive = false,
+    autoWinConnection = nil,
+    safeMap = nil,
+    safeCFrame = nil,
+    safePosition = Vector3.zero,
+    safeCenter = Vector3.zero,
+    safePhase = 1,
+    lastSafeShift = 0,
+    ballOriginals = {},
+    clientBallHitRemote = nil,
+    lastHitRemoteResolve = 0,
+    hitReportsBlocked = 0,
+    decoyPart = nil,
+    decoyAttachment = nil,
+    decoyRedirects = 0,
+    hitDetectionConnections = {},
+    hitDetectionDisabled = 0,
+    lastHitDetectionScan = 0,
+    
+    -- Dynamic Anti-Cheat Engine
+    antiCheatBypass = true,
+    antiAfk = true,
+    antiKick = true,
+    antiAfkConnections = {},
+    kicksBlocked = 0,
+    detectedAnticheatRemotes = {},
+    
+    -- Dynamic Anti-Abilities Engine
+    antiAbilities = true,
+    antiAbilityConnection = nil,
+    antiAbilityTagsRemoved = 0,
+    antiAbilityForcesRemoved = 0,
+    antiAbilityLastBlocked = "None",
+    antiAbilityCharacter = nil,
+    antiAbilityLastCFrame = nil,
+    antiAbilityLastPlaying = false,
+    originalCanTouch = {},
+    savedAtmospheres = {},
+    
+    -- Automation
+    autoPickMode = true,
+    preferredMode = "Classic",
+    voteConnection = nil,
+    lastVoteKey = "",
+    lastVotedMode = "",
+    votesSent = 0,
+    
+    autoUpgrades = true,
+    upgradePriority = "Balanced",
+    upgradeConnection = nil,
+    upgradeBusy = false,
+    lastUpgradeCheck = 0,
+    upgradesPurchased = 0,
+    lastUpgrade = "",
+    lastUpgradeStatus = "Waiting for lobby",
+    
+    autoSpin = true,
+    spinConnection = nil,
+    spinBusy = false,
+    lastSpinAt = env.__CM_DODGE_OR_DIE_LAST_SPIN_AT or -math.huge,
+    lastSpinCount = -1,
+    spinsUsed = 0,
+    lastSpinReward = "",
+    lastSpinStatus = "Waiting for lobby",
+    
+    autoClaimQuests = true,
+    questConnection = nil,
+    questBusy = false,
+    lastQuestCheck = 0,
+    questsClaimed = 0,
+    lastQuestClaim = "",
+    lastQuestStatus = "Waiting for lobby",
+    
+    autoClaimBattlePass = true,
+    battlePassConnection = nil,
+    battlePassBusy = false,
+    lastBattlePassCheck = 0,
+    battlePassQuestsClaimed = 0,
+    battlePassTiersClaimed = 0,
+    lastBattlePassClaim = "",
+    lastBattlePassStatus = "Waiting for claimable rewards",
+    
+    autoRedeemCodes = true,
+    codeConnection = nil,
+    codeBusy = false,
+    lastCodeScan = 0,
+    codeScanInterval = 60,
+    codeFeedUrl = "https://robloxden.com/game-codes/dodge-or-die",
+    codeAttempts = env.__CM_DODGE_OR_DIE_CODE_ATTEMPTS,
+    codesDiscovered = 0,
+    codesRedeemed = 0,
+    lastCode = "",
+    lastCodeStatus = "Waiting for code scan",
+    
+    -- Crates
+    instantOpenCrates = true,
+    autoBuyCrates = false,
+    selectedCrate = "Normal",
+    crateCashReserve = 0,
+    crateConnection = nil,
+    crateResultConnection = nil,
+    crateBusy = false,
+    lastCratePurchase = 0,
+    cratesPurchaseRequested = 0,
+    cratesOpened = 0,
+    lastCrateReward = "",
+    lastCrateDescription = "",
+    lastCrateStatus = "Auto Buy is off",
+    crateModule = nil,
+    originalCrateSpin = nil,
+    
+    -- Visuals
+    espEnabled = true,
+    espObjects = {},
+    espCount = 0,
+    playerEspEnabled = false,
+    playerEspDistance = 750,
+    playerEspObjects = {},
+    playerEspConnection = nil,
+    lastPlayerEspUpdate = 0,
+    fullbright = false,
+    lowGraphics = false,
+    visualConnection = nil,
+    lastVisualApply = 0,
+    lightingSnapshot = nil,
+    postEffectSnapshot = {},
+    originalQualityLevel = nil,
+    
+    -- Dodge Mechanics
+    safeMode = true,
+    safeActive = false,
+    safeUntil = 0,
+    originalCanQuery = {},
+    evadeUntil = 0,
+    evadeVector = Vector3.zero,
+    evadePower = 130,
+    distance = 50,
+    reactionTime = 0.85,
+    cooldown = 0.38,
+    lastDodge = 0,
+    connection = nil,
+    scans = 0,
+    detections = 0,
+    dodges = 0,
+    dashErrors = 0,
+    forcedMoves = 0,
+    threat = nil,
+    direction = "Left",
+    lastReason = "waiting-for-round",
+    lastDistance = -1,
+    lastSpeed = -1,
+    lastTargeted = false,
+    
+    -- Movement
+    speedEnabled = false,
+    walkSpeed = 32,
+    jumpEnabled = false,
+    jumpPower = 75,
+    infiniteJump = false,
+    noclip = false,
+    movementConnection = nil,
+    jumpConnection = nil,
+    originalMovement = {},
+    originalNoclip = {},
+    
+    -- Server
+    autoRejoin = true,
+    autoRejoinConnection = nil,
+    autoReloadHub = true,
+    autoServerHop = true,
+    minimumServerPlayers = 5,
+    serverHopConnection = nil,
+    lastPopulationCheck = 0,
+    lowPopulationSince = 0,
+    serverHopGraceUntil = os.clock() + 25,
+    lastServerHopStatus = "Population is healthy",
+    teleportBusy = false,
+    
+    -- System
+    duplicatesRemoved = duplicatesRemoved,
+}
+
+State.clientBallHitRemote = resolveSafeRemote("ClientBallHit")
+env.__CM_DODGE_OR_DIE_STATE = State
+
+-- Micro-Jitter (Anti-Bot Pattern Detection)
+local function humanDelay(minSec, maxSec)
+    minSec = minSec or 0.05
+    maxSec = maxSec or 0.15
+    task.wait(minSec + (math.random() * (maxSec - minSec)))
+end
+
+local function safeFireServer(remote, ...)
+    if not remote then return end
+    humanDelay(0.02, 0.08)
+    pcall(function(...) remote:FireServer(...) end, ...)
+end
+
+local function safeInvokeServer(remote, ...)
+    if not remote then return nil end
+    humanDelay(0.05, 0.12)
+    local ok, res = pcall(function(...) return remote:InvokeServer(...) end, ...)
+    return ok and res or nil
+end
+
+--==================================================
+-- DYNAMIC ANTI-CHEAT & TELEMETRY DETECTOR ENGINE
+--==================================================
+
+-- Dynamic Anticheat Remote Scanner & Hooking
+local function scanAndBlockAnticheatRemotes()
+    local keywords = {"ban", "cheat", "detect", "telemetry", "sanity", "verify", "flag", "report", "anticheat", "ac_", "security", "check"}
+    local containers = {ReplicatedStorage, workspace, LocalPlayer:FindFirstChild("PlayerGui"), LocalPlayer:FindFirstChild("PlayerScripts")}
+    
+    for _, container in ipairs(containers) do
+        if container then
+            for _, descendant in ipairs(container:GetDescendants()) do
+                if descendant:IsA("RemoteEvent") or descendant:IsA("RemoteFunction") then
+                    local nameLower = string.lower(descendant.Name)
+                    for _, kw in ipairs(keywords) do
+                        if string.find(nameLower, kw, 1, true) and not State.detectedAnticheatRemotes[descendant] then
+                            State.detectedAnticheatRemotes[descendant] = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+scanAndBlockAnticheatRemotes()
+
+-- Dynamic Heartbeat Anticheat Connection Cleaner
+local function installHitDetectionBypass()
+    local getcon = getconnections or function() return {} end
+    local anticheatKeywords = {"hitdetection", "anticheat", "sanity", "checker", "detector", "security", "monitor", "cheat"}
+    
+    for _, signal in ipairs({RunService.Heartbeat, RunService.Stepped, RunService.RenderStepped}) do
+        for _, connection in ipairs(getcon(signal)) do
+            local fn = connection.Function
+            local source = fn and debug.info(fn, "s") or ""
+            local sourceLower = string.lower(source)
+            
+            local isAnticheat = false
+            for _, kw in ipairs(anticheatKeywords) do
+                if string.find(sourceLower, kw, 1, true) then
+                    isAnticheat = true
+                    break
+                end
+            end
+            
+            if connection.Enabled and isAnticheat then
+                local tracked = false
+                for _, existing in ipairs(State.hitDetectionConnections) do
+                    if existing == connection then tracked = true break end
+                end
+                if not tracked then
+                    connection:Disable()
+                    State.hitDetectionConnections[#State.hitDetectionConnections + 1] = connection
+                    State.hitDetectionDisabled += 1
+                end
+            end
+        end
+    end
+end
+
+-- Dynamic Anti-Kick
+local hookfn = hookfunction or (typeof(hookfunction) == "function" and hookfunction)
+if hookfn and typeof(LocalPlayer.Kick) == "function" then
+    pcall(function()
+        hookfn(LocalPlayer.Kick, newcclosure(function(self, ...)
+            if State.antiKick then
+                State.kicksBlocked += 1
+                return nil
+            end
+            return nil
+        end))
+    end)
+end
+
+-- Suppress crash dumps
+pcall(function()
+    for _, connection in ipairs(getconnections(ScriptContext.Error)) do
+        connection:Disable()
+    end
+end)
+
+-- Tool Crate Handler
+local function getToolDescription(toolName)
+    local description = ToolsShared.ToolDescriptions and ToolsShared.ToolDescriptions[toolName]
+    if description then return description end
+    local ok, result = pcall(function() return ToolsShared.GetDescription(toolName) end)
+    return ok and tostring(result or "") or ""
+end
+
+local function getToolCrateModule()
+    if State.crateModule then return State.crateModule end
+    local playerScripts = LocalPlayer:FindFirstChild("PlayerScripts")
+    local gui = playerScripts and playerScripts:FindFirstChild("GUI")
+    local handler = gui and gui:FindFirstChild("ToolCrateHandling")
+    local moduleScript = handler and handler:FindFirstChild("ToolCrateLocalModule")
+    if not moduleScript then return nil end
+    local ok, module = pcall(require, moduleScript)
+    if not ok or typeof(module) ~= "table" then return nil end
+    State.crateModule = module
+    if not env.__CM_ORIGINAL_CRATE_SPIN then
+        env.__CM_ORIGINAL_CRATE_SPIN = module.spin
+    end
+    State.originalCrateSpin = env.__CM_ORIGINAL_CRATE_SPIN
+    return module
+end
+
+local function installInstantCrateOpen()
+    local module = getToolCrateModule()
+    if not module or not State.originalCrateSpin then return false end
+    module.spin = newcclosure(function(toolName, crateType, alreadyOwned, upgraded)
+        if not State.instantOpenCrates then
+            return env.__CM_ORIGINAL_CRATE_SPIN(toolName, crateType, alreadyOwned, upgraded)
+        end
+        local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+        local lobbyUI = playerGui and playerGui:FindFirstChild("LobbyUI")
+        local crateFrame = lobbyUI and lobbyUI:FindFirstChild("ToolCrateFrame")
+        if crateFrame then crateFrame.Visible = false end
+        return nil
+    end)
+    return true
+end
+
+local function uninstallInstantCrateOpen()
+    if State.crateModule and env.__CM_ORIGINAL_CRATE_SPIN then
+        State.crateModule.spin = env.__CM_ORIGINAL_CRATE_SPIN
+    end
+end
+
+installInstantCrateOpen()
+
+local openToolCrateRemote = resolveSafeRemote("OpenToolCrate")
+if openToolCrateRemote then
+    State.crateResultConnection = openToolCrateRemote.OnClientEvent:Connect(function(toolName, crateType, alreadyOwned, upgraded)
+        State.cratesOpened += 1
+        State.lastCrateReward = tostring(toolName)
+        State.lastCrateDescription = getToolDescription(toolName)
+        if upgraded then
+            State.lastCrateStatus = string.format("%s upgraded from %s crate", tostring(toolName), tostring(crateType))
+        elseif alreadyOwned then
+            State.lastCrateStatus = string.format("%s already owned", tostring(toolName))
+        else
+            State.lastCrateStatus = string.format("Unlocked %s from %s crate", tostring(toolName), tostring(crateType))
+        end
+        pcall(function()
+            Library:Notify({
+                Type = "Success",
+                Title = State.lastCrateStatus,
+                Content = State.lastCrateDescription,
+                Duration = 4,
+            })
+        end)
+        if State.instantOpenCrates then
+            State.crateBusy = false
+        else
+            task.delay(12, function() State.crateBusy = false end)
+        end
+    end)
+end
+
+-- Dash Finder
+local function findDash()
+    local filtergcFn = filtergc or (typeof(getgc) == "function" and function(...) return nil end)
+    if typeof(filtergcFn) == "function" then
+        local ok, fn = pcall(filtergcFn, "function", {
+            Name = "doDash",
+            IgnoreExecutor = true,
+            Constants = {"Left", "Right"},
+        }, true)
+        if ok and fn then return fn end
+    end
+    return nil
+end
+
+local doDash = findDash()
+State.dashFound = doDash ~= nil
+env.__CM_DODGE_OR_DIE_BOOT = doDash and "dash-found" or "dash-missing"
+
+-- Ball Target & ESP Functions
+local function isTargeting(ball, root)
+    local align = ball:FindFirstChild("AlignPosition")
+    local attachment = root:FindFirstChild("RootAttachment")
+    return align ~= nil and attachment ~= nil and align.Attachment1 == attachment
+end
+
+local function removeBallEsp(ball)
+    local objects = State.espObjects[ball]
+    if not objects then return end
+    if objects.highlight then objects.highlight:Destroy() end
+    if objects.billboard then objects.billboard:Destroy() end
+    State.espObjects[ball] = nil
+end
+
+local function clearBallEsp()
+    for ball in pairs(State.espObjects) do
+        removeBallEsp(ball)
+    end
+    State.espCount = 0
+end
+
+local function setCharacterQueryProtection(character, protected)
+    if protected then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "VFXPart" then
+                if State.originalCanQuery[part] == nil then
+                    State.originalCanQuery[part] = part.CanQuery
+                end
+                part.CanQuery = false
+            end
+        end
+        State.safeActive = true
+    elseif State.safeActive then
+        for part, original in pairs(State.originalCanQuery) do
+            if part.Parent then
+                pcall(function() part.CanQuery = original end)
+            end
+            State.originalCanQuery[part] = nil
+        end
+        State.safeActive = false
+    end
+end
+
+for _, effect in ipairs(Lighting:GetChildren()) do
+    if effect:IsA("Atmosphere") then
+        State.savedAtmospheres[#State.savedAtmospheres + 1] = effect
+    end
+end
+
+local function restoreAutoWinBalls()
+    for ball, original in pairs(State.ballOriginals) do
+        if ball.Parent then
+            pcall(function()
+                ball.CanCollide = original.CanCollide
+                ball.CanTouch = original.CanTouch
+                ball.CanQuery = original.CanQuery
+                local align = ball:FindFirstChild("AlignPosition")
+                if align and original.AlignEnabled ~= nil then
+                    align.Enabled = original.AlignEnabled
+                end
+                if align and original.Attachment1 and original.Attachment1.Parent then
+                    align.Attachment1 = original.Attachment1
+                end
+            end)
+        end
+        State.ballOriginals[ball] = nil
+    end
+    if State.decoyPart and State.decoyPart.Parent then
+        State.decoyPart:Destroy()
+    end
+    State.decoyPart = nil
+    State.decoyAttachment = nil
+end
+
+local function calculateSafeCFrame(map, root)
+    local minimum = Vector3.new(math.huge, math.huge, math.huge)
+    local maximum = Vector3.new(-math.huge, -math.huge, -math.huge)
+    local count = 0
+    for _, part in ipairs(map:GetDescendants()) do
+        if part:IsA("BasePart") then
+            count += 1
+            local half = part.Size * 0.5
+            minimum = Vector3.new(
+                math.min(minimum.X, part.Position.X - half.X),
+                math.min(minimum.Y, part.Position.Y - half.Y),
+                math.min(minimum.Z, part.Position.Z - half.Z)
+            )
+            maximum = Vector3.new(
+                math.max(maximum.X, part.Position.X + half.X),
+                math.max(maximum.Y, part.Position.Y + half.Y),
+                math.max(maximum.Z, part.Position.Z + half.Z)
+            )
+        end
+    end
+    if count == 0 then
+        State.safeCenter = root.Position + Vector3.new(0, 10000, 0)
+        return CFrame.new(State.safeCenter + Vector3.new(45000, 0, 45000))
+    end
+    local center = (minimum + maximum) * 0.5
+    State.safeCenter = Vector3.new(center.X, maximum.Y + 10000, center.Z)
+    State.safePhase = 1
+    State.lastSafeShift = os.clock()
+    return CFrame.new(State.safeCenter + Vector3.new(45000, 0, 45000))
+end
+
+local function ensureAutoWinDecoy()
+    if State.decoyAttachment and State.decoyAttachment.Parent then
+        return State.decoyAttachment
+    end
+    local decoy = Instance.new("Part")
+    decoy.Name = "CM_AutoWinDecoy"
+    decoy.Size = Vector3.one
+    decoy.Transparency = 1
+    decoy.Anchored = true
+    decoy.CanCollide = false
+    decoy.CanTouch = false
+    decoy.CanQuery = false
+    decoy.CFrame = CFrame.new(State.safePosition + Vector3.new(10000, 5000, 10000))
+    decoy.Parent = workspace
+    local attachment = Instance.new("Attachment")
+    attachment.Name = "RootAttachment"
+    attachment.Parent = decoy
+    State.decoyPart = decoy
+    State.decoyAttachment = attachment
+    return attachment
+end
+
+local function disableBallTarget(ball)
+    if not ball:IsA("BasePart") then return end
+    local align = ball:FindFirstChild("AlignPosition")
+    if not State.ballOriginals[ball] then
+        State.ballOriginals[ball] = {
+            CanCollide = ball.CanCollide,
+            CanTouch = ball.CanTouch,
+            CanQuery = ball.CanQuery,
+            Attachment1 = align and align.Attachment1 or nil,
+            AlignEnabled = align and align.Enabled or nil,
+        }
+    end
+    ball.CanCollide = false
+    ball.CanTouch = false
+    ball.CanQuery = false
+    if align then
+        local character = LocalPlayer.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+        local rootAttachment = root and root:FindFirstChild("RootAttachment")
+        if rootAttachment and align.Attachment1 == rootAttachment then
+            State.decoyRedirects += 1
+        end
+        align.Attachment1 = ensureAutoWinDecoy()
+        align.Enabled = false
+    end
+end
+
+local function restoreHitDetection()
+    for _, connection in ipairs(State.hitDetectionConnections) do
+        pcall(function() connection:Enable() end)
+    end
+    table.clear(State.hitDetectionConnections)
+end
+
+local function deactivateAutoWin(character)
+    restoreAutoWinBalls()
+    restoreHitDetection()
+    State.autoWinActive = false
+    State.safeMap = nil
+    State.safeCFrame = nil
+    State.safePosition = Vector3.zero
+    if character then
+        if not State.antiAbilities then setCharacterQueryProtection(character, false) end
+        local root = character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if root then root.AssemblyLinearVelocity = Vector3.zero end
+        if humanoid and humanoid.Health > 0 then
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            humanoid.BreakJointsOnDeath = true
+            humanoid:ChangeState(Enum.HumanoidStateType.Running)
+        end
+    end
+end
+
+local function setAntiAfk(enabled)
+    State.antiAfk = enabled
+    local getcon = getconnections or function() return {} end
+    if enabled then
+        for _, connection in ipairs(getcon(LocalPlayer.Idled)) do
+            local alreadyTracked = false
+            for _, tracked in ipairs(State.antiAfkConnections) do
+                if tracked == connection then alreadyTracked = true break end
+            end
+            if not alreadyTracked then
+                connection:Disable()
+                table.insert(State.antiAfkConnections, connection)
+            end
+        end
+    else
+        for _, connection in ipairs(State.antiAfkConnections) do
+            pcall(function() connection:Enable() end)
+        end
+        table.clear(State.antiAfkConnections)
+    end
+end
+
+--==================================================
+-- DYNAMIC ANTI-ABILITY & DEBUFF CLEANER
+--==================================================
+
+local harmfulTagPatterns = {
+    "target", "downed", "glued", "disrupt", "frozen", "freeze",
+    "timefreeze", "stunned", "stun", "ragdoll", "knock", "chained", "chain",
+    "burning", "blinded", "blind", "slow", "debuff", "silence", "lock"
+}
+
+local harmfulObjectPatterns = {
+    "ice", "freezeblock", "frozen", "glue", "chain", "phantom", "stun",
+    "ragdoll", "lightning", "burning", "fire", "darkness", "trap", "debuff"
+}
+
+local function setAbilityTouchProtection(character, protected)
+    if protected then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "VFXPart" then
+                if State.originalCanTouch[part] == nil then
+                    State.originalCanTouch[part] = part.CanTouch
+                end
+                part.CanTouch = false
+            end
+        end
+    else
+        for part, original in pairs(State.originalCanTouch) do
+            if part.Parent then
+                pcall(function() part.CanTouch = original end)
+            end
+            State.originalCanTouch[part] = nil
+        end
+    end
+end
+
+local function isSavedAtmosphere(effect)
+    for _, saved in ipairs(State.savedAtmospheres) do
+        if effect == saved then return true end
+    end
+    return false
+end
+
+local function clearBlindEffect()
+    for _, saved in ipairs(State.savedAtmospheres) do
+        if saved and saved.Parent ~= Lighting then
+            saved.Parent = Lighting
+        end
+    end
+    for _, effect in ipairs(Lighting:GetChildren()) do
+        if effect:IsA("Atmosphere") and not isSavedAtmosphere(effect)
+            and string.find(string.lower(effect.Name), "blind", 1, true) then
+            effect:Destroy()
+            State.antiAbilityLastBlocked = "Darkness Staff"
+        end
+    end
+    local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+    local gameUI = playerGui and playerGui:FindFirstChild("GameUI")
+    local blindedFrame = gameUI and gameUI:FindFirstChild("BlindedFrame")
+    if blindedFrame and blindedFrame.Visible then
+        blindedFrame.Visible = false
+        blindedFrame.BackgroundTransparency = 1
+        State.antiAbilityLastBlocked = "Darkness Staff"
+    end
+end
+
+local function jointConnectsOutsideCharacter(joint, character)
+    local part0 = joint:IsA("JointInstance") and joint.Part0 or nil
+    local part1 = joint:IsA("JointInstance") and joint.Part1 or nil
+    if part0 or part1 then
+        local part0Inside = part0 and part0:IsDescendantOf(character) or false
+        local part1Inside = part1 and part1:IsDescendantOf(character) or false
+        return part0Inside ~= part1Inside
+    end
+    if joint:IsA("Constraint") then
+        local attachment0 = joint.Attachment0
+        local attachment1 = joint.Attachment1
+        if attachment0 or attachment1 then
+            local attachment0Inside = attachment0 and attachment0:IsDescendantOf(character) or false
+            local attachment1Inside = attachment1 and attachment1:IsDescendantOf(character) or false
+            return attachment0Inside ~= attachment1Inside
+        end
+    end
+    return false
+end
+
+-- Dynamic Auto-Detected Debuffs & Ability Purger
+local function clearAbilityEffects()
+    if not State.antiAbilities then return end
+    local character = LocalPlayer.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if not character or not root or not humanoid then
+        State.antiAbilityCharacter = nil
+        State.antiAbilityLastCFrame = nil
+        State.antiAbilityLastPlaying = false
+        clearBlindEffect()
+        return
+    end
+
+    setCharacterQueryProtection(character, true)
+    setAbilityTouchProtection(character, true)
+
+    -- Dynamic Tag Scanner (Auto-detects ANY newly added debuff tags)
+    local activeTags = CollectionService:GetTags(character)
+    for _, tag in ipairs(activeTags) do
+        local tagLower = string.lower(tag)
+        for _, pattern in ipairs(harmfulTagPatterns) do
+            if string.find(tagLower, pattern, 1, true) then
+                CollectionService:RemoveTag(character, tag)
+                State.antiAbilityTagsRemoved += 1
+                State.antiAbilityLastBlocked = tag
+                break
+            end
+        end
+    end
+
+    -- Dynamic Object & Physics Cleaner (Auto-detects newly added debuff models/forces)
+    for _, object in ipairs(character:GetDescendants()) do
+        if object:IsA("BasePart") and object.Anchored then
+            object.Anchored = false
+            State.antiAbilityLastBlocked = "Freeze / Time Freeze"
+        else
+            local objNameLower = string.lower(object.Name)
+            local isHarmfulObject = false
+            for _, pattern in ipairs(harmfulObjectPatterns) do
+                if string.find(objNameLower, pattern, 1, true) then
+                    isHarmfulObject = true
+                    break
+                end
+            end
+            
+            if isHarmfulObject and (object:IsA("Model") or object:IsA("Folder") or object:IsA("BasePart")) then
+                object:Destroy()
+                State.antiAbilityForcesRemoved += 1
+            elseif (object:IsA("BodyVelocity") or object:IsA("BodyPosition") or object:IsA("BodyAngularVelocity")
+                or object:IsA("LinearVelocity") or object:IsA("AngularVelocity") or object:IsA("VectorForce"))
+                and object.Name ~= "WingsBodyVelocity" and object.Name ~= "WingsBodyGyro" then
+                object:Destroy()
+                State.antiAbilityForcesRemoved += 1
+                State.antiAbilityLastBlocked = "Fling / knockback"
+            elseif (object:IsA("JointInstance") or object:IsA("Constraint")) and jointConnectsOutsideCharacter(object, character) then
+                object:Destroy()
+                State.antiAbilityForcesRemoved += 1
+                State.antiAbilityLastBlocked = "Chain / Human Shield"
+            end
+        end
+    end
+
+    if humanoid.Health > 0 and humanoid.Health < humanoid.MaxHealth then
+        humanoid.Health = humanoid.MaxHealth
+        State.antiAbilityLastBlocked = "Ability damage"
+    end
+    if not State.autoWinActive then
+        humanoid.PlatformStand = false
+        humanoid.Sit = false
+        humanoid.AutoRotate = true
+        if humanoid.WalkSpeed < 14 and not State.speedEnabled then humanoid.WalkSpeed = 14 end
+        if root.AssemblyLinearVelocity.Magnitude > 180 then
+            root.AssemblyLinearVelocity = Vector3.zero
+            root.AssemblyAngularVelocity = Vector3.zero
+            State.antiAbilityLastBlocked = "Fling / knockback"
+        end
+    end
+
+    local playing = CollectionService:HasTag(character, "Playing")
+    if State.antiAbilityCharacter ~= character then
+        State.antiAbilityCharacter = character
+        State.antiAbilityLastCFrame = root.CFrame
+        State.antiAbilityLastPlaying = playing
+    elseif playing and State.antiAbilityLastPlaying and not State.autoWinActive and State.antiAbilityLastCFrame then
+        if (root.Position - State.antiAbilityLastCFrame.Position).Magnitude > 75 then
+            root.CFrame = State.antiAbilityLastCFrame
+            root.AssemblyLinearVelocity = Vector3.zero
+            State.antiAbilityLastBlocked = "Swap / forced teleport"
+        else
+            State.antiAbilityLastCFrame = root.CFrame
+        end
+    else
+        State.antiAbilityLastCFrame = root.CFrame
+    end
+    State.antiAbilityLastPlaying = playing
+    clearBlindEffect()
+end
+
+State.antiAbilityConnection = RunService.Heartbeat:Connect(clearAbilityEffects)
+setAntiAfk(true)
+
+-- Dynamic Ball Threat ESP Updates
+local function updateBallEsp(ball, root)
+    if not ball:IsA("BasePart") then return end
+    local objects = State.espObjects[ball]
+    if not objects then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "CM_BallESP_Highlight"
+        highlight.Adornee = ball
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.FillTransparency = 0.55
+        highlight.OutlineTransparency = 0
+        highlight.Parent = ball
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "CM_BallESP_Label"
+        billboard.Adornee = ball
+        billboard.AlwaysOnTop = true
+        billboard.LightInfluence = 0
+        billboard.Size = UDim2.fromOffset(170, 34)
+        billboard.StudsOffsetWorldSpace = Vector3.new(0, 3.5, 0)
+        billboard.Parent = ball
+
+        local label = Instance.new("TextLabel")
+        label.Name = "Label"
+        label.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+        label.BackgroundTransparency = 0.25
+        label.BorderSizePixel = 0
+        label.Size = UDim2.fromScale(1, 1)
+        label.Font = Enum.Font.GothamBold
+        label.TextScaled = true
+        label.TextStrokeTransparency = 0.45
+        label.Parent = billboard
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 7)
+        corner.Parent = label
+
+        objects = {highlight = highlight, billboard = billboard, label = label}
+        State.espObjects[ball] = objects
+    end
+
+    local targeted = root ~= nil and isTargeting(ball, root)
+    local fake = string.find(string.lower(ball.Name), "fake", 1, true) ~= nil
+    local blocked = State.autoWinActive and State.ballOriginals[ball] ~= nil
+    local color = if targeted then Color3.fromRGB(255, 55, 65)
+        elseif fake then Color3.fromRGB(155, 155, 165)
+        else Color3.fromRGB(40, 205, 255)
+    local distance = root and (ball.Position - root.Position).Magnitude or 0
+    local speed = ball.AssemblyLinearVelocity.Magnitude
+    local size = math.max(ball.Size.X, ball.Size.Y, ball.Size.Z)
+    local ballColor = ball.BrickColor.Name
+
+    objects.highlight.FillColor = color
+    objects.highlight.OutlineColor = Color3.new(1, 1, 1)
+    objects.label.TextColor3 = color
+    objects.label.Text = string.format(
+        "%s | %s | %.0f SPD | %.1f SIZE | %.0f studs",
+        targeted and "TARGETING YOU" or (blocked and "TARGET BLOCKED" or (fake and "FAKE BALL" or "BALL")),
+        ballColor, speed, size, distance
+    )
+end
+
+local function shouldDodge(ball, root)
+    if not ball:IsA("BasePart") then return false, "ignored" end
+    local offset = root.Position - ball.Position
+    local distance = offset.Magnitude
+    local velocity = ball.AssemblyLinearVelocity
+    local targeted = isTargeting(ball, root)
+
+    State.lastDistance = distance
+    State.lastSpeed = velocity.Magnitude
+    State.lastTargeted = targeted
+
+    if distance <= State.distance then
+        return true, targeted and "near-targeted" or "near-ball"
+    end
+    return false, "tracking"
+end
+
+local function dodge(reason, ball, root)
+    if os.clock() - State.lastDodge < State.cooldown then return end
+    if not doDash then doDash = findDash() end
+    State.lastDodge = os.clock()
+    if State.threat ~= ball then
+        State.threat = ball
+        local side = (ball.Position - root.Position):Dot(root.CFrame.RightVector)
+        State.direction = side < 0 and "Right" or "Left"
+    end
+    local direction = State.direction
+    local sign = direction == "Left" and -1 or 1
+    State.evadeVector = root.CFrame.RightVector * sign
+    State.evadeUntil = os.clock() + 0.65
+
+    local push = State.evadeVector * State.evadePower
+    root.AssemblyLinearVelocity = Vector3.new(push.X, root.AssemblyLinearVelocity.Y, push.Z)
+    State.forcedMoves += 1
+    State.dodges += 1
+    State.lastReason = reason .. ":" .. direction .. ":forced"
+
+    if doDash then
+        local ok = pcall(doDash, direction)
+        if not ok then
+            State.dashErrors += 1
+            doDash = nil
+            State.dashFound = false
+        end
+    end
+end
+
+State.connection = RunService.Heartbeat:Connect(function()
+    if not State.enabled and not State.espEnabled then
+        local character = LocalPlayer.Character
+        if character and not State.antiAbilities then setCharacterQueryProtection(character, false) end
+        return
+    end
+    if not balls or balls.Parent ~= workspace then
+        balls = workspace:FindFirstChild("Balls")
+    end
+    if not balls then
+        clearBallEsp()
+        local character = LocalPlayer.Character
+        if character and not State.autoWinActive and not State.antiAbilities then setCharacterQueryProtection(character, false) end
+        return
+    end
+    local character = LocalPlayer.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid or humanoid.Health <= 0 then
+        setCharacterQueryProtection(character or {}, false)
+        clearBallEsp()
+        return
+    end
+
+    if State.espEnabled then
+        local present = {}
+        local count = 0
+        for _, ball in ipairs(balls:GetChildren()) do
+            if ball:IsA("BasePart") then
+                present[ball] = true
+                count += 1
+                updateBallEsp(ball, root)
+            end
+        end
+        for ball in pairs(State.espObjects) do
+            if not present[ball] then removeBallEsp(ball) end
+        end
+        State.espCount = count
+    else
+        clearBallEsp()
+    end
+
+    if not State.enabled then
+        if not State.autoWinActive and not State.antiAbilities then setCharacterQueryProtection(character, false) end
+        return
+    end
+    State.scans += 1
+    local dangerousBall = nil
+    local dangerReason = nil
+    for _, ball in ipairs(balls:GetChildren()) do
+        local dangerous, reason = shouldDodge(ball, root)
+        if dangerous then
+            dangerousBall = ball
+            dangerReason = reason
+            break
+        end
+    end
+
+    if dangerousBall then
+        State.detections += 1
+        State.safeUntil = os.clock() + 0.4
+        dodge(dangerReason, dangerousBall, root)
+    elseif State.threat and not State.threat.Parent then
+        State.threat = nil
+    end
+
+    if os.clock() < State.evadeUntil then
+        local push = State.evadeVector * State.evadePower
+        root.AssemblyLinearVelocity = Vector3.new(push.X, root.AssemblyLinearVelocity.Y, push.Z)
+    end
+
+    setCharacterQueryProtection(character, State.antiAbilities or (State.safeMode and os.clock() < State.safeUntil))
+end)
+
+State.autoWinConnection = RunService.Heartbeat:Connect(function()
+    local character = LocalPlayer.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    local map = workspace:FindFirstChild("CurrentMap")
+    local playing = character ~= nil and CollectionService:HasTag(character, "Playing")
+
+    if not State.autoWin or not playing or not map or not root or not humanoid or humanoid.Health <= 0 then
+        if State.autoWinActive then deactivateAutoWin(character) end
+        return
+    end
+
+    if State.safeMap ~= map or not State.safeCFrame then
+        State.safeMap = map
+        State.safeCFrame = calculateSafeCFrame(map, root)
+        State.safePosition = State.safeCFrame.Position
+    end
+
+    if (not State.clientBallHitRemote or not State.clientBallHitRemote.Parent)
+        and os.clock() - State.lastHitRemoteResolve >= 1 then
+        State.lastHitRemoteResolve = os.clock()
+        State.clientBallHitRemote = resolveSafeRemote("ClientBallHit")
+    end
+
+    if os.clock() - State.lastHitDetectionScan >= 1 then
+        State.lastHitDetectionScan = os.clock()
+        installHitDetectionBypass()
+        scanAndBlockAnticheatRemotes()
+    end
+
+    local liveBalls = workspace:FindFirstChild("Balls")
+    local nearestBall = math.huge
+    if liveBalls then
+        for _, ball in ipairs(liveBalls:GetChildren()) do
+            if ball:IsA("BasePart") then
+                nearestBall = math.min(nearestBall, (ball.Position - root.Position).Magnitude)
+                disableBallTarget(ball)
+            end
+        end
+    end
+
+    local now = os.clock()
+    if now - State.lastSafeShift >= 10 or (nearestBall < 12000 and now - State.lastSafeShift >= 0.5) then
+        State.safePhase = -State.safePhase
+        State.lastSafeShift = now
+        State.safeCFrame = CFrame.new(State.safeCenter + Vector3.new(45000 * State.safePhase, 0, 45000 * State.safePhase))
+        State.safePosition = State.safeCFrame.Position
+    end
+
+    State.autoWinActive = true
+    local decoy = ensureAutoWinDecoy()
+    if decoy and State.decoyPart then
+        State.decoyPart.CFrame = CFrame.new(State.safePosition + Vector3.new(10000, 5000, 10000))
+    end
+    setCharacterQueryProtection(character, true)
+    root.CFrame = State.safeCFrame
+    root.AssemblyLinearVelocity = Vector3.zero
+    root.AssemblyAngularVelocity = Vector3.zero
+    humanoid.BreakJointsOnDeath = false
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    if humanoid.Health < humanoid.MaxHealth then humanoid.Health = humanoid.MaxHealth end
+    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+end)
+
+-- Auto Pick Gamemode
+State.voteConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoPickMode then return end
+    local lobbyUI = LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild("LobbyUI")
+    local frame = lobbyUI and lobbyUI:FindFirstChild("GamemodeVoteFrame")
+    if not frame or not frame.Visible then
+        State.lastVoteKey = ""
+        return
+    end
+
+    local offered = {}
+    local titles = {}
+    for index = 1, 3 do
+        local option = frame:FindFirstChild("vote" .. index)
+        local title = option and option:FindFirstChild("Title")
+        local mode = title and title.Text or ""
+        titles[index] = mode
+        if mode ~= "" then offered[mode] = true end
+    end
+    local key = table.concat(titles, "|")
+    if key == State.lastVoteKey or key == "||" then return end
+
+    local chosen = offered[State.preferredMode] and State.preferredMode or (offered.Classic and "Classic" or titles[1])
+    if chosen and chosen ~= "" then
+        local selectRemote = resolveSafeRemote("Select")
+        if selectRemote then
+            safeFireServer(selectRemote, chosen)
+            State.lastVoteKey = key
+            State.lastVotedMode = chosen
+            State.votesSent += 1
+        end
+    end
+end)
+
+-- Dynamic Upgrades Scanner (Auto-detects ANY newly added upgrade stat in game updates)
+local function getUpgradeCandidate()
+    local upgrades = LocalPlayer:FindFirstChild("Upgrades")
+    local points = LocalPlayer:FindFirstChild("Skill Points")
+    if not upgrades or not points then return nil end
+
+    local candidates = {}
+    local cheapestCost = math.huge
+    
+    -- Dynamically iterate over ALL children in Upgrades folder
+    for _, valueObject in ipairs(upgrades:GetChildren()) do
+        local name = valueObject.Name
+        local value = tonumber(valueObject.Value) or 0
+        local okLvl, level = pcall(function() return UpgradesShared.FindLevel(value) end)
+        level = okLvl and level or 0
+        local okCost, cost = pcall(function() return UpgradesShared.CalculateCost(name, value, level) end)
+        cost = okCost and cost or math.huge
+        
+        local maxLvl = UpgradesShared.upgradeCosts and UpgradesShared.upgradeCosts[name] and UpgradesShared.upgradeCosts[name].MaxLevel or 100
+        if level < maxLvl then
+            cheapestCost = math.min(cheapestCost, cost)
+            if cost <= points.Value then
+                candidates[#candidates + 1] = {name = name, value = value, level = level, cost = cost}
+            end
+        end
+    end
+    if #candidates == 0 then return nil, cheapestCost end
+
+    if State.upgradePriority ~= "Balanced" then
+        for _, candidate in ipairs(candidates) do
+            if candidate.name == State.upgradePriority then return candidate, cheapestCost end
+        end
+    end
+
+    table.sort(candidates, function(a, b)
+        if a.level == b.level then
+            if a.value == b.value then return a.name < b.name end
+            return a.value < b.value
+        end
+        return a.level < b.level
+    end)
+    return candidates[1], cheapestCost
+end
+
+State.upgradeConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoUpgrades or State.upgradeBusy then return end
+    if os.clock() - State.lastUpgradeCheck < 1 then return end
+    State.lastUpgradeCheck = os.clock()
+    local character = LocalPlayer.Character
+    if not character or not CollectionService:HasTag(character, "Lobby") then
+        State.lastUpgradeStatus = "Waiting for lobby"
+        return
+    end
+    local candidate, cheapestCost = getUpgradeCandidate()
+    if not candidate then
+        local points = LocalPlayer:FindFirstChild("Skill Points")
+        if cheapestCost < math.huge and points then
+            State.lastUpgradeStatus = string.format("Need %d more point(s); cheapest costs %d", math.max(0, cheapestCost - points.Value), cheapestCost)
+        else
+            State.lastUpgradeStatus = "All upgrades maxed"
+        end
+        return
+    end
+
+    State.upgradeBusy = true
+    task.spawn(function()
+        humanDelay(0.05, 0.15)
+        local remote = resolveSafeRemote("PurchaseUpgrade")
+        local purchased = remote and safeInvokeServer(remote, candidate.name)
+        if purchased then
+            State.upgradesPurchased += 1
+            State.lastUpgrade = candidate.name
+            State.lastUpgradeStatus = "Purchased " .. candidate.name
+        else
+            State.lastUpgradeStatus = "Purchase failed"
+        end
+        State.upgradeBusy = false
+    end)
+end)
+
+-- Spinner Wheel Logic
+State.spinConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoSpin or State.spinBusy then return end
+    if os.clock() - State.lastSpinAt < 18 then return end
+
+    local character = LocalPlayer.Character
+    if not character or not CollectionService:HasTag(character, "Lobby") then
+        State.lastSpinStatus = "Waiting for lobby"
+        return
+    end
+
+    local spinnerData = LocalPlayer:FindFirstChild("SpinnerWheel")
+    local spinCount = spinnerData and spinnerData:FindFirstChild("SpinCount")
+    if not spinCount or spinCount.Value <= 0 then
+        State.lastSpinStatus = "No spins available"
+        return
+    end
+
+    State.spinBusy = true
+    State.lastSpinAt = os.clock()
+    env.__CM_DODGE_OR_DIE_LAST_SPIN_AT = State.lastSpinAt
+    State.lastSpinCount = spinCount.Value
+    State.lastSpinStatus = "Spinning"
+    task.spawn(function()
+        local remote = ReplicatedStorage:WaitForChild("SpinnerWheelSystem"):WaitForChild("spinEvents"):WaitForChild("RemoteFunction")
+        humanDelay(0.05, 0.15)
+        local ok, accepted, reward = pcall(function()
+            return remote:InvokeServer("uxrSpinWheel")
+        end)
+        if ok and accepted then
+            State.spinsUsed += 1
+            State.lastSpinReward = tostring(reward or "")
+            State.lastSpinStatus = "Spin accepted"
+        else
+            State.lastSpinStatus = ok and "Spin rejected" or "Spin request failed"
+        end
+        State.spinBusy = false
+    end)
+end)
+
+-- Quest Auto Claim Logic
+State.questConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoClaimQuests or State.questBusy then return end
+    if os.clock() - State.lastQuestCheck < 8 then return end
+    State.lastQuestCheck = os.clock()
+
+    State.questBusy = true
+    State.lastQuestStatus = "Checking quests"
+    task.spawn(function()
+        local ok, status = pcall(function()
+            local viewRemote = resolveSafeRemote("QuestViewEvent")
+            local claimRemote = resolveSafeRemote("QuestClaimEvent")
+            if not viewRemote or not claimRemote then return "Quest remotes unavailable" end
+
+            humanDelay(0.05, 0.1)
+            local data = viewRemote:InvokeServer()
+            if not data then return "Quest data unavailable" end
+
+            local allComplete = true
+            local allClaimed = true
+            for index = 1, 6 do
+                local quest = data["Quest" .. index]
+                if quest then
+                    local complete = quest.Progress >= quest.Amount
+                    allComplete = allComplete and complete
+                    allClaimed = allClaimed and quest.Claimed == true
+                    if complete and quest.Claimed == false then
+                        humanDelay(0.1, 0.2)
+                        local claimed = claimRemote:InvokeServer(index)
+                        if claimed then
+                            State.questsClaimed += 1
+                            State.lastQuestClaim = "Quest " .. index
+                            return "Claimed Quest " .. index
+                        end
+                        return "Quest claim rejected"
+                    end
+                else
+                    allComplete = false
+                    allClaimed = false
+                end
+            end
+
+            if allComplete and allClaimed and data.CompleteClaimed == false then
+                humanDelay(0.1, 0.2)
+                local claimed = claimRemote:InvokeServer(4)
+                if claimed then
+                    State.questsClaimed += 1
+                    State.lastQuestClaim = "Completion bonus"
+                    return "Claimed completion bonus"
+                end
+                return "Bonus claim rejected"
+            end
+            return "No completed unclaimed quests"
+        end)
+        State.lastQuestStatus = ok and status or "Quest check failed"
+        State.questBusy = false
+    end)
+end)
+
+-- Battle Pass Auto Claim Logic
+local function wasTierClaimed(claimed, tier)
+    return claimed and (claimed[tostring(tier)] == true or claimed[tier] == true)
+end
+
+State.battlePassConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoClaimBattlePass or State.battlePassBusy then return end
+    if os.clock() - State.lastBattlePassCheck < 8 then return end
+    State.lastBattlePassCheck = os.clock()
+    State.battlePassBusy = true
+    State.lastBattlePassStatus = "Checking Battle Pass"
+
+    task.spawn(function()
+        local ok, status = pcall(function()
+            local remotes = ReplicatedStorage:FindFirstChild("BattlePassRemotes")
+            local getState = remotes and remotes:FindFirstChild("GetState")
+            local claimQuest = remotes and remotes:FindFirstChild("ClaimQuest")
+            local claimTier = remotes and remotes:FindFirstChild("ClaimTier")
+            if not getState or not claimQuest or not claimTier then
+                return "Battle Pass remotes unavailable"
+            end
+
+            humanDelay(0.05, 0.1)
+            local passState = getState:InvokeServer()
+            if not passState then return "Battle Pass data unavailable" end
+            local claimedThisCheck = 0
+
+            for _, kind in ipairs({"Daily", "Weekly"}) do
+                local questGroup = passState[kind]
+                for index, quest in ipairs(questGroup and questGroup.Quests or {}) do
+                    if not quest.Claimed and quest.Progress >= quest.Amount then
+                        humanDelay(0.1, 0.2)
+                        local claimed = claimQuest:InvokeServer(kind, index)
+                        if claimed then
+                            claimedThisCheck += 1
+                            State.battlePassQuestsClaimed += 1
+                            State.lastBattlePassClaim = string.format("%s Quest %d", kind, index)
+                        end
+                    end
+                end
+            end
+
+            passState = getState:InvokeServer() or passState
+            local tracks = {
+                {name = "Free", rewards = BattlePassConfig.FreeRewards, claimed = passState.ClaimedFree, allowed = true},
+                {name = "Premium", rewards = BattlePassConfig.PremiumRewards, claimed = passState.ClaimedPremium, allowed = passState.PremiumOwned == true},
+            }
+            for _, track in ipairs(tracks) do
+                if track.allowed then
+                    local tiers = {}
+                    for tier in pairs(track.rewards or {}) do
+                        if typeof(tier) == "number" then tiers[#tiers + 1] = tier end
+                    end
+                    table.sort(tiers)
+                    for _, tier in ipairs(tiers) do
+                        if tier <= (tonumber(passState.Tier) or 0) and not wasTierClaimed(track.claimed, tier) then
+                            humanDelay(0.1, 0.2)
+                            local claimed = claimTier:InvokeServer(track.name, tier)
+                            if claimed then
+                                claimedThisCheck += 1
+                                State.battlePassTiersClaimed += 1
+                                State.lastBattlePassClaim = string.format("%s Tier %d", track.name, tier)
+                            end
+                        end
+                    end
+                end
+            end
+
+            if claimedThisCheck > 0 then
+                return string.format("Claimed %d Battle Pass reward(s)", claimedThisCheck)
+            end
+            return "No claimable Battle Pass rewards"
+        end)
+        State.lastBattlePassStatus = ok and status or "Battle Pass check failed"
+        State.battlePassBusy = false
+    end)
+end)
+
+-- Auto Code Redeem Feed Scraper
+local fallbackCodes = {"1KCCU", "250K", "DODGE"}
+local function discoverActiveCodes()
+    local discovered = {}
+    local seen = {}
+    local function add(code)
+        code = tostring(code or ""):match("^%s*(.-)%s*$")
+        if code ~= "" and #code <= 50 and not seen[code] then
+            seen[code] = true
+            discovered[#discovered + 1] = code
+        end
+    end
+
+    local ok, html = pcall(function()
+        return __CMHUB_GET_TEXT_V1(State.codeFeedUrl)
+    end)
+    if ok and typeof(html) == "string" then
+        for code in string.gmatch(html, 'data%-expired="false".-data%-copy="([^"]+)"') do
+            add(code:gsub("&amp;", "&"):gsub("&quot;", '"'):gsub("&#39;", "'"))
+        end
+    end
+    for _, code in ipairs(fallbackCodes) do add(code) end
+    return discovered, ok
+end
+
+State.codeConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoRedeemCodes or State.codeBusy then return end
+    if os.clock() - State.lastCodeScan < State.codeScanInterval then return end
+    State.lastCodeScan = os.clock()
+    State.codeBusy = true
+    State.lastCodeStatus = "Checking for new codes"
+
+    task.spawn(function()
+        local ok, status = pcall(function()
+            local codes, feedOnline = discoverActiveCodes()
+            State.codesDiscovered = #codes
+            local remote = resolveSafeRemote("RedeemCode")
+            if not remote then return "RedeemCode remote unavailable" end
+
+            local newAttempts = 0
+            local redeemed = 0
+            for _, code in ipairs(codes) do
+                if not State.codeAttempts[code] then
+                    humanDelay(0.3, 0.6)
+                    local callOk, accepted, message = pcall(function()
+                        return remote:InvokeServer(code)
+                    end)
+                    if callOk then
+                        State.codeAttempts[code] = {
+                            accepted = accepted == true,
+                            message = tostring(message or ""),
+                            attemptedAt = os.time(),
+                        }
+                        newAttempts += 1
+                        State.lastCode = code
+                        if accepted then
+                            redeemed += 1
+                            State.codesRedeemed += 1
+                            State.lastCodeStatus = "Redeemed " .. code
+                        else
+                            State.lastCodeStatus = string.format("%s: %s", code, tostring(message or "already claimed / inactive"))
+                        end
+                    end
+                end
+            end
+
+            if redeemed > 0 then
+                return string.format("Redeemed %d new code(s)", redeemed)
+            elseif newAttempts > 0 then
+                return string.format("Checked %d new code(s)", newAttempts)
+            elseif feedOnline then
+                return string.format("Up to date - %d active code(s)", #codes)
+            end
+            return string.format("Feed offline - fallback list checked (%d)", #codes)
+        end)
+        State.lastCodeStatus = ok and status or "Code scan failed"
+        State.codeBusy = false
+    end)
+end)
+
+-- Auto Crate Purchase Logic (Dynamic Crate Types)
+State.crateConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoBuyCrates or State.crateBusy then return end
+    if os.clock() - State.lastCratePurchase < 1.5 then return end
+    State.lastCratePurchase = os.clock()
+
+    local character = LocalPlayer.Character
+    if not character or not CollectionService:HasTag(character, "Lobby") then
+        State.lastCrateStatus = "Waiting for lobby"
+        return
+    end
+
+    local pricing = ToolsShared.CratePricing and ToolsShared.CratePricing[State.selectedCrate]
+    local price = pricing and tonumber(pricing[1])
+    local cash = LocalPlayer:FindFirstChild("Cash")
+    if not price or not cash then
+        State.lastCrateStatus = "Crate price or Cash unavailable"
+        return
+    end
+    if cash.Value - State.crateCashReserve < price then
+        State.lastCrateStatus = string.format(
+            "Need $%d more for %s crate (reserve: $%d)",
+            math.max(0, price + State.crateCashReserve - cash.Value),
+            State.selectedCrate,
+            State.crateCashReserve
+        )
+        return
+    end
+
+    local remote = resolveSafeRemote("PurchaseCrate")
+    if not remote then
+        State.lastCrateStatus = "PurchaseCrate remote unavailable"
+        return
+    end
+
+    State.crateBusy = true
+    State.cratesPurchaseRequested += 1
+    State.lastCrateStatus = string.format("Buying %s crate for $%d", State.selectedCrate, price)
+    safeFireServer(remote, State.selectedCrate)
+    task.delay(6, function()
+        if State.crateBusy then
+            State.crateBusy = false
+            State.lastCrateStatus = "Purchase timed out or rejected"
+        end
+    end)
+end)
+
+-- Clipboard & Social Links Helper
+local function copySocialLink(url, socialName)
+    local fn = setclipboard or toclipboard or set_clipboard
+    local ok = typeof(fn) == "function" and pcall(fn, url)
+    if ok then
+        Library:Notify({
+            Type = "Success",
+            Title = "Link Copied!",
+            Content = socialName .. " link copied - Thank you for supporting Captain Manjiro! :3",
+            Duration = 5,
+        })
+    else
+        Library:Notify({
+            Type = "Warning",
+            Title = "Clipboard Unavailable",
+            Content = "Copy manually: " .. url,
+            Duration = 6,
+        })
+    end
+end
+
+-- Player ESP Mechanics
+local function destroyPlayerEsp(target)
+    local objects = State.playerEspObjects[target]
+    if not objects then return end
+    if objects.highlight then objects.highlight:Destroy() end
+    if objects.billboard then objects.billboard:Destroy() end
+    State.playerEspObjects[target] = nil
+end
+
+local function clearPlayerEsp()
+    for target in pairs(State.playerEspObjects) do
+        destroyPlayerEsp(target)
+    end
+end
+
+local function updatePlayerEsp(target, localRoot)
+    if target == LocalPlayer then return end
+    local character = target.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid or humanoid.Health <= 0 then
+        destroyPlayerEsp(target)
+        return
+    end
+
+    local distance = (root.Position - localRoot.Position).Magnitude
+    local objects = State.playerEspObjects[target]
+    if not objects or objects.character ~= character then
+        destroyPlayerEsp(target)
+        local color = target.Team ~= nil and target.Team == LocalPlayer.Team
+            and Color3.fromRGB(70, 255, 120) or Color3.fromRGB(255, 85, 85)
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "CM_PlayerESP"
+        highlight.Adornee = character
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.FillColor = color
+        highlight.FillTransparency = 0.72
+        highlight.OutlineColor = color
+        highlight.OutlineTransparency = 0
+        highlight.Parent = character
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "CM_PlayerInfo"
+        billboard.Adornee = root
+        billboard.AlwaysOnTop = true
+        billboard.Size = UDim2.fromOffset(220, 42)
+        billboard.StudsOffset = Vector3.new(0, 3.3, 0)
+        billboard.Parent = root
+
+        local label = Instance.new("TextLabel")
+        label.BackgroundTransparency = 1
+        label.Size = UDim2.fromScale(1, 1)
+        label.Font = Enum.Font.GothamBold
+        label.TextColor3 = color
+        label.TextStrokeTransparency = 0
+        label.TextSize = 14
+        label.Parent = billboard
+
+        objects = {character = character, highlight = highlight, billboard = billboard, label = label}
+        State.playerEspObjects[target] = objects
+    end
+
+    local visible = distance <= State.playerEspDistance
+    objects.highlight.Enabled = visible
+    objects.billboard.Enabled = visible
+    objects.label.Text = string.format("%s | %dm | %d HP", target.DisplayName, math.floor(distance + 0.5), math.floor(humanoid.Health + 0.5))
+end
+
+-- Visual Overrides
+local function captureVisualState()
+    if State.lightingSnapshot then return end
+    State.lightingSnapshot = {
+        Brightness = Lighting.Brightness,
+        ClockTime = Lighting.ClockTime,
+        FogEnd = Lighting.FogEnd,
+        Ambient = Lighting.Ambient,
+        OutdoorAmbient = Lighting.OutdoorAmbient,
+        GlobalShadows = Lighting.GlobalShadows,
+    }
+    pcall(function() State.originalQualityLevel = settings().Rendering.QualityLevel end)
+    for _, effect in ipairs(Lighting:GetChildren()) do
+        if effect:IsA("PostEffect") then
+            State.postEffectSnapshot[effect] = effect.Enabled
+        end
+    end
+end
+
+local function applyVisualState()
+    if not State.fullbright and not State.lowGraphics then return end
+    captureVisualState()
+    local original = State.lightingSnapshot
+    Lighting.Brightness = State.fullbright and 3 or original.Brightness
+    Lighting.ClockTime = State.fullbright and 14 or original.ClockTime
+    Lighting.FogEnd = State.fullbright and 1000000 or original.FogEnd
+    Lighting.Ambient = State.fullbright and Color3.fromRGB(180, 180, 180) or original.Ambient
+    Lighting.OutdoorAmbient = State.fullbright and Color3.fromRGB(180, 180, 180) or original.OutdoorAmbient
+    Lighting.GlobalShadows = State.lowGraphics and false or original.GlobalShadows
+    pcall(function()
+        settings().Rendering.QualityLevel = State.lowGraphics and Enum.QualityLevel.Level01 or State.originalQualityLevel
+    end)
+    for effect, wasEnabled in pairs(State.postEffectSnapshot) do
+        if effect.Parent then
+            effect.Enabled = State.lowGraphics and false or wasEnabled
+        end
+    end
+end
+
+local function restoreVisualState()
+    local original = State.lightingSnapshot
+    if original then
+        for property, value in pairs(original) do Lighting[property] = value end
+    end
+    for effect, wasEnabled in pairs(State.postEffectSnapshot) do
+        if effect.Parent then effect.Enabled = wasEnabled end
+    end
+    if State.originalQualityLevel then
+        pcall(function() settings().Rendering.QualityLevel = State.originalQualityLevel end)
+    end
+    State.lightingSnapshot = nil
+    State.postEffectSnapshot = {}
+    State.originalQualityLevel = nil
+end
+
+local function restoreMovement()
+    for humanoid, original in pairs(State.originalMovement) do
+        if humanoid.Parent then
+            humanoid.WalkSpeed = original.walkSpeed
+            humanoid.UseJumpPower = original.useJumpPower
+            humanoid.JumpPower = original.jumpPower
+            humanoid.JumpHeight = original.jumpHeight
+        end
+    end
+    State.originalMovement = {}
+    for part, canCollide in pairs(State.originalNoclip) do
+        if part.Parent then part.CanCollide = canCollide end
+    end
+    State.originalNoclip = {}
+end
+
+State.visualConnection = RunService.Heartbeat:Connect(function()
+    local now = os.clock()
+    if State.playerEspEnabled and now - State.lastPlayerEspUpdate >= 0.15 then
+        State.lastPlayerEspUpdate = now
+        local character = LocalPlayer.Character
+        local localRoot = character and character:FindFirstChild("HumanoidRootPart")
+        if localRoot then
+            local present = {}
+            for _, target in ipairs(Players:GetPlayers()) do
+                if target ~= LocalPlayer then
+                    present[target] = true
+                    updatePlayerEsp(target, localRoot)
+                end
+            end
+            for target in pairs(State.playerEspObjects) do
+                if not present[target] then destroyPlayerEsp(target) end
+            end
+        end
+    elseif not State.playerEspEnabled and next(State.playerEspObjects) then
+        clearPlayerEsp()
+    end
+
+    if (State.fullbright or State.lowGraphics) and now - State.lastVisualApply >= 0.75 then
+        State.lastVisualApply = now
+        applyVisualState()
+    end
+end)
+
+State.movementConnection = RunService.Heartbeat:Connect(function()
+    local character = LocalPlayer.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid and (State.speedEnabled or State.jumpEnabled) then
+        if not State.originalMovement[humanoid] then
+            State.originalMovement[humanoid] = {
+                walkSpeed = humanoid.WalkSpeed,
+                useJumpPower = humanoid.UseJumpPower,
+                jumpPower = humanoid.JumpPower,
+                jumpHeight = humanoid.JumpHeight,
+            }
+        end
+        if State.speedEnabled then humanoid.WalkSpeed = State.walkSpeed end
+        if State.jumpEnabled then
+            humanoid.UseJumpPower = true
+            humanoid.JumpPower = State.jumpPower
+        end
+    end
+
+    if character and State.noclip then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                if State.originalNoclip[part] == nil then State.originalNoclip[part] = part.CanCollide end
+                part.CanCollide = false
+            end
+        end
+    elseif next(State.originalNoclip) then
+        for part, canCollide in pairs(State.originalNoclip) do
+            if part.Parent then part.CanCollide = canCollide end
+        end
+        State.originalNoclip = {}
+    end
+end)
+
+State.jumpConnection = UserInputService.JumpRequest:Connect(function()
+    if not State.infiniteJump then return end
+    local character = LocalPlayer.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.Health > 0 then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- Teleporting & Server Hop
+local function queueHubReload()
+    if not State.autoReloadHub then return false end
+    local queue = queue_on_teleport or (syn and syn.queue_on_teleport)
+    if typeof(queue) ~= "function" then return false end
+    local queuedCode = [[
+task.wait(3)
+pcall(function()
+    loadstring(__CMHUB_GET_TEXT_V1("https://pastefy.app/yVwruY6w/raw"))()
+end)
+]]
+    return pcall(queue, queuedCode)
+end
+
+local function rejoinServer()
+    if State.teleportBusy then return end
+    State.teleportBusy = true
+    queueHubReload()
+    Library:Notify({ Type = "Info", Title = "Rejoining", Content = "Reconnecting to Dodge or Die...", Duration = 4 })
+    local ok = pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
+    if not ok then
+        State.teleportBusy = false
+        Library:Notify({ Type = "Error", Title = "Rejoin Failed", Content = "Teleport request rejected.", Duration = 4 })
+    end
+end
+
+local function hopServer()
+    if State.teleportBusy then return end
+    State.teleportBusy = true
+    State.lastServerHopStatus = "Searching for a populated server"
+    task.spawn(function()
+        local cursor = nil
+        local chosen = nil
+        local chosenPopulation = -1
+        for _ = 1, 3 do
+            local url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100", game.PlaceId)
+            if cursor then url ..= "&cursor=" .. HttpService:UrlEncode(cursor) end
+            local ok, page = pcall(function() return HttpService:JSONDecode(__CMHUB_GET_TEXT_V1(url)) end)
+            if not ok or typeof(page) ~= "table" then break end
+            for _, server in ipairs(page.data or {}) do
+                if server.id ~= game.JobId
+                    and server.playing < server.maxPlayers
+                    and server.playing + 1 >= State.minimumServerPlayers
+                    and server.playing > chosenPopulation then
+                    chosen = server.id
+                    chosenPopulation = server.playing
+                end
+            end
+            if chosen or not page.nextPageCursor then break end
+            cursor = page.nextPageCursor
+        end
+        if chosen then
+            State.lastServerHopStatus = string.format("Joining server with %d players", chosenPopulation)
+            queueHubReload()
+            Library:Notify({ Type = "Success", Title = "Server Hop", Content = State.lastServerHopStatus, Duration = 4 })
+            local ok = pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, chosen, LocalPlayer) end)
+            if ok then return end
+        end
+        State.teleportBusy = false
+        State.lowPopulationSince = 0
+        State.serverHopGraceUntil = os.clock() + 20
+        State.lastServerHopStatus = "No suitable populated server found"
+        Library:Notify({ Type = "Warning", Title = "Server Hop", Content = "No open server found. Try again shortly.", Duration = 4 })
+    end)
+end
+
+State.serverHopConnection = RunService.Heartbeat:Connect(function()
+    if not State.autoServerHop or State.teleportBusy then return end
+    local now = os.clock()
+    if now < State.serverHopGraceUntil or now - State.lastPopulationCheck < 5 then return end
+    State.lastPopulationCheck = now
+    local playerCount = #Players:GetPlayers()
+    if playerCount >= State.minimumServerPlayers then
+        State.lowPopulationSince = 0
+        State.lastServerHopStatus = string.format("Population healthy: %d/%d players", playerCount, State.minimumServerPlayers)
+        return
+    end
+    if State.lowPopulationSince == 0 then
+        State.lowPopulationSince = now
+        State.lastServerHopStatus = string.format("Low population: %d/%d; confirming...", playerCount, State.minimumServerPlayers)
+    elseif now - State.lowPopulationSince >= 10 then
+        State.lastServerHopStatus = string.format("Only %d players; finding a fuller server", playerCount)
+        hopServer()
+    end
+end)
+
+State.autoRejoinConnection = game:GetService("CoreGui").DescendantAdded:Connect(function(descendant)
+    if not State.autoRejoin or State.teleportBusy then return end
+    if descendant.Name == "ErrorPrompt" then
+        task.delay(2, function()
+            if State.autoRejoin and descendant.Parent then rejoinServer() end
+        end)
+    end
+end)
+
+--==================================================
+-- CM UI LIBRARY WINDOW & TABS BUILDER
+--==================================================
+
+local Window = Library:CreateWindow({
+    Title = "Dodge or Die leaked by real",
+    Subtitle = "VERSION 2.0",
+    Size = UDim2.fromOffset(610, 470),
+    TabWidth = 158,
+})
+
+-- Tag Hub Gui for duplication handling
+task.defer(function()
+    for _, root in ipairs({game:GetService("CoreGui"), LocalPlayer:FindFirstChild("PlayerGui")}) do
+        if root then
+            for _, gui in ipairs(root:GetChildren()) do
+                if gui.Name == "CM_UI_LIBRARY" then
+                    gui:SetAttribute("DodgeOrDieCMHub", true)
+                end
+            end
+        end
+    end
+end)
+
+-- Tabs
+local SurvivalTab = Window:AddTab({ Title = "Survival", Icon = "shield" })
+local ProtectionTab = Window:AddTab({ Title = "Protection & Anti-Cheat", Icon = "shield" })
+local AutomationTab = Window:AddTab({ Title = "Automation", Icon = "tools" })
+local CratesTab = Window:AddTab({ Title = "Tool Crates", Icon = "misc" })
+local VisualsTab = Window:AddTab({ Title = "Visuals", Icon = "eye" })
+local MovementTab = Window:AddTab({ Title = "Movement", Icon = "teleport" })
+local ServerTab = Window:AddTab({ Title = "Server", Icon = "world" })
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
+local CreditsTab = Window:AddTab({ Title = "Credits", Icon = "heart" })
+
+-- 1. SURVIVAL TAB
+local SurvivalSection = SurvivalTab:NewSection("Round Survival & Ball Evasion")
+
+SurvivalSection:AddParagraph({
+    Title = "Survival System",
+    Content = "Enable Auto Win for unreachable farming position, or Auto Dodge for natural movements with automated evasive dashes.",
+})
+
+local AutoWinToggle = SurvivalSection:AddToggle({
+    Title = "Auto Win",
+    Description = "Disables local hit detection and shifts between two safe points out of ball reach.",
+    Default = true,
+    Callback = function(value)
+        State.autoWin = value
+        if not value then deactivateAutoWin(LocalPlayer.Character) end
+    end,
+})
+
+local AutoDodgeToggle = SurvivalSection:AddToggle({
+    Title = "Auto Dodge",
+    Description = "Maintains player movement and automatically dashes when real dangerous balls approach.",
+    Default = false,
+    Callback = function(value)
+        State.enabled = value
+    end,
+})
+
+SurvivalSection:AddToggle({
+    Title = "No-Hit Failsafe (CanQuery Protection)",
+    Description = "Removes character parts from ball query collision checks.",
+    Default = true,
+    Callback = function(value)
+        State.safeMode = value
+        if not value then
+            local character = LocalPlayer.Character
+            if character then setCharacterQueryProtection(character, false) end
+        end
+    end,
+})
+
+SurvivalSection:AddToggle({
+    Title = "Ball ESP + Live Stats",
+    Description = "Displays ball target status, color, speed, size, and real-time distance.",
+    Default = true,
+    Callback = function(value)
+        State.espEnabled = value
+        if not value then clearBallEsp() end
+    end,
+})
+
+-- 2. PROTECTION & ANTI-CHEAT TAB
+local ProtectionSection = ProtectionTab:NewSection("Dynamic Anti-Cheat & Protection")
+
+ProtectionSection:AddParagraph({
+    Title = "Dynamic Anti-Cheat Active",
+    Content = "Auto-detects newly added anticheat scripts, remotes, ability tags, and debuffs dynamically in real-time.",
+})
+
+ProtectionSection:AddToggle({
+    Title = "Anti AFK",
+    Description = "Disables Roblox idle disconnect listeners.",
+    Default = true,
+    Callback = function(value)
+        setAntiAfk(value)
+    end,
+})
+
+ProtectionSection:AddToggle({
+    Title = "Anti Kick",
+    Description = "Intercepts and cancels Anti Kick & Anti Ban",
+    Default = true,
+    Callback = function(value)
+        State.antiKick = value
+    end,
+})
+
+ProtectionSection:AddToggle({
+    Title = "Dynamic Anti-Abilities & Debuffs",
+    Description = "Auto-detects and clears ANY newly added status tags, freeze models, stuns, flings, and teleports.",
+    Default = true,
+    Callback = function(value)
+        State.antiAbilities = value
+        if value then
+            clearAbilityEffects()
+        else
+            local character = LocalPlayer.Character
+            setAbilityTouchProtection(character, false)
+            if character and not State.autoWinActive and not State.safeMode then
+                setCharacterQueryProtection(character, false)
+            end
+        end
+    end,
+})
+
+-- 3. AUTOMATION TAB
+local AutomationSection = AutomationTab:NewSection("Automatic Rewards & Progress")
+
+AutomationSection:AddParagraph({
+    Title = "Automated Progress",
+    Content = "All automation tasks feature humanized execution delays and dynamic stat detection.",
+})
+
+AutomationSection:AddToggle({
+    Title = "Auto Pick Gamemode",
+    Description = "Automatically votes when gamemode selection appears.",
+    Default = true,
+    Callback = function(value)
+        State.autoPickMode = value
+        if not value then State.lastVoteKey = "" end
+    end,
+})
+
+AutomationSection:AddDropdown({
+    Title = "Preferred Mode",
+    Description = "Gamemode to vote for; falls back to Classic when unavailable.",
+    Values = {"Classic", "Super Speed", "Single Target"},
+    Multi = false,
+    Default = 1,
+    Callback = function(value)
+        State.preferredMode = value
+        State.lastVoteKey = ""
+    end,
+})
+
+local AutoUpgradesToggle = AutomationSection:AddToggle({
+    Title = "Dynamic Auto Upgrades",
+    Description = "Auto-detects newly added upgrade stats in game updates and purchases affordable upgrades.",
+    Default = true,
+    Callback = function(value)
+        State.autoUpgrades = value
+    end,
+})
+
+-- Dynamically build upgrade dropdown values from player stats
+local initialUpgradeValues = {"Balanced"}
+local upgradesFolder = LocalPlayer:FindFirstChild("Upgrades")
+if upgradesFolder then
+    for _, child in ipairs(upgradesFolder:GetChildren()) do
+        table.insert(initialUpgradeValues, child.Name)
+    end
+else
+    table.insert(initialUpgradeValues, "Speed")
+    table.insert(initialUpgradeValues, "Jump")
+    table.insert(initialUpgradeValues, "Dashes")
+end
+
+local UpgradePriorityDropdown = AutomationSection:AddDropdown({
+    Title = "Upgrade Priority",
+    Description = "Balanced raises lowest level upgrade first.",
+    Values = initialUpgradeValues,
+    Multi = false,
+    Default = 1,
+    Callback = function(value)
+        State.upgradePriority = value
+    end,
+})
+
+AutomationSection:AddToggle({
+    Title = "Auto Spin Wheel",
+    Description = "Spins the wheel with anti-spam cooldown.",
+    Default = true,
+    Callback = function(value)
+        State.autoSpin = value
+    end,
+})
+
+AutomationSection:AddToggle({
+    Title = "Auto Claim Quests",
+    Description = "Claims completed quests and completion bonuses.",
+    Default = true,
+    Callback = function(value)
+        State.autoClaimQuests = value
+    end,
+})
+
+AutomationSection:AddToggle({
+    Title = "Auto Claim Battle Pass",
+    Description = "Claims completed Daily/Weekly quests and unlocked Free/Premium tiers.",
+    Default = true,
+    Callback = function(value)
+        State.autoClaimBattlePass = value
+        if value then State.lastBattlePassCheck = 0 end
+    end,
+})
+
+AutomationSection:AddToggle({
+    Title = "Auto Redeem Codes",
+    Description = "Checks live code feed every 60s and redeems active codes.",
+    Default = true,
+    Callback = function(value)
+        State.autoRedeemCodes = value
+        if value then State.lastCodeScan = 0 end
+    end,
+})
+
+-- 4. TOOL CRATES TAB
+local CratesSection = CratesTab:NewSection("Tool Crates Management")
+
+CratesSection:AddParagraph({
+    Title = "Crate Guide",
+    Content = "Normal ($85): Common/Uncommon\nElite ($650): Rare/Epic\nSuper ($1500): Epic/Legendary/Mythical",
+})
+
+CratesSection:AddToggle({
+    Title = "Instant Open Tool Crates",
+    Description = "Skips the 12-second spinner animation.",
+    Default = true,
+    Callback = function(value)
+        State.instantOpenCrates = value
+        if value then installInstantCrateOpen() else uninstallInstantCrateOpen() end
+    end,
+})
+
+-- Dynamically list crate types
+local crateTypes = {}
+if ToolsShared.CratePricing then
+    for crateName in pairs(ToolsShared.CratePricing) do
+        table.insert(crateTypes, crateName)
+    end
+end
+if #crateTypes == 0 then crateTypes = {"Normal", "Elite", "Super"} end
+
+CratesSection:AddDropdown({
+    Title = "Tool Crate Type",
+    Description = "Select crate type to purchase.",
+    Values = crateTypes,
+    Multi = false,
+    Default = 1,
+    Callback = function(value)
+        State.selectedCrate = value
+        State.lastCratePurchase = 0
+    end,
+})
+
+CratesSection:AddSlider({
+    Title = "Cash Reserve Protection",
+    Description = "Stops purchasing if Cash falls below this value.",
+    Default = 0,
+    Min = 0,
+    Max = 10000,
+    Rounding = 0,
+    Callback = function(value)
+        State.crateCashReserve = value
+    end,
+})
+
+CratesSection:AddToggle({
+    Title = "Auto Buy Tool Crates",
+    Description = "Buys selected crates automatically when cash is available.",
+    Default = false,
+    Callback = function(value)
+        State.autoBuyCrates = value
+        State.lastCratePurchase = 0
+        State.lastCrateStatus = value and "Waiting for affordable crate" or "Auto Buy is off"
+    end,
+})
+
+-- 5. VISUALS TAB
+local VisualsSection = VisualsTab:NewSection("Player & World Visuals")
+
+VisualsSection:AddToggle({
+    Title = "Player ESP",
+    Description = "Highlights players with name, distance, and health through walls.",
+    Default = false,
+    Callback = function(value)
+        State.playerEspEnabled = value
+        if not value then clearPlayerEsp() end
+    end,
+})
+
+VisualsSection:AddSlider({
+    Title = "Player ESP Distance",
+    Description = "Maximum stud distance for player ESP.",
+    Default = State.playerEspDistance,
+    Min = 100,
+    Max = 3000,
+    Rounding = 0,
+    Callback = function(value)
+        State.playerEspDistance = value
+    end,
+})
+
+VisualsSection:AddToggle({
+    Title = "Fullbright",
+    Description = "Removes map darkness and enhances lighting visibility.",
+    Default = false,
+    Callback = function(value)
+        State.fullbright = value
+        if State.fullbright or State.lowGraphics then applyVisualState() else restoreVisualState() end
+    end,
+})
+
+VisualsSection:AddToggle({
+    Title = "Low Graphics / FPS Boost",
+    Description = "Minimizes render quality, turns off shadows and post effects for high FPS.",
+    Default = false,
+    Callback = function(value)
+        State.lowGraphics = value
+        if State.fullbright or State.lowGraphics then applyVisualState() else restoreVisualState() end
+    end,
+})
+
+-- 6. MOVEMENT TAB
+local MovementSection = MovementTab:NewSection("Movement Modifiers")
+
+local SpeedToggle = MovementSection:AddToggle({
+    Title = "Walk Speed Boost",
+    Description = "Overrides WalkSpeed.",
+    Default = false,
+    Callback = function(value)
+        State.speedEnabled = value
+        if not value then
+            for humanoid, original in pairs(State.originalMovement) do
+                if humanoid.Parent then humanoid.WalkSpeed = original.walkSpeed end
+            end
+        end
+    end,
+})
+
+MovementSection:AddSlider({
+    Title = "Walk Speed",
+    Description = "Target walk speed.",
+    Default = State.walkSpeed,
+    Min = 16,
+    Max = 120,
+    Rounding = 0,
+    Callback = function(value)
+        State.walkSpeed = value
+    end,
+})
+
+local JumpToggle = MovementSection:AddToggle({
+    Title = "Jump Boost",
+    Description = "Overrides JumpPower.",
+    Default = false,
+    Callback = function(value)
+        State.jumpEnabled = value
+        if not value then
+            for humanoid, original in pairs(State.originalMovement) do
+                if humanoid.Parent then
+                    humanoid.UseJumpPower = original.useJumpPower
+                    humanoid.JumpPower = original.jumpPower
+                    humanoid.JumpHeight = original.jumpHeight
+                end
+            end
+        end
+    end,
+})
+
+MovementSection:AddSlider({
+    Title = "Jump Power",
+    Description = "Target jump power.",
+    Default = State.jumpPower,
+    Min = 50,
+    Max = 180,
+    Rounding = 0,
+    Callback = function(value)
+        State.jumpPower = value
+    end,
+})
+
+local InfiniteJumpToggle = MovementSection:AddToggle({
+    Title = "Infinite Jump",
+    Description = "Allows jumping in mid-air.",
+    Default = false,
+    Callback = function(value)
+        State.infiniteJump = value
+    end,
+})
+
+local NoclipToggle = MovementSection:AddToggle({
+    Title = "Noclip",
+    Description = "Disables character part collisions.",
+    Default = false,
+    Callback = function(value)
+        State.noclip = value
+    end,
+})
+
+MovementSection:AddButton({
+    Title = "Restore Normal Movement",
+    Description = "Resets all speed, jump, and collision overrides.",
+    Icon = "teleport",
+    Callback = function()
+        SpeedToggle:SetValue(false)
+        JumpToggle:SetValue(false)
+        InfiniteJumpToggle:SetValue(false)
+        NoclipToggle:SetValue(false)
+        restoreMovement()
+        Library:Notify({ Type = "Info", Title = "Movement Restored", Content = "Speed, jump, and collisions normalized.", Duration = 3 })
+    end,
+})
+
+-- 7. SERVER TAB
+local ServerSection = ServerTab:NewSection("Server & Connection Tools")
+
+ServerSection:AddToggle({
+    Title = "Auto Hop Low-Population Servers",
+    Description = "Hops automatically if server stays below minimum players.",
+    Default = true,
+    Callback = function(value)
+        State.autoServerHop = value
+        State.lowPopulationSince = 0
+        if value then State.serverHopGraceUntil = os.clock() + 25 end
+    end,
+})
+
+ServerSection:AddSlider({
+    Title = "Minimum Server Players",
+    Description = "Player threshold for server hopping.",
+    Default = State.minimumServerPlayers,
+    Min = 2,
+    Max = 12,
+    Rounding = 0,
+    Callback = function(value)
+        State.minimumServerPlayers = value
+        State.lowPopulationSince = 0
+    end,
+})
+
+ServerSection:AddToggle({
+    Title = "Auto Reload Hub After Teleport",
+    Description = "Queues CM Hub to load again after server hop or rejoin.",
+    Default = true,
+    Callback = function(value)
+        State.autoReloadHub = value
+    end,
+})
+
+ServerSection:AddToggle({
+    Title = "Auto Rejoin",
+    Description = "Attempts to reconnect when Roblox error prompts appear.",
+    Default = true,
+    Callback = function(value)
+        State.autoRejoin = value
+    end,
+})
+
+ServerSection:AddButton({
+    Title = "Rejoin Server",
+    Description = "Reconnects to current server instance.",
+    Icon = "world",
+    Callback = rejoinServer,
+})
+
+ServerSection:AddButton({
+    Title = "Server Hop",
+    Description = "Finds and joins a populated public server.",
+    Icon = "world",
+    Callback = hopServer,
+})
+
+-- 8. SETTINGS TAB
+local SettingsSection = SettingsTab:NewSection("Auto Dodge Mechanics Tuning")
+
+SettingsSection:AddSlider({
+    Title = "Detection Distance",
+    Description = "Stud radius for ball threat detection.",
+    Default = State.distance,
+    Min = 10,
+    Max = 80,
+    Rounding = 0,
+    Callback = function(value)
+        State.distance = value
+    end,
+})
+
+SettingsSection:AddSlider({
+    Title = "Reaction Time",
+    Description = "Predicted time threshold before evasion.",
+    Default = State.reactionTime,
+    Min = 0.2,
+    Max = 1.5,
+    Rounding = 2,
+    Callback = function(value)
+        State.reactionTime = value
+    end,
+})
+
+SettingsSection:AddSlider({
+    Title = "Evasion Power",
+    Description = "Velocity magnitude applied during evasive moves.",
+    Default = State.evadePower,
+    Min = 80,
+    Max = 180,
+    Rounding = 0,
+    Callback = function(value)
+        State.evadePower = value
+    end,
+})
+
+-- 9. CREDITS TAB
+local CreditsSection = CreditsTab:NewSection("Creator & Community - Captain Manjiro :3")
+
+CreditsSection:AddParagraph({
+    Title = "Thank You For Supporting Captain Manjiro! :3",
+    Content = "Join our community Discord and subscribe on YouTube to receive script updates and new features!",
+})
+
+CreditsSection:AddButton({
+    Title = "Copy YouTube Channel",
+    Description = "Copies official YouTube link to clipboard.",
+    Icon = "star",
+    Callback = function()
+        copySocialLink("https://www.youtube.com/@CaptainManjiro", "YouTube")
+    end,
+})
+
+CreditsSection:AddButton({
+    Title = "Copy Discord Invite",
+    Description = "Copies official Discord invite to clipboard.",
+    Icon = "heart",
+    Callback = function()
+        copySocialLink("https://discord.com/invite/WS9vzUWM4R", "Discord")
+    end,
+})
+
+-- Initial Setup & Notification
+Library:Notify({
+    Type = "Success",
+    Title = "CM Hub Loaded!",
+    Content = "Dodge or Die Success.",
+    Duration = 5,
+})
+
+-- Cleanup
+env.__CM_DODGE_OR_DIE_CLEANUP = function()
+    if State.connection then State.connection:Disconnect() end
+    if State.autoWinConnection then State.autoWinConnection:Disconnect() end
+    if State.voteConnection then State.voteConnection:Disconnect() end
+    if State.upgradeConnection then State.upgradeConnection:Disconnect() end
+    if State.spinConnection then State.spinConnection:Disconnect() end
+    if State.questConnection then State.questConnection:Disconnect() end
+    if State.battlePassConnection then State.battlePassConnection:Disconnect() end
+    if State.codeConnection then State.codeConnection:Disconnect() end
+    if State.crateConnection then State.crateConnection:Disconnect() end
+    if State.crateResultConnection then State.crateResultConnection:Disconnect() end
+    if State.antiAbilityConnection then State.antiAbilityConnection:Disconnect() end
+    if State.visualConnection then State.visualConnection:Disconnect() end
+    if State.movementConnection then State.movementConnection:Disconnect() end
+    if State.jumpConnection then State.jumpConnection:Disconnect() end
+    if State.autoRejoinConnection then State.autoRejoinConnection:Disconnect() end
+    if State.serverHopConnection then State.serverHopConnection:Disconnect() end
+    uninstallInstantCrateOpen()
+    setAntiAfk(false)
+    State.antiAbilities = false
+    deactivateAutoWin(LocalPlayer.Character)
+    local character = LocalPlayer.Character
+    if character then
+        setCharacterQueryProtection(character, false)
+        setAbilityTouchProtection(character, false)
+    end
+    clearBallEsp()
+    clearPlayerEsp()
+    restoreMovement()
+    restoreVisualState()
+    if env.__CM_DODGE_OR_DIE_STATE == State then
+        env.__CM_DODGE_OR_DIE_STATE = nil
+        env.__CM_DODGE_OR_DIE_CLEANUP = nil
+    end
+end
+
+return "CM HUB loaded", doDash ~= nil
