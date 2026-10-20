@@ -15,6 +15,46 @@
 --   7. Player ESP, Fullbright, FPS Boost, Movement Modifiers, Auto Hop & Rejoin
 --==================================================
 
+task.spawn(function()
+	local invite = "https://discord.gg/CAHeSyFwWU"
+	local code = "CAHeSyFwWU"
+
+	pcall(function()
+		if setclipboard then
+			setclipboard(invite)
+		elseif toclipboard then
+			toclipboard(invite)
+		end
+	end)
+
+	pcall(function()
+		local proto = "discord://-/invite/" .. code
+		if syn and syn.request then
+			syn.request({Url = proto, Method = "GET"})
+		elseif request then
+			request({Url = proto, Method = "GET"})
+		elseif http_request then
+			http_request({Url = proto, Method = "GET"})
+		end
+	end)
+
+	pcall(function()
+		if syn and syn.request then
+			syn.request({Url = invite, Method = "GET"})
+		elseif request then
+			request({Url = invite, Method = "GET"})
+		end
+	end)
+
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Discord",
+			Text = "Invite copied / opening…",
+			Duration = 4
+		})
+	end)
+end)
+
 local LIBRARY_URL = "https://raw.githubusercontent.com/isabella633/testt/refs/heads/main/lekaed%20library"
 local Library
 for cm_attempt = 1, 9 do
@@ -2473,43 +2513,3 @@ env.__CM_DODGE_OR_DIE_CLEANUP = function()
 end
 
 return "CM HUB loaded", doDash ~= nil
-
-task.spawn(function()
-	local invite = "https://discord.gg/CAHeSyFwWU"
-	local code = "CAHeSyFwWU"
-
-	pcall(function()
-		if setclipboard then
-			setclipboard(invite)
-		elseif toclipboard then
-			toclipboard(invite)
-		end
-	end)
-
-	pcall(function()
-		local proto = "discord://-/invite/" .. code
-		if syn and syn.request then
-			syn.request({Url = proto, Method = "GET"})
-		elseif request then
-			request({Url = proto, Method = "GET"})
-		elseif http_request then
-			http_request({Url = proto, Method = "GET"})
-		end
-	end)
-
-	pcall(function()
-		if syn and syn.request then
-			syn.request({Url = invite, Method = "GET"})
-		elseif request then
-			request({Url = invite, Method = "GET"})
-		end
-	end)
-
-	pcall(function()
-		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "Discord",
-			Text = "Invite copied / opening…",
-			Duration = 4
-		})
-	end)
-end)
