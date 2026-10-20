@@ -1,0 +1,2836 @@
+local tweenService = game:GetService("TweenService")
+local userInputService = game:GetService("UserInputService")
+local statsService = game:GetService("Stats")
+local httpService = game:GetService("HttpService")
+local lighting = game:GetService("Lighting")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local players = game:GetService("Players")
+local virtualInputManager = game:GetService("VirtualInputManager")
+local runService = game:GetService("RunService")
+local localPlayer = players.LocalPlayer
+
+for index, value in ipairs(lighting:GetChildren()) do
+  if (value:IsA("BlurEffect") or value:IsA("DepthOfFieldEffect"))
+    and not value.Name:lower():find("aim") then
+    value.Enabled = false
+  end
+end
+
+local remotes = replicatedStorage:FindFirstChild("Remotes")
+local playerCharacter = remotes and remotes:FindFirstChild("PlayerCharacter")
+
+local weaponInventory = remotes
+weaponInventory = remotes and remotes:FindFirstChild("WeaponInventory")
+
+if weaponInventory then
+  weaponInventory:FindFirstChild("Request_SetSelectedCosmetic")
+end
+
+local v1 = {
+  Katana = {
+    "Default", "Bloodluster", "Champion", "Christmas", "DarkMatter", "DeepBlue", "Flaming",
+    "Oathbreaker",
+  },
+  Kusarigama = { "Default", "BronzeViper", "Celestial", "Magma", "Oathbreaker" },
+  Daggers = {
+    "Default", "BronzeViper", "Christmas", "CrimsonFangs", "DarkMatter", "Draconic", "Golden",
+    "Oathbreaker",
+  },
+  Naginata = {
+    "Default", "Christmas", "DarkMatter", "DeepBlue", "Oathbreaker", "SerpentSlayer",
+  },
+  Gauntlets = { "Default", "Bloodluster", "Golden", "Magma", "Oathbreaker" },
+  Warhammer = { "Default", "DarkMatter", "Iceborn", "Oathbreaker", "Viper" },
+  CurvedBlades = { "Default", "Butterfly", "Draconic", "Oathbreaker", "Scorchflower" },
+  BoStaff = { "Default", "Bloodluster", "DeepBlue", "Void" },
+}
+
+local v2 = {
+  "Katana", "Kusarigama", "Daggers", "Naginata", "Gauntlets", "Warhammer", "CurvedBlades",
+  "BoStaff",
+}
+
+pcall(function()
+  local weaponModulesShared = replicatedStorage:FindFirstChild("WeaponModulesShared")
+
+  if weaponModulesShared then
+    for index2, value2 in ipairs(weaponModulesShared:GetChildren()) do
+      if value2:IsA("ModuleScript") and value2.Name ~= "BaseWeapon" then
+        local v3, v4 = pcall(require, value2)
+
+        if v3 and v4 and v4.WeaponInfo and v4.WeaponInfo.Cosmetics then
+          local v5 = {}
+
+          for key in pairs(v4.WeaponInfo.Cosmetics) do
+            table.insert(v5, key)
+          end
+
+          table.sort(v5)
+          v1[value2.Name] = v5
+        end
+      end
+    end
+  end
+end)
+
+local v6 = {
+  AutoParry = false,
+  AutoDodge = false,
+  LegitMode = true,
+  AlwaysDefendUltimates = true,
+  ParryChance = 100,
+  DodgeChance = 100,
+  ParryNotifications = true,
+  ParryFlash = true,
+  AutoUltimate = false,
+  UltimateNearTarget = true,
+  UltimateDistance = 12,
+  UltimateFacingOnly = true,
+  UnlockAllCosmetics = true,
+  AutoApplyCosmetics = true,
+  AutoSaveConfig = true,
+  UIScale = 100,
+  ToggleKey = Enum.KeyCode.RightControl,
+}
+
+local v7 = {
+  handler = nil,
+  connections = {},
+  equippedCosmetics = {
+    Katana = "Oathbreaker",
+    Kusarigama = "Celestial",
+    Daggers = "CrimsonFangs",
+    Naginata = "SerpentSlayer",
+    Gauntlets = "Magma",
+    Warhammer = "Iceborn",
+    CurvedBlades = "Scorchflower",
+    BoStaff = "Void",
+  },
+  isScriptDestroyed = false,
+  lastUltimateTrigger = 0,
+}
+
+local function f1(p1)
+  if not p1 then
+    return true
+  end
+
+  if p1.PhysicsComponent and p1.PhysicsComponent.IsGrounded then
+    local v8, v9 = pcall(function() return p1.PhysicsComponent:IsGrounded() end)
+
+    if v8 then
+      return v9
+    end
+
+    return true
+  end
+
+  return true
+end
+
+local v10 = "default"
+
+local function f2(gsub)
+  local v11 = gsub
+  v11 = v11 or v10 or "default"
+
+  pcall(function()
+    local v12 = "XZ HUB CONFIG/DuelingGrounds" .. "/" .. v11 .. ".json"
+
+    local v13 = {
+      Game = "Dueling Grounds",
+      GameId = 9051406594,
+      PlaceId = game.PlaceId,
+      ConfigName = v11,
+      LastSaved = os.time(),
+      Settings = {
+        AutoParry = v6.AutoParry,
+        AutoDodge = v6.AutoDodge,
+        LegitMode = v6.LegitMode,
+        AlwaysDefendUltimates = v6.AlwaysDefendUltimates,
+        ParryChance = v6.ParryChance,
+        DodgeChance = v6.DodgeChance,
+        ParryFlash = v6.ParryFlash,
+        AutoUltimate = v6.AutoUltimate,
+        UltimateNearTarget = v6.UltimateNearTarget,
+        UltimateDistance = v6.UltimateDistance,
+        UltimateFacingOnly = v6.UltimateFacingOnly,
+        UnlockAllCosmetics = v6.UnlockAllCosmetics,
+        AutoApplyCosmetics = v6.AutoApplyCosmetics,
+        AutoSaveConfig = v6.AutoSaveConfig,
+        UIScale = v6.UIScale,
+        ToggleKey = v6.ToggleKey.Name,
+      },
+      Cosmetics = v7.equippedCosmetics,
+    }
+
+    if typeof(writefile) == "function" then
+      writefile(v12, httpService:JSONEncode(v13))
+    end
+  end)
+end
+
+local function f3()
+  local v14 = {}
+
+  if #v14 == 0 then
+    table.insert(v14, "default")
+  end
+
+  table.sort(v14)
+  return v14
+end
+
+local function f4(p2)
+  return false
+end
+
+f4(v10)
+
+local function f5(p3)
+  if not p3 or typeof(p3) ~= "table" then
+    return false
+  end
+
+  local superArmorDamage
+
+  if p3.triggerUltimate or p3.isUltimate or p3.IsUltimate then
+    return true
+  else
+    local sourceModule = p3.sourceModule
+
+    if sourceModule then
+      local name = typeof(sourceModule) == "Instance" and sourceModule.Name
+        or tostring(sourceModule)
+
+      if name:find("Ultimate") or name:find("Special") or name:find("Critical") then
+        return true
+      else
+        local v15, v16 = pcall(require, sourceModule)
+
+        if v15 and type(v16) == "table" then
+          if v16.IsUltimate or v16.isUltimate or v16.IsSpecial then
+            return true
+          end
+
+          if v16.impacts and type(v16.impacts) == "table" then
+            local v17 = v16.impacts[p3.sourceImpactN or 1]
+
+            if v17 and v17.impactInfo then
+              local impactInfo = v17.impactInfo
+
+              if impactInfo.superArmorDamage and impactInfo.superArmorDamage >= 100 then
+                return true
+              else
+                local impactResults = impactInfo.impactResults
+
+                if impactResults and impactResults.GetHit
+                  and impactResults.GetHit.triggerUltimate then
+                  return true
+                end
+              end
+            end
+          end
+        end
+
+        superArmorDamage = p3.superArmorDamage
+
+        if superArmorDamage and p3.superArmorDamage >= 100 then
+          return true
+        end
+
+        return false
+      end
+    else
+      superArmorDamage = p3.superArmorDamage
+
+      if superArmorDamage and p3.superArmorDamage >= 100 then
+        return true
+      end
+
+      return false
+    end
+  end
+end
+
+local f6
+
+local function f7()
+  local v18 = f6()
+
+  if not v18 then
+    return false
+  elseif v18.EquippedWeapon ~= nil then
+    return true
+  else
+    local character = localPlayer.Character
+
+    if character and character:GetAttribute("EquippedWeapon") ~= nil then
+      return true
+    end
+
+    if v18.WeaponToHandler then
+      for key2, value3 in pairs(v18.WeaponToHandler) do
+        if value3 and (value3.IsHolding or value3.IsEquipped) then
+          return true
+        end
+      end
+
+      return false
+    end
+
+    return false
+  end
+end
+
+local v19
+
+function f6()
+  if v7.handler then
+    return v7.handler
+  end
+
+  local character2 = localPlayer.Character
+  local v20
+
+  if not character2 or not v19 then
+    return nil
+  else
+    local v21
+    v21, v20 = pcall(function() return v19:GetController("CharacterController") end)
+
+    if v21 and v20 then
+      local v22, v23 = pcall(function() return v20:GetCharacterHandler(character2) end)
+
+      if v22 and v23 then
+        v7.handler = v23
+        return v7.handler
+      end
+
+      return nil
+    end
+
+    return nil
+  end
+end
+
+local function f8()
+  local v24 = f6()
+
+  if not v24 or not v24.ActionManager then
+    return false
+  else
+    local actionManager = v24.ActionManager
+
+    if not f7() then
+      return false
+    end
+
+    if v24.IsParrying or v24.IsBlocking or actionManager.BlockAction ~= nil then
+      return false
+    else
+      local character3 = localPlayer.Character
+
+      if not character3 then
+        return false
+      else
+        local humanoid = character3:FindFirstChildOfClass("Humanoid")
+
+        if not humanoid or humanoid.Health <= 0 then
+          return false
+        end
+
+        if not f1(v24) then
+          return false
+        end
+
+        if actionManager._blockCooldown and actionManager._blockCooldown > 0
+          or actionManager.IsSwappingWeapon then
+          return false
+        end
+
+        if v24.IsDodging or v24.IsStaggered then
+          return false
+        else
+          local currentAction = actionManager.CurrentAction
+
+          if currentAction then
+            local actionType = currentAction.ActionType
+
+            if actionType == "BasicAttack" or actionType == "HeavyAttack"
+              or actionType == "LightAttack" or actionType == "CriticalStrike"
+              or actionType == "Ultimate" or actionType == "UltimateAbility" then
+              return false
+            elseif currentAction.Recovering then
+              return false
+            else
+              if actionType == "Stagger" or actionType == "Jump" or actionType == "Dodge"
+                or actionType == "Intro" or actionType == "Death" then
+                return false
+              end
+
+              if not (currentAction.ParallelBlockAllowed or currentAction.CanParry) then
+                return false
+              end
+
+              return true
+            end
+          else
+            return true
+          end
+        end
+      end
+    end
+  end
+end
+
+local function f9()
+  local v25 = f6()
+
+  if not v25 or not v25.ActionManager then
+    return false
+  else
+    local actionManager2 = v25.ActionManager
+
+    if v25.IsDodging then
+      return false
+    else
+      local character4 = localPlayer.Character
+
+      if not character4 then
+        return false
+      else
+        local humanoid2 = character4:FindFirstChildOfClass("Humanoid")
+
+        if not humanoid2 or humanoid2.Health <= 0 then
+          return false
+        elseif not f1(v25) then
+          return false
+        else
+          if v25.IsStaggered then
+            return false
+          end
+
+          if actionManager2._dodgeStamina and actionManager2._dodgeStamina <= 0 then
+            return false
+          elseif actionManager2.CurrentMiniStun then
+            return false
+          else
+            local currentAction2 = actionManager2.CurrentAction
+
+            if currentAction2 then
+              local actionType2 = currentAction2.ActionType
+
+              if actionType2 == "BasicAttack" or actionType2 == "HeavyAttack"
+                or actionType2 == "LightAttack" or actionType2 == "CriticalStrike"
+                or actionType2 == "Ultimate" or actionType2 == "UltimateAbility" then
+                return false
+              elseif currentAction2.Recovering then
+                return false
+              else
+                if actionType2 == "Stagger" or actionType2 == "Jump" or actionType2 == "Dodge"
+                  or actionType2 == "Intro" or actionType2 == "Death" then
+                  return false
+                end
+
+                return true
+              end
+            else
+              return true
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+local function f10()
+  local v26 = f6()
+
+  if not v26 then
+    return false
+  elseif not f7() then
+    return false
+  elseif v26.CanPerformUltimate then
+    local v27, v28 = pcall(function() return v26:CanPerformUltimate() end)
+
+    if v27 and not v28 then
+      return false
+    end
+  else
+    local originalModel = v26.OriginalModel or localPlayer.Character
+
+    if (originalModel and originalModel:GetAttribute("UltimateEnergy") or 0) < 100 then
+      return false
+    end
+  end
+
+  local actionManager3 = v26.ActionManager
+
+  if actionManager3 and actionManager3.CurrentAction then
+    local actionType3 = actionManager3.CurrentAction.ActionType
+
+    if actionType3 == "Ultimate" or actionType3 == "UltimateAbility" then
+      return false
+    elseif v26.IsStaggered then
+      return false
+    else
+      v26._desiredQueuedAction = "Ultimate"
+      v26._desiredQueuedActionDuration = 0.33333333333333
+
+      if actionManager3 and actionManager3.TryQueueBasicAttack then
+        pcall(function() actionManager3:TryQueueBasicAttack("Ultimate") end)
+      end
+
+      pcall(function()
+        local r = Enum.KeyCode.R
+
+        pcall(function()
+          local playerKeybindsController = require(replicatedStorage.GameManager):GetController("PlayerKeybindsController")
+
+          if playerKeybindsController and playerKeybindsController.Keybinds
+            and playerKeybindsController.Keybinds.UltimateAbility then
+            local keyboardBinding = playerKeybindsController.Keybinds.UltimateAbility.KeyboardBinding
+
+            if keyboardBinding and Enum.KeyCode[keyboardBinding] then
+              r = Enum.KeyCode[keyboardBinding]
+            end
+          end
+        end)
+
+        virtualInputManager:SendKeyEvent(true, r, false, game)
+        task.delay(0.05, function() virtualInputManager:SendKeyEvent(false, r, false, game) end)
+      end)
+
+      v7.lastUltimateTrigger = tick()
+      return true
+    end
+  elseif v26.IsStaggered then
+    return false
+  else
+    v26._desiredQueuedAction = "Ultimate"
+    v26._desiredQueuedActionDuration = 0.33333333333333
+
+    if actionManager3 and actionManager3.TryQueueBasicAttack then
+      pcall(function() actionManager3:TryQueueBasicAttack("Ultimate") end)
+    end
+
+    pcall(function()
+      local r2 = Enum.KeyCode.R
+
+      pcall(function()
+        local playerKeybindsController2 = require(replicatedStorage.GameManager):GetController("PlayerKeybindsController")
+
+        if playerKeybindsController2 and playerKeybindsController2.Keybinds
+          and playerKeybindsController2.Keybinds.UltimateAbility then
+          local keyboardBinding2 = playerKeybindsController2.Keybinds.UltimateAbility.KeyboardBinding
+
+          if keyboardBinding2 and Enum.KeyCode[keyboardBinding2] then
+            r2 = Enum.KeyCode[keyboardBinding2]
+          end
+        end
+      end)
+
+      virtualInputManager:SendKeyEvent(true, r2, false, game)
+      task.delay(0.05, function() virtualInputManager:SendKeyEvent(false, r2, false, game) end)
+    end)
+
+    v7.lastUltimateTrigger = tick()
+    return true
+  end
+end
+
+local function f11()
+  local v29 = f6()
+
+  if not v29 or not v29.ActionManager then
+    return
+  end
+
+  if not f7() then
+    return
+  end
+
+  if v29.IsParrying or v29.IsBlocking then
+    return
+  end
+
+  if v6.LegitMode and not f8() then
+    return
+  end
+
+  v29.IsParrying = true
+
+  task.delay(0.14, function()
+    local v30 = f6()
+
+    if not v30 or not v30.ActionManager then
+      return
+    else
+      local blockAction = v30.ActionManager.BlockAction
+
+      if blockAction then
+        blockAction._wantsToRelease = true
+      else
+        v30.IsParrying = false
+      end
+
+      return
+    end
+  end)
+end
+
+local function f12()
+  local v31 = f6()
+
+  if not v31 or not v31.ActionManager then
+    return
+  elseif v31.IsDodging then
+    return
+  else
+    if v6.LegitMode and not f9() then
+      return
+    end
+
+    v31.IsDodging = true
+    v31._desiredDodge = 0.2667
+
+    task.delay(0.35, function()
+      local v32 = f6()
+
+      if not v32 then
+        return
+      end
+
+      if v32.IsDodging then
+        v32.IsDodging = nil
+      end
+    end)
+
+    return
+  end
+end
+
+local function makeScreenGui()
+  if playerCharacter and playerCharacter:FindFirstChild("Update")
+    and playerCharacter.Update:FindFirstChild("RegisterImpact") then
+    local connect = playerCharacter.Update.RegisterImpact.OnClientEvent:Connect(function(p4, p5)
+      if not (v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates) then
+        return
+      else
+        local v33 = f5(p5)
+        local v34 = f7()
+
+        if v33 and v6.AlwaysDefendUltimates then
+          if v34 and v6.AutoParry and (not v6.LegitMode or f8()) then
+            f11()
+
+            if v6.AutoDodge and (not v6.LegitMode or f9()) then
+              f12()
+            end
+          elseif v6.AutoDodge and (not v6.LegitMode or f9()) then
+            f12()
+          elseif not v6.LegitMode then
+            if v34 then
+              f11()
+            else
+              f12()
+            end
+          end
+        else
+          local autoParry = v34
+          local v35 = false
+
+          if v34 then
+            autoParry = v6.AutoParry and math.random(1, 100) <= v6.ParryChance
+          end
+
+          if autoParry then
+            if not v6.LegitMode or f8() then
+              f11()
+              v35 = true
+            end
+          end
+
+          if v6.AutoDodge and not v35 and math.random(1, 100) <= v6.DodgeChance then
+            if not v6.LegitMode or f9() then
+              f12()
+            end
+          end
+        end
+
+        return
+      end
+    end)
+
+    table.insert(v7.connections, connect)
+  end
+
+  local v36 = f6()
+
+  if v36 and v36.Parried then
+    local connect2 = v36.Parried:Connect(function()
+      local xzParryFlash
+
+      if v6.ParryFlash then
+        xzParryFlash = Instance.new("ScreenGui")
+        xzParryFlash.Name = "XZParryFlash"
+        xzParryFlash.IgnoreGuiInset = true
+        xzParryFlash.ResetOnSpawn = false
+
+        pcall(function()
+          xzParryFlash.Parent = typeof(gethui) == "function" and gethui() or CoreGui
+        end)
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.fromScale(1, 1)
+        frame.BackgroundColor3 = Color3.fromRGB(255, 200, 60)
+        frame.BackgroundTransparency = 0.9
+        frame.Parent = xzParryFlash
+
+        local create = tweenService:Create(frame, TweenInfo.new(
+          0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out
+        ), { BackgroundTransparency = 1 })
+
+        create:Play()
+        create.Completed:Once(function() xzParryFlash:Destroy() end)
+      end
+    end)
+
+    table.insert(v7.connections, connect2)
+  end
+end
+
+task.spawn(function()
+  local v37
+
+  while not v7.isScriptDestroyed do
+    task.wait(0.08)
+
+    if v6.AutoUltimate and tick() - v7.lastUltimateTrigger > 1.8 then
+      local v38 = f6()
+
+      if v38 and f7() then
+        if v38.CanPerformUltimate then
+          local v39, v40 = pcall(function() return v38:CanPerformUltimate() end)
+          v37 = v39 and v40
+        else
+          local originalModel2 = v38.OriginalModel or localPlayer.Character
+          v37 = (originalModel2 and originalModel2:GetAttribute("UltimateEnergy") or 0) >= 100
+        end
+
+        if v37 then
+          local character5 = localPlayer.Character
+
+          local humanoid3 = character5
+          humanoid3 = character5 and character5:FindFirstChildOfClass("Humanoid")
+
+          local humanoidRootPart = character5
+
+          humanoidRootPart = character5
+            and (character5:FindFirstChild("HumanoidRootPart") or character5.PrimaryPart)
+
+          local v41 = humanoid3 and humanoid3.Health > 0
+          local actionManager4 = v38.ActionManager
+          local currentAction3 = actionManager4 and actionManager4.CurrentAction
+
+          if v41
+            and not (currentAction3
+              and (currentAction3.ActionType == "Ultimate"
+                or currentAction3.ActionType == "UltimateAbility"))
+            and not v38.IsStaggered
+            and humanoidRootPart then
+            local v42 = true
+
+            if v6.UltimateNearTarget then
+              v42 = false
+              local position = humanoidRootPart.Position
+              local lookVector = humanoidRootPart.CFrame.LookVector
+
+              for index3, value4 in ipairs(players:GetPlayers()) do
+                if value4 ~= localPlayer and value4.Character
+                  and value4.Character:FindFirstChild("HumanoidRootPart") then
+                  local humanoidRootPart2 = value4.Character.HumanoidRootPart
+                  local humanoid4 = value4.Character:FindFirstChildOfClass("Humanoid")
+
+                  if humanoid4 and humanoid4.Health > 0 then
+                    local v43 = humanoidRootPart2.Position - position
+
+                    if v43.Magnitude <= (v6.UltimateDistance or 12) then
+                      if v6.UltimateFacingOnly then
+                        if lookVector:Dot(v43.Unit) >= 0.17 then
+                          v42 = true
+                          break
+                        end
+                      else
+                        v42 = true
+                        break
+                      end
+                    end
+                  end
+                end
+              end
+            end
+
+            if v42 then
+              f10()
+            end
+          end
+        end
+      end
+    end
+  end
+end)
+
+local f13
+
+local function f14()
+  local character6 = localPlayer.Character
+
+  if not character6 then
+    return
+  else
+    local mountedWeapons = character6:FindFirstChild("MountedWeapons")
+
+    for key3, value5 in pairs(v7.equippedCosmetics) do
+      local v44 = key3
+      local v45 = value5
+      f13(v44)
+
+      if mountedWeapons then
+        local findFirstChild = mountedWeapons:FindFirstChild(v44)
+
+        if findFirstChild then
+          findFirstChild:SetAttribute("CurrentCosmetic", v45)
+        end
+      end
+
+      pcall(function()
+        local v46 = f6()
+        local weaponToHandler = v46 and v46.WeaponToHandler and v46.WeaponToHandler[v44]
+        local v47
+
+        if weaponToHandler then
+          v47 = v46.WeaponToHandler[v44]
+
+          if v47.CurrentCosmeticInstance and typeof(v47.CurrentCosmeticInstance) == "Instance" then
+            pcall(function() v47.CurrentCosmeticInstance:Destroy() end)
+          end
+
+          if v47.CosmeticModel and typeof(v47.CosmeticModel) == "Instance" then
+            pcall(function() v47.CosmeticModel:Destroy() end)
+          end
+
+          v47:SetCosmetic(v45)
+        end
+      end)
+    end
+
+    return
+  end
+end
+
+local function f15(character7)
+  if not character7 then
+    return
+  end
+
+  task.spawn(function()
+    local waitForChild = character7:WaitForChild("MountedWeapons", 8)
+    local f16
+
+    if not waitForChild then
+      return
+    else
+      function f16(p6)
+        local v48 = v7.equippedCosmetics[p6.Name]
+
+        if v48 then
+          f13(p6.Name)
+          p6:SetAttribute("CurrentCosmetic", v48)
+
+          pcall(function()
+            local v49 = f6()
+
+            local weaponToHandler2 = v49 and v49.WeaponToHandler
+              and v49.WeaponToHandler[p6.Name]
+
+            local v50
+
+            if weaponToHandler2 then
+              v50 = v49.WeaponToHandler[p6.Name]
+
+              if v50.CurrentCosmeticInstance
+                and typeof(v50.CurrentCosmeticInstance) == "Instance" then
+                pcall(function() v50.CurrentCosmeticInstance:Destroy() end)
+              end
+
+              if v50.CosmeticModel and typeof(v50.CosmeticModel) == "Instance" then
+                pcall(function() v50.CosmeticModel:Destroy() end)
+              end
+
+              v50:SetCosmetic(v48)
+            end
+          end)
+        end
+      end
+
+      for index4, value6 in ipairs(waitForChild:GetChildren()) do
+        f16(value6)
+      end
+
+      local connect3 = waitForChild.ChildAdded:Connect(function(child)
+        task.wait(0.05)
+        f16(child)
+        task.wait(0.2)
+        f16(child)
+      end)
+
+      table.insert(v7.connections, connect3)
+      return
+    end
+  end)
+end
+
+function f13(p7)
+  local character8 = localPlayer.Character
+
+  if not character8 then
+    return
+  else
+    local function f17(p8)
+      if not p8 then
+        return
+      end
+
+      for index5, value7 in ipairs((p8:FindFirstChild(p7) or p8):GetDescendants()) do
+        local v51 = value7
+
+        if v51:IsA("ParticleEmitter") or v51:IsA("Trail") or v51:IsA("Beam")
+          or v51:IsA("PointLight") or v51:IsA("Highlight") then
+          pcall(function()
+            v51.Enabled = false
+            v51:Destroy()
+          end)
+        end
+      end
+    end
+
+    f17(character8:FindFirstChild("MountedWeapons"))
+    f17(character8:FindFirstChild("Weapons"))
+
+    local humanoid5 = character8:FindFirstChildOfClass("Humanoid")
+    local animator = humanoid5 and humanoid5:FindFirstChildOfClass("Animator")
+
+    if animator then
+      for index6, value8 in ipairs(animator:GetPlayingAnimationTracks()) do
+        local v52 = value8
+        local animation = v52.Animation
+        local lower = animation and animation.Name:lower() or ""
+
+        if lower:find("ult") or lower:find("special") or lower:find("attack")
+          or p7 and lower:find(p7:lower()) then
+          pcall(function() v52:Stop(0.05) end)
+        end
+      end
+    end
+
+    return
+  end
+end
+
+local function f18(key4, p9)
+  if not key4 or not p9 then
+    return
+  else
+    v7.equippedCosmetics[key4] = p9
+    f13(key4)
+
+    pcall(function()
+      if v19 then
+        local weaponInventoryController = v19:GetController("WeaponInventoryController")
+
+        if weaponInventoryController then
+          weaponInventoryController.WeaponToSelectedCosmetic[key4] = p9
+
+          if weaponInventoryController.WeaponCosmeticChanged then
+            weaponInventoryController.WeaponCosmeticChanged:Fire(key4, p9)
+          end
+        end
+      end
+    end)
+
+    local character9 = localPlayer.Character
+
+    if character9 then
+      local mountedWeapons2 = character9:FindFirstChild("MountedWeapons")
+
+      if mountedWeapons2 then
+        local findFirstChild2 = mountedWeapons2:FindFirstChild(key4)
+
+        if findFirstChild2 then
+          findFirstChild2:SetAttribute("CurrentCosmetic", p9)
+        end
+      end
+    end
+
+    pcall(function()
+      local v53 = f6()
+      local weaponToHandler3 = v53 and v53.WeaponToHandler and v53.WeaponToHandler[key4]
+      local v54
+
+      if weaponToHandler3 then
+        v54 = v53.WeaponToHandler[key4]
+
+        if v54.CurrentCosmeticInstance and typeof(v54.CurrentCosmeticInstance) == "Instance" then
+          pcall(function() v54.CurrentCosmeticInstance:Destroy() end)
+        end
+
+        if v54.CosmeticModel and typeof(v54.CosmeticModel) == "Instance" then
+          pcall(function() v54.CosmeticModel:Destroy() end)
+        end
+
+        v54:SetCosmetic(p9)
+      end
+    end)
+
+    return
+  end
+end
+
+local v55 = {}
+v55.__index = v55
+
+local function f19(p10)
+  if type(p10) == "string" and p10:find("rbxassetid://") then
+    return "rbxthumb://type=Asset&id=" .. p10:match("%d+") .. "&w=150&h=150"
+  end
+
+  if type(p10) == "number" or type(p10) == "string" and tonumber(p10) then
+    return "rbxthumb://type=Asset&id=" .. tostring(p10) .. "&w=150&h=150"
+  end
+
+  return p10
+end
+
+local function f20(parent, p11)
+  local uiCorner = Instance.new("UICorner")
+  uiCorner.CornerRadius = UDim.new(0, p11 or 10)
+  uiCorner.Parent = parent
+
+  return uiCorner
+end
+
+local color = Color3.fromRGB(10, 10, 12)
+local color2 = Color3.fromRGB(24, 24, 29)
+local color3 = Color3.fromRGB(18, 18, 22)
+local color4 = Color3.fromRGB(255, 45, 55)
+local color5 = Color3.fromRGB(175, 20, 28)
+local color6 = Color3.fromRGB(25, 8, 10)
+local color7 = Color3.fromRGB(250, 250, 250)
+local color8 = Color3.fromRGB(135, 135, 142)
+local color9 = Color3.fromRGB(45, 45, 54)
+
+function v55:CreateWindow(p12)
+  local v56 = p12 or {}
+  local subtitle = v56.Subtitle
+
+  local v57 = subtitle
+  v57 = subtitle or "Dueling Grounds leaked by real"
+
+  local toggleKey = v56.ToggleKey or Enum.KeyCode.RightControl
+
+  local v58 = {
+    Tabs = {},
+    CurrentTabIndex = 1,
+    IsUIOpen = true,
+    IsAnimating = false,
+    ScaleVal = v6.UIScale and v6.UIScale / 100 or 1,
+    ToggleKey = toggleKey,
+    SelectedBtn = nil,
+  }
+
+  local coreGui
+  pcall(function() coreGui = typeof(gethui) == "function" and gethui() or CoreGui end)
+
+  if not coreGui then
+    coreGui = localPlayer:WaitForChild("PlayerGui")
+  end
+
+  if coreGui:FindFirstChild("XZ_DG_Master") then
+    coreGui.XZ_DG_Master:Destroy()
+  end
+
+  local xzDGMaster = Instance.new("ScreenGui")
+  xzDGMaster.Name = "XZ_DG_Master"
+  xzDGMaster.ResetOnSpawn = false
+  xzDGMaster.Parent = coreGui
+
+  v58.ScreenGui = xzDGMaster
+
+  local mainFrame = Instance.new("Frame")
+  mainFrame.Name = "MainFrame"
+  mainFrame.Size = UDim2.new(0, 740, 0, 540)
+  mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+  mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+  mainFrame.BackgroundColor3 = color
+  mainFrame.BorderSizePixel = 0
+  mainFrame.ClipsDescendants = true
+  mainFrame.Parent = xzDGMaster
+
+  f20(mainFrame, 10)
+  v58.MainFrame = mainFrame
+
+  local uiScale = Instance.new("UIScale")
+  uiScale.Scale = v58.ScaleVal
+  uiScale.Parent = mainFrame
+
+  v58.UIScale = uiScale
+
+  local imageButton = Instance.new("ImageButton")
+  imageButton.Size = UDim2.new(0, 42, 0, 42)
+  imageButton.Position = UDim2.new(0.04, 0, 0.22, 0)
+  imageButton.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+  imageButton.BorderSizePixel = 0
+  imageButton.AutoButtonColor = false
+  imageButton.Active = true
+  imageButton.ZIndex = 50
+  imageButton.Parent = xzDGMaster
+
+  f20(imageButton, 21)
+
+  local uiStroke = Instance.new("UIStroke")
+  uiStroke.Thickness = 1.2
+  uiStroke.Color = Color3.fromRGB(65, 20, 24)
+  uiStroke.Transparency = 0.2
+  uiStroke.Parent = imageButton
+
+  local imageLabel = Instance.new("ImageLabel")
+  imageLabel.Size = UDim2.new(0, 22, 0, 22)
+  imageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+  imageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+  imageLabel.BackgroundTransparency = 1
+  imageLabel.Image = "rbxthumb://type=Asset&id=140277993260075&w=150&h=150"
+  imageLabel.ZIndex = 51
+  imageLabel.Parent = imageButton
+
+  local uiScale2 = Instance.new("UIScale")
+  uiScale2.Scale = 1
+  uiScale2.Parent = imageButton
+
+  local v59 = false
+  local v60, position2, position3
+
+  imageButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+      or input.UserInputType == Enum.UserInputType.Touch then
+      v60 = true
+      v59 = false
+      position2 = input.Position
+      position3 = imageButton.Position
+
+      tweenService:Create(uiScale2, TweenInfo.new(
+        0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out
+      ), { Scale = 0.88 }):Play()
+
+      input.Changed:Connect(function()
+        if input.UserInputState == Enum.UserInputState.End then
+          v60 = false
+
+          tweenService:Create(uiScale2, TweenInfo.new(
+            0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out
+          ), { Scale = 1 }):Play()
+        end
+      end)
+    end
+  end)
+
+  local v61
+
+  imageButton.InputChanged:Connect(function(input2)
+    if input2.UserInputType == Enum.UserInputType.MouseMovement
+      or input2.UserInputType == Enum.UserInputType.Touch then
+      v61 = input2
+    end
+  end)
+
+  userInputService.InputChanged:Connect(function(input3)
+    if input3 == v61 and v60 then
+      local v62 = input3.Position - position2
+
+      if v62.Magnitude > 6 then
+        v59 = true
+      end
+
+      imageButton.Position = UDim2.new(
+        position3.X.Scale, position3.X.Offset + v62.X, position3.Y.Scale,
+        position3.Y.Offset + v62.Y
+      )
+    end
+  end)
+
+  function v58:ToggleUI(p13)
+    local v63 = p13
+
+    if self.IsAnimating or not xzDGMaster.Parent then
+      return
+    end
+
+    if v63 == nil then
+      v63 = not self.IsUIOpen
+    end
+
+    if v63 == self.IsUIOpen then
+      return
+    end
+
+    self.IsAnimating = true
+
+    if v63 then
+      mainFrame.Visible = true
+      self.IsUIOpen = true
+      uiScale.Scale = self.ScaleVal * 0.88
+
+      local create2 = tweenService:Create(uiScale, TweenInfo.new(
+        0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out
+      ), { Scale = self.ScaleVal })
+
+      create2:Play()
+      create2.Completed:Connect(function() self.IsAnimating = false end)
+    else
+      self.IsUIOpen = false
+
+      local create3 = tweenService:Create(uiScale, TweenInfo.new(
+        0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.In
+      ), { Scale = self.ScaleVal * 0.88 })
+
+      create3:Play()
+
+      create3.Completed:Connect(function()
+        mainFrame.Visible = false
+        self.IsAnimating = false
+      end)
+    end
+  end
+
+  imageButton.MouseButton1Click:Connect(function()
+    if not v59 then
+      v58:ToggleUI()
+    end
+  end)
+
+  userInputService.InputBegan:Connect(function(input4, p14)
+    if not p14 and input4.KeyCode == v58.ToggleKey then
+      v58:ToggleUI()
+    end
+  end)
+
+  local v64, position4, position5
+
+  mainFrame.InputBegan:Connect(function(input5)
+    if input5.UserInputType == Enum.UserInputType.MouseButton1 then
+      v64 = true
+      position4 = input5.Position
+      position5 = mainFrame.Position
+
+      input5.Changed:Connect(function()
+        if input5.UserInputState == Enum.UserInputState.End then
+          v64 = false
+        end
+      end)
+    end
+  end)
+
+  local v65
+
+  mainFrame.InputChanged:Connect(function(input6)
+    if input6.UserInputType == Enum.UserInputType.MouseMovement then
+      v65 = input6
+    end
+  end)
+
+  userInputService.InputChanged:Connect(function(input7)
+    if input7 == v65 and v64 then
+      local v66 = input7.Position - position4
+
+      mainFrame.Position = UDim2.new(
+        position5.X.Scale, position5.X.Offset + v66.X, position5.Y.Scale,
+        position5.Y.Offset + v66.Y
+      )
+    end
+  end)
+
+  local frame2 = Instance.new("Frame")
+  frame2.Size = UDim2.new(0, 165, 1, 0)
+  frame2.BackgroundColor3 = color
+  frame2.BorderSizePixel = 0
+  frame2.Parent = mainFrame
+
+  f20(frame2, 10)
+
+  local frame3 = Instance.new("Frame")
+  frame3.Size = UDim2.new(1, 0, 0, 56)
+  frame3.BackgroundTransparency = 1
+  frame3.Parent = frame2
+
+  local imageLabel2 = Instance.new("ImageLabel")
+  imageLabel2.Size = UDim2.new(0, 32, 0, 32)
+  imageLabel2.Position = UDim2.new(0, 12, 0.5, -16)
+  imageLabel2.BackgroundTransparency = 1
+  imageLabel2.Image = "rbxthumb://type=Asset&id=140277993260075&w=150&h=150"
+  imageLabel2.Parent = frame3
+
+  local textLabel = Instance.new("TextLabel")
+  textLabel.Size = UDim2.new(1, -52, 1, 0)
+  textLabel.Position = UDim2.new(0, 50, 0, 0)
+  textLabel.BackgroundTransparency = 1
+  textLabel.Text = "<font color='#FF2D37'>XZ</font> <font color='#FFFFFF'>HUB</font>"
+  textLabel.RichText = true
+  textLabel.Font = Enum.Font.GothamBold
+  textLabel.TextSize = 15
+  textLabel.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel.Parent = frame3
+
+  local scrollingFrame = Instance.new("ScrollingFrame")
+  scrollingFrame.Size = UDim2.new(1, 0, 1, -98)
+  scrollingFrame.Position = UDim2.new(0, 0, 0, 56)
+  scrollingFrame.BackgroundTransparency = 1
+  scrollingFrame.BorderSizePixel = 0
+  scrollingFrame.ScrollBarThickness = 0
+  scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+  scrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+  scrollingFrame.Parent = frame2
+
+  local uiListLayout = Instance.new("UIListLayout")
+  uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+  uiListLayout.Padding = UDim.new(0, 4)
+  uiListLayout.Parent = scrollingFrame
+
+  local uiPadding = Instance.new("UIPadding")
+  uiPadding.PaddingTop = UDim.new(0, 4)
+  uiPadding.PaddingLeft = UDim.new(0, 10)
+  uiPadding.PaddingRight = UDim.new(0, 10)
+  uiPadding.Parent = scrollingFrame
+
+  v58.SideList = scrollingFrame
+
+  local frame4 = Instance.new("Frame")
+  frame4.Size = UDim2.new(1, -20, 0, 32)
+  frame4.Position = UDim2.new(0, 10, 1, -40)
+  frame4.BackgroundTransparency = 1
+  frame4.BorderSizePixel = 0
+  frame4.Parent = frame2
+
+  local imageLabel3 = Instance.new("ImageLabel")
+  imageLabel3.Size = UDim2.new(0, 24, 0, 24)
+  imageLabel3.Position = UDim2.new(0, 2, 0.5, -12)
+  imageLabel3.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+  imageLabel3.BorderSizePixel = 0
+  imageLabel3.Parent = frame4
+
+  f20(imageLabel3, 12)
+
+  task.spawn(function()
+    local image, v67 = players:GetUserThumbnailAsync(
+      localPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100
+    )
+
+    if v67 then
+      imageLabel3.Image = image
+    end
+  end)
+
+  local textLabel2 = Instance.new("TextLabel")
+  textLabel2.Size = UDim2.new(1, -36, 0, 14)
+  textLabel2.Position = UDim2.new(0, 32, 0, 2)
+  textLabel2.BackgroundTransparency = 1
+  textLabel2.Text = localPlayer.DisplayName
+  textLabel2.TextColor3 = color7
+  textLabel2.Font = Enum.Font.GothamBold
+  textLabel2.TextSize = 10.5
+  textLabel2.TextTruncate = Enum.TextTruncate.AtEnd
+  textLabel2.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel2.Parent = frame4
+
+  local textLabel3 = Instance.new("TextLabel")
+  textLabel3.Size = UDim2.new(1, -36, 0, 12)
+  textLabel3.Position = UDim2.new(0, 32, 0, 16)
+  textLabel3.BackgroundTransparency = 1
+  textLabel3.Text = "@" .. localPlayer.Name
+  textLabel3.TextColor3 = color8
+  textLabel3.Font = Enum.Font.Gotham
+  textLabel3.TextSize = 9
+  textLabel3.TextTruncate = Enum.TextTruncate.AtEnd
+  textLabel3.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel3.Parent = frame4
+
+  local frame5 = Instance.new("Frame")
+  frame5.Size = UDim2.new(1, -165, 0, 56)
+  frame5.Position = UDim2.new(0, 165, 0, 0)
+  frame5.BackgroundTransparency = 1
+  frame5.Parent = mainFrame
+
+  local textLabel4 = Instance.new("TextLabel")
+  textLabel4.Size = UDim2.new(1, -110, 1, 0)
+  textLabel4.Position = UDim2.new(0, 18, 0, 0)
+  textLabel4.BackgroundTransparency = 1
+  textLabel4.RichText = true
+
+  textLabel4.Text = "<font color='#FFFFFF'><b>" .. v57
+    .. "</b></font>  <font color='#55555F'>|</font>  <font color='#FF2D37'>Combat</font>"
+
+  textLabel4.Font = Enum.Font.Gotham
+  textLabel4.TextSize = 13
+  textLabel4.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel4.Parent = frame5
+
+  v58.TopTitle = textLabel4
+  v58.Subtitle = v57
+
+  local function makeImageButton(p15, p16)
+    local imageButton2 = Instance.new("ImageButton")
+    imageButton2.Size = UDim2.new(0, 16, 0, 16)
+    imageButton2.Position = UDim2.new(1, p15, 0.5, -8)
+    imageButton2.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+    imageButton2.Image = f19(p16)
+    imageButton2.ImageColor3 = color8
+    imageButton2.BorderSizePixel = 0
+    imageButton2.ZIndex = 11
+    imageButton2.Parent = frame5
+
+    f20(imageButton2, 4)
+
+    imageButton2.MouseEnter:Connect(function()
+      tweenService:Create(imageButton2, TweenInfo.new(0.18), {
+        BackgroundColor3 = Color3.fromRGB(34, 34, 40),
+        ImageColor3 = color7,
+      }):Play()
+    end)
+
+    imageButton2.MouseLeave:Connect(function()
+      tweenService:Create(imageButton2, TweenInfo.new(0.18), {
+        BackgroundColor3 = Color3.fromRGB(24, 24, 28),
+        ImageColor3 = color8,
+      }):Play()
+    end)
+
+    return imageButton2
+  end
+
+  makeImageButton(-41, "10734896206").MouseButton1Click:Connect(function()
+    v58:ToggleUI(false)
+  end)
+
+  local v68 = makeImageButton(-20, "10747384394")
+
+  v68.MouseEnter:Connect(function()
+    tweenService:Create(v68, TweenInfo.new(0.18), {
+      BackgroundColor3 = color5,
+      ImageColor3 = Color3.new(1, 1, 1),
+    }):Play()
+  end)
+
+  v68.MouseLeave:Connect(function()
+    tweenService:Create(v68, TweenInfo.new(0.18), {
+      BackgroundColor3 = Color3.fromRGB(24, 24, 28),
+      ImageColor3 = color8,
+    }):Play()
+  end)
+
+  v68.MouseButton1Click:Connect(function()
+    v7.isScriptDestroyed = true
+    xzDGMaster:Destroy()
+  end)
+
+  local frame6 = Instance.new("Frame")
+  frame6.Size = UDim2.new(1, -180, 1, -66)
+  frame6.Position = UDim2.new(0, 173, 0, 56)
+  frame6.BackgroundTransparency = 1
+  frame6.BorderSizePixel = 0
+  frame6.ClipsDescendants = true
+  frame6.Parent = mainFrame
+
+  local frame7 = Instance.new("Frame")
+  frame7.Size = UDim2.new(1, 0, 1, 0)
+  frame7.Position = UDim2.new(0, 0, 0, 0)
+  frame7.BackgroundTransparency = 1
+  frame7.BorderSizePixel = 0
+  frame7.Parent = frame6
+
+  v58.PagesTrack = frame7
+  return setmetatable(v58, v55)
+end
+
+function v55:CreateCategory(text)
+  local textLabel5 = Instance.new("TextLabel")
+  textLabel5.Size = UDim2.new(1, 0, 0, 22)
+  textLabel5.BackgroundTransparency = 1
+  textLabel5.Text = text
+  textLabel5.TextColor3 = color8
+  textLabel5.Font = Enum.Font.GothamBold
+  textLabel5.TextSize = 11
+  textLabel5.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel5.Parent = self.SideList
+end
+
+function v55:CreateTab(text2, p17)
+  local v69 = #self.Tabs + 1
+
+  local textButton = Instance.new("TextButton")
+  textButton.Size = UDim2.new(1, 0, 0, 34)
+  textButton.BackgroundTransparency = 1
+  textButton.Text = ""
+  textButton.AutoButtonColor = false
+  textButton.BorderSizePixel = 0
+  textButton.Parent = self.SideList
+
+  local uiScale3 = Instance.new("UIScale")
+  uiScale3.Scale = 1
+  uiScale3.Parent = textButton
+
+  local frame8 = Instance.new("Frame")
+  frame8.Size = UDim2.new(1, 0, 1, 0)
+  frame8.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  frame8.BackgroundTransparency = 1
+  frame8.ClipsDescendants = true
+  frame8.BorderSizePixel = 0
+  frame8.Parent = textButton
+
+  f20(frame8, 6)
+
+  local uiGradient = Instance.new("UIGradient")
+
+  uiGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, color5),
+    ColorSequenceKeypoint.new(0.45, Color3.fromRGB(115, 16, 20)),
+    ColorSequenceKeypoint.new(1, color6),
+  })
+
+  uiGradient.Offset = Vector2.new(-1, 0)
+  uiGradient.Parent = frame8
+
+  local frame9 = Instance.new("Frame")
+  frame9.Size = UDim2.new(0, 3.5, 0, 0)
+  frame9.Position = UDim2.new(0, 3, 0.5, 0)
+  frame9.AnchorPoint = Vector2.new(0, 0.5)
+  frame9.BackgroundColor3 = color4
+  frame9.BorderSizePixel = 0
+  frame9.ZIndex = 5
+  frame9.Parent = textButton
+
+  f20(frame9, 2)
+
+  local imageLabel4 = Instance.new("ImageLabel")
+  imageLabel4.Size = UDim2.new(0, 17, 0, 17)
+  imageLabel4.Position = UDim2.new(0, 14, 0.5, -8.5)
+  imageLabel4.BackgroundTransparency = 1
+  imageLabel4.Image = f19(p17 or "10734975692")
+  imageLabel4.ImageColor3 = color4
+  imageLabel4.BorderSizePixel = 0
+  imageLabel4.ZIndex = 4
+  imageLabel4.Parent = textButton
+
+  local textLabel6 = Instance.new("TextLabel")
+  textLabel6.Size = UDim2.new(1, -40, 1, 0)
+  textLabel6.Position = UDim2.new(0, 38, 0, 0)
+  textLabel6.BackgroundTransparency = 1
+  textLabel6.Text = text2
+  textLabel6.TextColor3 = color8
+  textLabel6.Font = Enum.Font.GothamMedium
+  textLabel6.TextSize = 12
+  textLabel6.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel6.ZIndex = 4
+  textLabel6.Parent = textButton
+
+  local v70 = {
+    Btn = textButton,
+    Scale = uiScale3,
+    BgFrame = frame8,
+    Gradient = uiGradient,
+    Icon = imageLabel4,
+    Text = textLabel6,
+    Indicator = frame9,
+  }
+
+  local scrollingFrame2 = Instance.new("ScrollingFrame")
+  scrollingFrame2.Name = text2
+  scrollingFrame2.Size = UDim2.new(1, 0, 1, 0)
+  scrollingFrame2.Position = UDim2.new(v69 - 1, 0, 0, 0)
+  scrollingFrame2.BackgroundTransparency = 1
+  scrollingFrame2.BorderSizePixel = 0
+  scrollingFrame2.ScrollBarThickness = 3
+  scrollingFrame2.ScrollBarImageColor3 = Color3.fromRGB(45, 45, 55)
+  scrollingFrame2.ScrollBarImageTransparency = 0.4
+  scrollingFrame2.CanvasSize = UDim2.new(0, 0, 0, 0)
+  scrollingFrame2.AutomaticCanvasSize = Enum.AutomaticSize.Y
+  scrollingFrame2.ClipsDescendants = true
+  scrollingFrame2.Parent = self.PagesTrack
+
+  local uiPadding2 = Instance.new("UIPadding")
+  uiPadding2.PaddingRight = UDim.new(0, 6)
+  uiPadding2.PaddingBottom = UDim.new(0, 20)
+  uiPadding2.Parent = scrollingFrame2
+
+  local frame10 = Instance.new("Frame")
+  frame10.Size = UDim2.new(0.485, 0, 0, 0)
+  frame10.AutomaticSize = Enum.AutomaticSize.Y
+  frame10.BackgroundTransparency = 1
+  frame10.Parent = scrollingFrame2
+
+  local uiListLayout2 = Instance.new("UIListLayout")
+  uiListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+  uiListLayout2.Padding = UDim.new(0, 10)
+  uiListLayout2.Parent = frame10
+
+  local frame11 = Instance.new("Frame")
+  frame11.Size = UDim2.new(0.485, 0, 0, 0)
+  frame11.Position = UDim2.new(0.515, 0, 0, 0)
+  frame11.AutomaticSize = Enum.AutomaticSize.Y
+  frame11.BackgroundTransparency = 1
+  frame11.Parent = scrollingFrame2
+
+  rightLayout = Instance.new("UIListLayout")
+  rightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+  rightLayout.Padding = UDim.new(0, 10)
+  rightLayout.Parent = frame11
+
+  local v71 = {
+    Name = text2,
+    Index = v69,
+    ColLeft = frame10,
+    ColRight = frame11,
+    NextCol = "Left",
+  }
+
+  local function f21()
+    if self.CurrentTabIndex == v69 then
+      return
+    end
+
+    local selectedBtn = self.SelectedBtn
+    self.CurrentTabIndex = v69
+    tweenService:Create(self.TopTitle, TweenInfo.new(0.1), { TextTransparency = 1 }):Play()
+
+    task.delay(0.1, function()
+      self.TopTitle.Text = "<font color='#FFFFFF'><b>" .. self.Subtitle
+        .. "</b></font>  <font color='#55555F'>|</font>  <font color='#FF2D37'>" .. text2
+        .. "</font>"
+
+      tweenService:Create(self.TopTitle, TweenInfo.new(
+        0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out
+      ), { TextTransparency = 0 }):Play()
+    end)
+
+    if selectedBtn and selectedBtn ~= v70 then
+      tweenService:Create(selectedBtn.Indicator, TweenInfo.new(0.2), {
+        Size = UDim2.new(0, 3.5, 0, 0),
+      }):Play()
+
+      tweenService:Create(selectedBtn.Text, TweenInfo.new(0.2), { TextColor3 = color8 }):Play()
+      tweenService:Create(selectedBtn.Icon, TweenInfo.new(0.2), { ImageColor3 = color4 }):Play()
+
+      local create4 = tweenService:Create(selectedBtn.Gradient, TweenInfo.new(
+        0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.In
+      ), { Offset = Vector2.new(-1, 0) })
+
+      create4:Play()
+
+      create4.Completed:Connect(function()
+        if self.SelectedBtn ~= selectedBtn then
+          selectedBtn.BgFrame.BackgroundTransparency = 1
+        end
+      end)
+    end
+
+    self.SelectedBtn = v70
+    v70.BgFrame.BackgroundTransparency = 0
+
+    tweenService:Create(v70.Gradient, TweenInfo.new(
+      0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out
+    ), { Offset = Vector2.new(0, 0) }):Play()
+
+    tweenService:Create(v70.Indicator, TweenInfo.new(
+      0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out
+    ), { Size = UDim2.new(0, 3.5, 0.65, 0) }):Play()
+
+    tweenService:Create(v70.Text, TweenInfo.new(0.2), {
+      TextColor3 = Color3.new(1, 1, 1),
+    }):Play()
+
+    tweenService:Create(v70.Icon, TweenInfo.new(0.2), {
+      ImageColor3 = Color3.new(1, 1, 1),
+    }):Play()
+
+    tweenService:Create(self.PagesTrack, TweenInfo.new(
+      0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out
+    ), { Position = UDim2.new(-(v69 - 1), 0, 0, 0) }):Play()
+  end
+
+  textButton.MouseEnter:Connect(function()
+    if self.SelectedBtn ~= v70 then
+      tweenService:Create(textLabel6, TweenInfo.new(0.15), {
+        TextColor3 = Color3.fromRGB(220, 220, 225),
+      }):Play()
+
+      tweenService:Create(imageLabel4, TweenInfo.new(0.15), {
+        ImageColor3 = Color3.fromRGB(255, 120, 125),
+      }):Play()
+    end
+  end)
+
+  textButton.MouseLeave:Connect(function()
+    if self.SelectedBtn ~= v70 then
+      tweenService:Create(textLabel6, TweenInfo.new(0.15), { TextColor3 = color8 }):Play()
+      tweenService:Create(imageLabel4, TweenInfo.new(0.15), { ImageColor3 = color4 }):Play()
+    end
+  end)
+
+  textButton.MouseButton1Down:Connect(function()
+    tweenService:Create(uiScale3, TweenInfo.new(0.08), { Scale = 0.94 }):Play()
+  end)
+
+  textButton.MouseButton1Up:Connect(function()
+    tweenService:Create(uiScale3, TweenInfo.new(0.24, Enum.EasingStyle.Back), {
+      Scale = 1,
+    }):Play()
+  end)
+
+  textButton.MouseButton1Click:Connect(function()
+    uiScale3.Scale = 0.94
+
+    tweenService:Create(uiScale3, TweenInfo.new(0.28, Enum.EasingStyle.Back), {
+      Scale = 1,
+    }):Play()
+
+    f21()
+  end)
+
+  if v69 == 1 then
+    self.SelectedBtn = v70
+
+    v70.BgFrame.BackgroundTransparency = 0
+    v70.Gradient.Offset = Vector2.new(0, 0)
+    v70.Indicator.Size = UDim2.new(0, 3.5, 0.65, 0)
+    v70.Text.TextColor3 = Color3.new(1, 1, 1)
+    v70.Icon.ImageColor3 = Color3.new(1, 1, 1)
+
+    self.TopTitle.Text = "<font color='#FFFFFF'><b>" .. self.Subtitle
+      .. "</b></font>  <font color='#55555F'>|</font>  <font color='#FF2D37'>" .. text2
+      .. "</font>"
+  end
+
+  table.insert(self.Tabs, v71)
+
+  function v71.CreateSection(p18, text3, p19, text4, p20)
+    local colRight
+
+    if p20 == "Right" then
+      colRight = v71.ColRight
+    elseif p20 == "Left" then
+      colRight = v71.ColLeft
+    else
+      colRight = v71.NextCol == "Left" and v71.ColLeft or v71.ColRight
+      v71.NextCol = v71.NextCol == "Left" and "Right" or "Left"
+    end
+
+    local v72 = { CurrentHeight = 52 }
+
+    local frame12 = Instance.new("Frame")
+    frame12.Size = UDim2.new(1, 0, 0, 46)
+    frame12.BackgroundTransparency = 1
+    frame12.ClipsDescendants = true
+    frame12.Parent = colRight
+
+    local frame13 = Instance.new("Frame")
+    frame13.Size = UDim2.new(1, 0, 0, 46)
+    frame13.BackgroundColor3 = color2
+    frame13.BorderSizePixel = 0
+    frame13.ZIndex = 4
+    frame13.Parent = frame12
+
+    f20(frame13, 8)
+
+    local imageLabel5 = Instance.new("ImageLabel")
+    imageLabel5.Size = UDim2.new(0, 20, 0, 20)
+    imageLabel5.Position = UDim2.new(0, 12, 0.5, -10)
+    imageLabel5.BackgroundTransparency = 1
+    imageLabel5.Image = f19(p19 or "10723374641")
+    imageLabel5.ImageColor3 = color4
+    imageLabel5.ZIndex = 5
+    imageLabel5.Parent = frame13
+
+    local textLabel7 = Instance.new("TextLabel")
+    textLabel7.Size = UDim2.new(0.6, 0, 0, 18)
+    textLabel7.Position = UDim2.new(0, 38, 0, 8)
+    textLabel7.BackgroundTransparency = 1
+    textLabel7.Text = text3
+    textLabel7.TextColor3 = color7
+    textLabel7.Font = Enum.Font.GothamBold
+    textLabel7.TextSize = 12
+    textLabel7.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel7.ZIndex = 5
+    textLabel7.Parent = frame13
+
+    local textLabel8 = Instance.new("TextLabel")
+    textLabel8.Size = UDim2.new(0.6, 0, 0, 14)
+    textLabel8.Position = UDim2.new(0, 38, 0, 24)
+    textLabel8.BackgroundTransparency = 1
+    textLabel8.Text = text4 or ""
+    textLabel8.TextColor3 = color8
+    textLabel8.Font = Enum.Font.Gotham
+    textLabel8.TextSize = 9
+    textLabel8.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel8.ZIndex = 5
+    textLabel8.Parent = frame13
+
+    local textButton2 = Instance.new("TextButton")
+    textButton2.Size = UDim2.new(0, 32, 0, 16)
+    textButton2.Position = UDim2.new(1, -44, 0, 15)
+    textButton2.BackgroundColor3 = color4
+    textButton2.Text = ""
+    textButton2.AutoButtonColor = false
+    textButton2.ZIndex = 5
+    textButton2.Parent = frame13
+
+    f20(textButton2, 8)
+
+    local frame14 = Instance.new("Frame")
+    frame14.Size = UDim2.new(0, 12, 0, 12)
+    frame14.Position = UDim2.new(1, -14, 0.5, -6)
+    frame14.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    frame14.ZIndex = 6
+    frame14.Parent = textButton2
+
+    f20(frame14, 6)
+
+    local frame15 = Instance.new("Frame")
+    frame15.Size = UDim2.new(1, 0, 0, 0)
+    frame15.Position = UDim2.new(0, 0, 0, 46)
+    frame15.BackgroundTransparency = 1
+    frame15.ClipsDescendants = true
+    frame15.Visible = true
+    frame15.Parent = frame12
+
+    local frame16 = Instance.new("Frame")
+    frame16.Size = UDim2.new(1, 0, 1, 0)
+    frame16.BackgroundTransparency = 1
+    frame16.Parent = frame15
+
+    local v73 = true
+
+    local function f22()
+      if v73 then
+        frame12.Size = UDim2.new(1, 0, 0, v72.CurrentHeight)
+        frame15.Size = UDim2.new(1, 0, 0, v72.CurrentHeight - 46)
+      end
+    end
+
+    textButton2.MouseButton1Click:Connect(function()
+      v73 = not v73
+
+      tweenService:Create(frame14, TweenInfo.new(0.24, Enum.EasingStyle.Back), {
+        Position = v73 and UDim2.new(1, -14, 0.5, -6) or UDim2.new(0, 2, 0.5, -6),
+      }):Play()
+
+      tweenService:Create(textButton2, TweenInfo.new(0.24), {
+        BackgroundColor3 = v73 and color4 or Color3.fromRGB(36, 36, 42),
+      }):Play()
+
+      if v73 then
+        frame15.Visible = true
+
+        tweenService:Create(frame12, TweenInfo.new(0.32, Enum.EasingStyle.Quart), {
+          Size = UDim2.new(1, 0, 0, v72.CurrentHeight),
+        }):Play()
+
+        tweenService:Create(frame15, TweenInfo.new(0.32, Enum.EasingStyle.Quart), {
+          Size = UDim2.new(1, 0, 0, v72.CurrentHeight - 46),
+        }):Play()
+      else
+        local create5 = tweenService:Create(
+          frame12, TweenInfo.new(0.26, Enum.EasingStyle.Quart),
+          { Size = UDim2.new(1, 0, 0, 46) }
+        )
+
+        tweenService:Create(frame15, TweenInfo.new(0.26, Enum.EasingStyle.Quart), {
+          Size = UDim2.new(1, 0, 0, 0),
+        }):Play()
+
+        create5:Play()
+
+        create5.Completed:Connect(function()
+          if not v73 then
+            frame15.Visible = false
+          end
+        end)
+      end
+    end)
+
+    function v72:AddToggle(text5, p21, p22)
+      local currentHeight = v72.CurrentHeight
+      v72.CurrentHeight = v72.CurrentHeight + 33
+      f22()
+
+      local frame17 = Instance.new("Frame")
+      frame17.Size = UDim2.new(1, -12, 0, 28)
+      frame17.Position = UDim2.new(0, 6, 0, currentHeight - 46)
+      frame17.BackgroundTransparency = 1
+      frame17.ClipsDescendants = true
+      frame17.Parent = frame16
+
+      f20(frame17, 6)
+
+      local frame18 = Instance.new("Frame")
+      frame18.Size = p21 and UDim2.new(1, 0, 1, 0) or UDim2.new(0, 0, 1, 0)
+      frame18.BackgroundColor3 = color3
+      frame18.BorderSizePixel = 0
+      frame18.ZIndex = 1
+      frame18.Parent = frame17
+
+      f20(frame18, 6)
+
+      local frame19 = Instance.new("Frame")
+      frame19.Size = UDim2.new(0, 2, 0, 14)
+      frame19.Position = UDim2.new(0, 7, 0.5, -7)
+      frame19.BackgroundColor3 = p21 and color4 or color9
+      frame19.BorderSizePixel = 0
+      frame19.ZIndex = 2
+      frame19.Parent = frame17
+
+      f20(frame19, 2)
+
+      local textLabel9 = Instance.new("TextLabel")
+      textLabel9.Size = UDim2.new(0.75, 0, 1, 0)
+      textLabel9.Position = UDim2.new(0, 16, 0, 0)
+      textLabel9.BackgroundTransparency = 1
+      textLabel9.Text = text5
+      textLabel9.TextColor3 = p21 and color7 or color8
+      textLabel9.Font = Enum.Font.Gotham
+      textLabel9.TextSize = 11
+      textLabel9.TextXAlignment = Enum.TextXAlignment.Left
+      textLabel9.ZIndex = 2
+      textLabel9.Parent = frame17
+
+      local textButton3 = Instance.new("TextButton")
+      textButton3.Size = UDim2.new(0, 16, 0, 16)
+      textButton3.Position = UDim2.new(1, -24, 0.5, -8)
+      textButton3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+      textButton3.BackgroundTransparency = p21 and 0 or 0.88
+      textButton3.Text = ""
+      textButton3.AutoButtonColor = false
+      textButton3.ZIndex = 3
+      textButton3.Parent = frame17
+
+      f20(textButton3, 4)
+
+      local uiGradient2 = Instance.new("UIGradient")
+      uiGradient2.Rotation = 45
+
+      uiGradient2.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 60, 75)),
+        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(215, 25, 38)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 12, 22)),
+      })
+
+      uiGradient2.Parent = textButton3
+
+      local imageLabel6 = Instance.new("ImageLabel")
+      imageLabel6.Size = p21 and UDim2.new(0, 10, 0, 10) or UDim2.new(0, 4, 0, 4)
+      imageLabel6.Position = UDim2.new(0.5, 0, 0.5, 0)
+      imageLabel6.AnchorPoint = Vector2.new(0.5, 0.5)
+      imageLabel6.BackgroundTransparency = 1
+      imageLabel6.Image = "rbxthumb://type=Asset&id=10709790644&w=150&h=150"
+      imageLabel6.ImageTransparency = p21 and 0 or 1
+      imageLabel6.ZIndex = 4
+      imageLabel6.Parent = textButton3
+
+      local v74 = p21
+
+      local function f23(p23, p24)
+        v74 = p23
+
+        if v74 then
+          tweenService:Create(frame18, TweenInfo.new(0.28, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(1, 0, 1, 0),
+          }):Play()
+
+          tweenService:Create(textButton3, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0,
+          }):Play()
+
+          tweenService:Create(imageLabel6, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 10, 0, 10),
+            ImageTransparency = 0,
+          }):Play()
+
+          tweenService:Create(frame19, TweenInfo.new(0.2), { BackgroundColor3 = color4 }):Play()
+          tweenService:Create(textLabel9, TweenInfo.new(0.2), { TextColor3 = color7 }):Play()
+        else
+          tweenService:Create(frame18, TweenInfo.new(0.24, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(0, 0, 1, 0),
+          }):Play()
+
+          tweenService:Create(textButton3, TweenInfo.new(0.18), {
+            BackgroundTransparency = 0.88,
+          }):Play()
+
+          tweenService:Create(imageLabel6, TweenInfo.new(0.15), {
+            Size = UDim2.new(0, 4, 0, 4),
+            ImageTransparency = 1,
+          }):Play()
+
+          tweenService:Create(frame19, TweenInfo.new(0.2), { BackgroundColor3 = color9 }):Play()
+          tweenService:Create(textLabel9, TweenInfo.new(0.2), { TextColor3 = color8 }):Play()
+        end
+
+        if p22 and not p24 then
+          p22(v74)
+        end
+      end
+
+      textButton3.MouseButton1Click:Connect(function()
+        textButton3.Size = UDim2.new(0, 13, 0, 13)
+        textButton3.Position = UDim2.new(1, -22.5, 0.5, -6.5)
+
+        tweenService:Create(textButton3, TweenInfo.new(0.24, Enum.EasingStyle.Back), {
+          Size = UDim2.new(0, 16, 0, 16),
+          Position = UDim2.new(1, -24, 0.5, -8),
+        }):Play()
+
+        f23(not v74, false)
+      end)
+
+      local v75 = {}
+
+      function v75:Set(p25, p26)
+        f23(p25, p26)
+      end
+
+      function v75.Get(p27)
+        return v74
+      end
+
+      return v75
+    end
+
+    function v72.AddSlider(p28, text6, index7, index8, text7, index9, p29)
+      local currentHeight2 = v72.CurrentHeight
+      v72.CurrentHeight = v72.CurrentHeight + 38
+      f22()
+
+      local frame20 = Instance.new("Frame")
+      frame20.Size = UDim2.new(1, -12, 0, 32)
+      frame20.Position = UDim2.new(0, 6, 0, currentHeight2 - 46)
+      frame20.BackgroundColor3 = color3
+      frame20.BorderSizePixel = 0
+      frame20.Parent = frame16
+
+      f20(frame20, 6)
+
+      local textLabel10 = Instance.new("TextLabel")
+      textLabel10.Size = UDim2.new(0.45, 0, 1, 0)
+      textLabel10.Position = UDim2.new(0, 10, 0, 0)
+      textLabel10.BackgroundTransparency = 1
+      textLabel10.Text = text6
+      textLabel10.TextColor3 = color7
+      textLabel10.Font = Enum.Font.Gotham
+      textLabel10.TextSize = 10.5
+      textLabel10.TextXAlignment = Enum.TextXAlignment.Left
+      textLabel10.Parent = frame20
+
+      local textLabel11 = Instance.new("TextLabel")
+      textLabel11.Size = UDim2.new(0, 40, 1, 0)
+      textLabel11.Position = UDim2.new(1, -48, 0, 0)
+      textLabel11.BackgroundTransparency = 1
+      textLabel11.Text = tostring(text7)
+      textLabel11.TextColor3 = color4
+      textLabel11.Font = Enum.Font.GothamBold
+      textLabel11.TextSize = 10
+      textLabel11.TextXAlignment = Enum.TextXAlignment.Right
+      textLabel11.Parent = frame20
+
+      local textButton4 = Instance.new("TextButton")
+      textButton4.Size = UDim2.new(0, 105, 0, 5)
+      textButton4.Position = UDim2.new(1, -158, 0.5, -2.5)
+      textButton4.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
+      textButton4.BorderSizePixel = 0
+      textButton4.Text = ""
+      textButton4.AutoButtonColor = false
+      textButton4.Parent = frame20
+
+      f20(textButton4, 3)
+      local v76 = math.clamp((text7 - index7) / (index8 - index7), 0, 1)
+
+      local frame21 = Instance.new("Frame")
+      frame21.Size = UDim2.new(v76, 0, 1, 0)
+      frame21.BackgroundColor3 = color4
+      frame21.BorderSizePixel = 0
+      frame21.Parent = textButton4
+
+      f20(frame21, 3)
+
+      local frame22 = Instance.new("Frame")
+      frame22.Size = UDim2.new(0, 11, 0, 11)
+      frame22.AnchorPoint = Vector2.new(0.5, 0.5)
+      frame22.Position = UDim2.new(v76, 0, 0.5, 0)
+      frame22.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+      frame22.BorderSizePixel = 0
+      frame22.ZIndex = 5
+      frame22.Parent = textButton4
+
+      f20(frame22, 6)
+      local v77 = false
+      local x = 0
+      local v78 = v76
+      local v79 = v76
+
+      local function f24(p30)
+        local v80 = math.clamp(p30, 0, 1)
+        v79 = v80
+        local v81 = index7 + (index8 - index7) * v80
+
+        if index9 and index9 > 0 then
+          v81 = math.round(v81 / index9) * index9
+        end
+
+        local v82 = (v81 - index7) / (index8 - index7)
+        frame21.Size = UDim2.new(v82, 0, 1, 0)
+        frame22.Position = UDim2.new(v82, 0, 0.5, 0)
+        textLabel11.Text = tostring(v81)
+
+        if p29 then
+          p29(v81)
+        end
+      end
+
+      textButton4.InputBegan:Connect(function(input8)
+        if input8.UserInputType == Enum.UserInputType.MouseButton1
+          or input8.UserInputType == Enum.UserInputType.Touch then
+          v77 = true
+          x = input8.Position.X
+          v78 = v79
+          local v83 = 105 * (self.UIScale.Scale > 0 and self.UIScale.Scale or 1)
+          local v84 = input8.Position.X - textButton4.AbsolutePosition.X
+
+          if v83 > 0 then
+            f24(v84 / v83)
+            v78 = v79
+          end
+        end
+      end)
+
+      userInputService.InputEnded:Connect(function(input9)
+        if input9.UserInputType == Enum.UserInputType.MouseButton1
+          or input9.UserInputType == Enum.UserInputType.Touch then
+          v77 = false
+        end
+      end)
+
+      userInputService.InputChanged:Connect(function(input10)
+        if v77
+          and (input10.UserInputType == Enum.UserInputType.MouseMovement
+            or input10.UserInputType == Enum.UserInputType.Touch) then
+          local v85 = input10.Position.X - x
+          local v86 = 105 * (self.UIScale.Scale > 0 and self.UIScale.Scale or 1)
+
+          if v86 > 0 then
+            f24(v78 + v85 / v86)
+          end
+        end
+      end)
+
+      local v87 = {}
+
+      function v87:Set(p31)
+        f24((math.clamp((p31 - index7) / (index8 - index7), 0, 1)))
+      end
+
+      return v87
+    end
+
+    function v72:AddDropdown(text8, p32, p33, p34)
+      local v88 = p32
+      local currentHeight3 = v72.CurrentHeight
+      v72.CurrentHeight = v72.CurrentHeight + 36
+      f22()
+
+      local frame23 = Instance.new("Frame")
+      frame23.Size = UDim2.new(1, -12, 0, 32)
+      frame23.Position = UDim2.new(0, 6, 0, currentHeight3 - 46)
+      frame23.BackgroundColor3 = color3
+      frame23.BorderSizePixel = 0
+      frame23.ZIndex = 8
+      frame23.Parent = frame16
+
+      f20(frame23, 6)
+
+      local textLabel12 = Instance.new("TextLabel")
+      textLabel12.Size = UDim2.new(0, 80, 1, 0)
+      textLabel12.Position = UDim2.new(0, 10, 0, 0)
+      textLabel12.BackgroundTransparency = 1
+      textLabel12.Text = text8
+      textLabel12.TextColor3 = color7
+      textLabel12.Font = Enum.Font.Gotham
+      textLabel12.TextSize = 11
+      textLabel12.TextXAlignment = Enum.TextXAlignment.Left
+      textLabel12.ZIndex = 8
+      textLabel12.Parent = frame23
+
+      local v89 = p33 or v88 and v88[1] or ""
+
+      local textButton5 = Instance.new("TextButton")
+      textButton5.Size = UDim2.new(0, 125, 0, 22)
+      textButton5.Position = UDim2.new(1, -131, 0.5, -11)
+      textButton5.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+      textButton5.Text = "  " .. tostring(v89)
+      textButton5.TextColor3 = color7
+      textButton5.Font = Enum.Font.Gotham
+      textButton5.TextSize = 10
+      textButton5.TextXAlignment = Enum.TextXAlignment.Left
+      textButton5.AutoButtonColor = false
+      textButton5.ZIndex = 9
+      textButton5.Parent = frame23
+
+      f20(textButton5, 5)
+
+      local imageLabel7 = Instance.new("ImageLabel")
+      imageLabel7.Size = UDim2.new(0, 12, 0, 12)
+      imageLabel7.Position = UDim2.new(1, -16, 0.5, -6)
+      imageLabel7.BackgroundTransparency = 1
+      imageLabel7.Image = "rbxthumb://type=Asset&id=10709790948&w=150&h=150"
+      imageLabel7.ImageColor3 = color8
+      imageLabel7.ZIndex = 10
+      imageLabel7.Parent = textButton5
+
+      local frame24 = Instance.new("Frame")
+      frame24.Size = UDim2.new(0, 125, 0, 0)
+      frame24.Position = UDim2.new(1, -131, 0, 30)
+      frame24.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+      frame24.ClipsDescendants = true
+      frame24.Visible = false
+      frame24.ZIndex = 20
+      frame24.Parent = frame23
+
+      f20(frame24, 6)
+
+      local scrollingFrame3 = Instance.new("ScrollingFrame")
+      scrollingFrame3.Size = UDim2.new(1, 0, 1, 0)
+      scrollingFrame3.BackgroundTransparency = 1
+      scrollingFrame3.ScrollBarThickness = 3
+      scrollingFrame3.ScrollBarImageColor3 = color4
+      scrollingFrame3.CanvasSize = UDim2.new(0, 0, 0, #v88 * 24)
+      scrollingFrame3.ZIndex = 21
+      scrollingFrame3.Parent = frame24
+
+      local uiListLayout3 = Instance.new("UIListLayout")
+      uiListLayout3.SortOrder = Enum.SortOrder.LayoutOrder
+      uiListLayout3.Padding = UDim.new(0, 2)
+      uiListLayout3.Parent = scrollingFrame3
+
+      local v90 = false
+
+      local function makeTextButton(index10)
+        scrollingFrame3:ClearAllChildren()
+
+        local uiListLayout4 = Instance.new("UIListLayout")
+        uiListLayout4.SortOrder = Enum.SortOrder.LayoutOrder
+        uiListLayout4.Padding = UDim.new(0, 2)
+        uiListLayout4.Parent = scrollingFrame3
+
+        scrollingFrame3.CanvasSize = UDim2.new(0, 0, 0, #index10 * 24)
+
+        for index11, value9 in ipairs(index10) do
+          local v91 = value9
+
+          local textButton6 = Instance.new("TextButton")
+          textButton6.Size = UDim2.new(1, -6, 0, 22)
+
+          textButton6.BackgroundColor3 = v91 == v89 and Color3.fromRGB(45, 18, 22)
+            or Color3.fromRGB(24, 24, 28)
+
+          textButton6.BackgroundTransparency = v91 == v89 and 0 or 1
+          textButton6.Text = "  " .. v91
+          textButton6.TextColor3 = v91 == v89 and color4 or color8
+          textButton6.Font = v91 == v89 and Enum.Font.GothamBold or Enum.Font.Gotham
+          textButton6.TextSize = 10
+          textButton6.TextXAlignment = Enum.TextXAlignment.Left
+          textButton6.AutoButtonColor = false
+          textButton6.ZIndex = 22
+          textButton6.Parent = scrollingFrame3
+
+          f20(textButton6, 4)
+
+          textButton6.MouseButton1Click:Connect(function()
+            v89 = v91
+            textButton5.Text = "  " .. v89
+            v90 = false
+            tweenService:Create(imageLabel7, TweenInfo.new(0.2), { Rotation = 0 }):Play()
+
+            local create6 = tweenService:Create(
+              frame24, TweenInfo.new(0.2, Enum.EasingStyle.Quart),
+              { Size = UDim2.new(0, 125, 0, 0) }
+            )
+
+            create6:Play()
+            create6.Completed:Connect(function() frame24.Visible = false end)
+
+            tweenService:Create(frame12, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
+              Size = UDim2.new(1, 0, 0, v72.CurrentHeight),
+            }):Play()
+
+            tweenService:Create(frame15, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
+              Size = UDim2.new(1, 0, 0, v72.CurrentHeight - 46),
+            }):Play()
+
+            makeTextButton(index10)
+
+            if p34 then
+              p34(v89)
+            end
+          end)
+        end
+      end
+
+      makeTextButton(v88)
+
+      textButton5.MouseButton1Click:Connect(function()
+        v90 = not v90
+
+        if v90 then
+          frame24.Visible = true
+
+          tweenService:Create(imageLabel7, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
+            Rotation = 180,
+          }):Play()
+
+          tweenService:Create(frame24, TweenInfo.new(0.28, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(0, 125, 0, 100),
+          }):Play()
+
+          tweenService:Create(frame12, TweenInfo.new(0.28, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(1, 0, 0, v72.CurrentHeight + 105),
+          }):Play()
+
+          tweenService:Create(frame15, TweenInfo.new(0.28, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(1, 0, 0, v72.CurrentHeight - 46 + 105),
+          }):Play()
+        else
+          tweenService:Create(imageLabel7, TweenInfo.new(0.2), { Rotation = 0 }):Play()
+
+          local create7 = tweenService:Create(
+            frame24, TweenInfo.new(0.2, Enum.EasingStyle.Quart),
+            { Size = UDim2.new(0, 125, 0, 0) }
+          )
+
+          create7:Play()
+          create7.Completed:Connect(function() frame24.Visible = false end)
+
+          tweenService:Create(frame12, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(1, 0, 0, v72.CurrentHeight),
+          }):Play()
+
+          tweenService:Create(frame15, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(1, 0, 0, v72.CurrentHeight - 46),
+          }):Play()
+        end
+      end)
+
+      local v92 = {}
+
+      function v92:Refresh(p35, p36)
+        v88 = p35
+
+        if p36 then
+          v89 = p36
+        end
+
+        textButton5.Text = "  " .. tostring(v89)
+        makeTextButton(p35)
+      end
+
+      return v92
+    end
+
+    function v72:AddTextBox(text9, p37, text10, p38)
+      local currentHeight4 = v72.CurrentHeight
+      v72.CurrentHeight = v72.CurrentHeight + 36
+      f22()
+
+      local frame25 = Instance.new("Frame")
+      frame25.Size = UDim2.new(1, -12, 0, 32)
+      frame25.Position = UDim2.new(0, 6, 0, currentHeight4 - 46)
+      frame25.BackgroundColor3 = color3
+      frame25.BorderSizePixel = 0
+      frame25.Parent = frame16
+
+      f20(frame25, 6)
+
+      local textLabel13 = Instance.new("TextLabel")
+      textLabel13.Size = UDim2.new(0.42, 0, 1, 0)
+      textLabel13.Position = UDim2.new(0, 10, 0, 0)
+      textLabel13.BackgroundTransparency = 1
+      textLabel13.Text = text9
+      textLabel13.TextColor3 = color7
+      textLabel13.Font = Enum.Font.Gotham
+      textLabel13.TextSize = 11
+      textLabel13.TextXAlignment = Enum.TextXAlignment.Left
+      textLabel13.Parent = frame25
+
+      local textBox = Instance.new("TextBox")
+      textBox.Size = UDim2.new(0, 125, 0, 22)
+      textBox.Position = UDim2.new(1, -131, 0.5, -11)
+      textBox.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+      textBox.PlaceholderText = p37 or "Enter text..."
+      textBox.PlaceholderColor3 = color8
+      textBox.Text = text10 or ""
+      textBox.TextColor3 = color7
+      textBox.Font = Enum.Font.Gotham
+      textBox.TextSize = 10
+      textBox.ClearTextOnFocus = false
+      textBox.ClipsDescendants = true
+      textBox.Parent = frame25
+
+      f20(textBox, 5)
+
+      local v93 = {}
+
+      function v93:Set(text11)
+        textBox.Text = tostring(text11)
+      end
+
+      function v93.Get(p39)
+        return textBox.Text
+      end
+
+      textBox.FocusLost:Connect(function(p40)
+        if p38 then
+          p38(textBox.Text, p40)
+        end
+      end)
+
+      return v93
+    end
+
+    function v72:AddButton(text12, p41)
+      local currentHeight5 = v72.CurrentHeight
+      v72.CurrentHeight = v72.CurrentHeight + 34
+      f22()
+
+      local textButton7 = Instance.new("TextButton")
+      textButton7.Size = UDim2.new(1, -12, 0, 28)
+      textButton7.Position = UDim2.new(0, 6, 0, currentHeight5 - 46)
+      textButton7.BackgroundColor3 = color3
+      textButton7.BorderSizePixel = 0
+      textButton7.Text = text12
+      textButton7.TextColor3 = color7
+      textButton7.Font = Enum.Font.GothamMedium
+      textButton7.TextSize = 11
+      textButton7.AutoButtonColor = false
+      textButton7.Parent = frame16
+
+      f20(textButton7, 6)
+
+      local uiScale4 = Instance.new("UIScale")
+      uiScale4.Scale = 1
+      uiScale4.Parent = textButton7
+
+      textButton7.MouseEnter:Connect(function()
+        tweenService:Create(textButton7, TweenInfo.new(0.15), {
+          BackgroundColor3 = Color3.fromRGB(32, 32, 38),
+          TextColor3 = color4,
+        }):Play()
+      end)
+
+      textButton7.MouseLeave:Connect(function()
+        tweenService:Create(textButton7, TweenInfo.new(0.15), {
+          BackgroundColor3 = color3,
+          TextColor3 = color7,
+        }):Play()
+      end)
+
+      textButton7.MouseButton1Down:Connect(function()
+        tweenService:Create(uiScale4, TweenInfo.new(0.08), { Scale = 0.95 }):Play()
+      end)
+
+      textButton7.MouseButton1Up:Connect(function()
+        tweenService:Create(uiScale4, TweenInfo.new(0.24, Enum.EasingStyle.Back), {
+          Scale = 1,
+        }):Play()
+      end)
+
+      textButton7.MouseButton1Click:Connect(function()
+        if p41 then
+          p41()
+        end
+      end)
+    end
+
+    function v72:AddKeybind(text13, text14, p42)
+      local currentHeight6 = v72.CurrentHeight
+      v72.CurrentHeight = v72.CurrentHeight + 36
+      f22()
+
+      local frame26 = Instance.new("Frame")
+      frame26.Size = UDim2.new(1, -12, 0, 32)
+      frame26.Position = UDim2.new(0, 6, 0, currentHeight6 - 46)
+      frame26.BackgroundColor3 = color3
+      frame26.BorderSizePixel = 0
+      frame26.Parent = frame16
+
+      f20(frame26, 6)
+
+      local textLabel14 = Instance.new("TextLabel")
+      textLabel14.Size = UDim2.new(0.5, 0, 1, 0)
+      textLabel14.Position = UDim2.new(0, 10, 0, 0)
+      textLabel14.BackgroundTransparency = 1
+      textLabel14.Text = text13
+      textLabel14.TextColor3 = color7
+      textLabel14.Font = Enum.Font.Gotham
+      textLabel14.TextSize = 11
+      textLabel14.TextXAlignment = Enum.TextXAlignment.Left
+      textLabel14.Parent = frame26
+
+      local textButton8 = Instance.new("TextButton")
+      textButton8.Size = UDim2.new(0, 105, 0, 22)
+      textButton8.Position = UDim2.new(1, -113, 0.5, -11)
+      textButton8.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+      textButton8.Text = "[" .. text14.Name .. "]"
+      textButton8.TextColor3 = color4
+      textButton8.Font = Enum.Font.GothamBold
+      textButton8.TextSize = 10
+      textButton8.AutoButtonColor = false
+      textButton8.Parent = frame26
+
+      f20(textButton8, 5)
+      local v94 = false
+
+      textButton8.MouseButton1Click:Connect(function()
+        if v94 then
+          return
+        end
+
+        v94 = true
+
+        textButton8.Text = "... Press Key ..."
+        textButton8.TextColor3 = Color3.fromRGB(255, 200, 50)
+
+        local connect4 = nil
+
+        connect4 = userInputService.InputBegan:Connect(function(input11)
+          if input11.UserInputType == Enum.UserInputType.Keyboard
+            and input11.KeyCode ~= Enum.KeyCode.Unknown then
+            textButton8.Text = "[" .. input11.KeyCode.Name .. "]"
+            textButton8.TextColor3 = color4
+
+            v94 = false
+            connect4:Disconnect()
+
+            if p42 then
+              p42(input11.KeyCode)
+            end
+          end
+        end)
+      end)
+
+      local v95 = {}
+
+      function v95:Set(text15)
+        textButton8.Text = "[" .. text15.Name .. "]"
+      end
+
+      return v95
+    end
+
+    return v72
+  end
+
+  return v71
+end
+
+local window = v55:CreateWindow({ Subtitle = "Dueling Grounds leaked by real", ToggleKey = v6.ToggleKey })
+local v96 = { Toggles = {}, Sliders = {}, Keybinds = {} }
+window:CreateCategory("Combat")
+local combatTab = window:CreateTab("Combat", "10734975692")
+
+local autoDefenseSection = combatTab:CreateSection(
+  "Auto Defense", "10734975692", "Parry & Dodge Core", "Left"
+)
+
+v96.Toggles.AutoParry = autoDefenseSection:AddToggle("Auto Parry", v6.AutoParry, function(autoParry2)
+  v6.AutoParry = autoParry2
+
+  if v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates then
+    makeScreenGui()
+  end
+end)
+
+v96.Toggles.LegitMode = autoDefenseSection:AddToggle("Legit Mode (Strict Checks)", v6.LegitMode, function(legitMode)
+  v6.LegitMode = legitMode
+end)
+
+v96.Toggles.AutoDodge = autoDefenseSection:AddToggle("Auto Dodge", v6.AutoDodge, function(autoDodge)
+  v6.AutoDodge = autoDodge
+
+  if v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates then
+    makeScreenGui()
+  end
+end)
+
+v96.Toggles.AlwaysDefendUltimates = autoDefenseSection:AddToggle("100% Defense on Ultimates", v6.AlwaysDefendUltimates, function(alwaysDefendUltimates)
+  v6.AlwaysDefendUltimates = alwaysDefendUltimates
+
+  if v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates then
+    makeScreenGui()
+  end
+end)
+
+local defenseParametersSection = combatTab:CreateSection(
+  "Defense Parameters", "10734950309", "Chance & Visuals", "Right"
+)
+
+v96.Sliders.ParryChance = defenseParametersSection:AddSlider("Parry Chance (%)", 0, 100, v6.ParryChance, 1, function(parryChance)
+  v6.ParryChance = parryChance
+end)
+
+v96.Sliders.DodgeChance = defenseParametersSection:AddSlider("Dodge Chance (%)", 0, 100, v6.DodgeChance, 1, function(dodgeChance)
+  v6.DodgeChance = dodgeChance
+end)
+
+v96.Toggles.ParryFlash = defenseParametersSection:AddToggle("Parry Flash Effect", v6.ParryFlash, function(parryFlash)
+  v6.ParryFlash = parryFlash
+end)
+
+local ultimateAbilitySection = combatTab:CreateSection(
+  "Ultimate Ability", "10734950309", "Close Range Automation", "Right"
+)
+
+v96.Toggles.AutoUltimate = ultimateAbilitySection:AddToggle("Auto Ultimate Ability", v6.AutoUltimate, function(autoUltimate)
+  v6.AutoUltimate = autoUltimate
+end)
+
+v96.Toggles.UltimateNearTarget = ultimateAbilitySection:AddToggle("Only Near Opponent", v6.UltimateNearTarget, function(ultimateNearTarget)
+  v6.UltimateNearTarget = ultimateNearTarget
+end)
+
+v96.Toggles.UltimateFacingOnly = ultimateAbilitySection:AddToggle("Must Face Opponent", v6.UltimateFacingOnly, function(ultimateFacingOnly)
+  v6.UltimateFacingOnly = ultimateFacingOnly
+end)
+
+v96.Sliders.UltimateDistance = ultimateAbilitySection:AddSlider("Strike Range (Studs)", 6, 25, v6.UltimateDistance, 1, function(ultimateDistance)
+  v6.UltimateDistance = ultimateDistance
+end)
+
+ultimateAbilitySection:AddButton("Force Trigger Ultimate", function() f10() end)
+window:CreateCategory("Customization")
+local cosmeticsTab = window:CreateTab("Cosmetics", "10709791437")
+local v97 = "Katana"
+local katana = v7.equippedCosmetics.Katana or v1.Katana and v1.Katana[1] or "Default"
+
+local section = cosmeticsTab:CreateSection(
+  "Weapon Skin Changer", "10709791437", "Equip Custom Skins", "Left"
+)
+
+local addDropdown
+
+section:AddDropdown("Weapon", v2, v97, function(key5)
+  v97 = key5
+  local v98 = v1[key5] or { "Default" }
+  katana = v7.equippedCosmetics[key5] or v98[1] or "Default"
+
+  if addDropdown and addDropdown.Refresh then
+    addDropdown:Refresh(v98, katana)
+  end
+end)
+
+addDropdown = section:AddDropdown("Skin", v1[v97] or { "Default" }, katana, function(p43)
+  katana = p43
+end)
+
+section:AddButton("Equip Skin", function() f18(v97, katana) end)
+
+local inventoryUnlockerSection = cosmeticsTab:CreateSection(
+  "Inventory Unlocker", "10723374641", "Unlock All Skins", "Right"
+)
+
+v96.Toggles.UnlockAllCosmetics = inventoryUnlockerSection:AddToggle("Auto Unlock on Menu", v6.UnlockAllCosmetics, function(unlockAllCosmetics)
+  v6.UnlockAllCosmetics = unlockAllCosmetics
+end)
+
+inventoryUnlockerSection:AddButton("Force Unlock All", function() end)
+
+inventoryUnlockerSection:AddButton("Equip All Top Tier Skins", function()
+  for key6, value10 in pairs({
+    Katana = "DarkMatter",
+    Kusarigama = "Celestial",
+    Daggers = "CrimsonFangs",
+    Naginata = "SerpentSlayer",
+    Gauntlets = "Magma",
+    Warhammer = "Iceborn",
+    CurvedBlades = "Scorchflower",
+    BoStaff = "Void",
+  }) do
+    f18(key6, value10)
+  end
+end)
+
+v96.Toggles.AutoApplyCosmetics = inventoryUnlockerSection:AddToggle("Auto Re-apply on Spawn", v6.AutoApplyCosmetics, function(autoApplyCosmetics)
+  v6.AutoApplyCosmetics = autoApplyCosmetics
+end)
+
+window:CreateCategory("Utilities")
+local settingsTab = window:CreateTab("Settings", "10734950309")
+
+local configurationSection = settingsTab:CreateSection(
+  "Configuration", "10734950309", "Save & Load Configs", "Left"
+)
+
+local v99 = v10 or "default"
+
+local addTextBox = configurationSection:AddTextBox("Config Name", "Enter name...", v99, function(p44)
+  local gsub2 = p44:gsub("[%c%p%s]", "_")
+
+  if gsub2 ~= "" then
+    v99 = gsub2
+  end
+end)
+
+local addDropdown2 = configurationSection:AddDropdown("Select Config", f3(), v10, function(p45)
+  v10 = p45
+  v99 = p45
+
+  if addTextBox and addTextBox.Set then
+    addTextBox:Set(p45)
+  end
+end)
+
+local function f25()
+  for key7, value11 in pairs(v96.Toggles) do
+    if v6[key7] ~= nil and value11.Set then
+      value11:Set(v6[key7], true)
+    end
+  end
+
+  for key8, value12 in pairs(v96.Sliders) do
+    if v6[key8] ~= nil and value12.Set then
+      value12:Set(v6[key8])
+    end
+  end
+
+  if v96.Keybinds.ToggleKey and v96.Keybinds.ToggleKey.Set then
+    v96.Keybinds.ToggleKey:Set(v6.ToggleKey)
+  end
+end
+
+configurationSection:AddButton("Save Config", function()
+  local v100 = v99
+
+  if not v100 or v100:gsub("%s+", "") == "" then
+    v100 = v10 or "default"
+  end
+
+  local gsub3 = v100:gsub("[%c%p%s]", "_")
+
+  if gsub3 == "" then
+    gsub3 = "default"
+  end
+
+  v10 = gsub3
+  f2(gsub3)
+  local v101 = f3()
+
+  if addDropdown2 and addDropdown2.Refresh then
+    addDropdown2:Refresh(v101, v10)
+  end
+
+  if addTextBox and addTextBox.Set then
+    addTextBox:Set(v10)
+  end
+end)
+
+configurationSection:AddButton("Load Config", function()
+  if f4(v10) then
+    if window.UIScale then
+      window.ScaleVal = v6.UIScale / 100
+      window.UIScale.Scale = window.ScaleVal
+    end
+
+    window.ToggleKey = v6.ToggleKey
+    f25()
+    f14()
+
+    if v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates then
+      makeScreenGui()
+    end
+  end
+end)
+
+configurationSection:AddButton("Refresh Configs", function()
+  local v102 = f3()
+
+  if addDropdown2 and addDropdown2.Refresh then
+    addDropdown2:Refresh(v102, v10)
+  end
+end)
+
+v96.Toggles.AutoSaveConfig = configurationSection:AddToggle("Auto Save Config", v6.AutoSaveConfig, function(p46)
+  v6.AutoSaveConfig = p46
+
+  if p46 then
+    f2(v10)
+  end
+end)
+
+local interfaceKeysSection = settingsTab:CreateSection(
+  "Interface & Keys", "10734950309", "Hub Configuration", "Right"
+)
+
+v96.Keybinds.ToggleKey = interfaceKeysSection:AddKeybind("Toggle UI Keybind", v6.ToggleKey, function(toggleKey2)
+  v6.ToggleKey = toggleKey2
+  window.ToggleKey = toggleKey2
+end)
+
+v96.Sliders.UIScale = interfaceKeysSection:AddSlider("UI Scale (%)", 70, 130, v6.UIScale, 1, function(p47)
+  v6.UIScale = p47
+  window.ScaleVal = p47 / 100
+
+  if window.IsUIOpen then
+    window.UIScale.Scale = window.ScaleVal
+  end
+end)
+
+settingsTab:CreateSection("Unload", "10747384394", "Terminate Script", "Right"):AddButton("Unload Script", function()
+  v7.isScriptDestroyed = true
+
+  if window.ScreenGui then
+    window.ScreenGui:Destroy()
+  end
+end)
+
+localPlayer.CharacterAdded:Connect(function(character10)
+  v7.handler = nil
+  task.wait(0.8)
+
+  if v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates then
+    makeScreenGui()
+  end
+
+  if v6.AutoApplyCosmetics then
+    f14()
+  end
+
+  f15(character10)
+end)
+
+if localPlayer.Character then
+  f15(localPlayer.Character)
+
+  if v6.AutoParry or v6.AutoDodge or v6.AlwaysDefendUltimates then
+    makeScreenGui()
+  end
+end
+
+if v6.AutoApplyCosmetics then
+  f14()
+end
+
