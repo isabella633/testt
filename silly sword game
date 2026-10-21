@@ -1,0 +1,4611 @@
+task.spawn(function()
+	local invite = "https://discord.gg/CAHeSyFwWU"
+	local code = "CAHeSyFwWU"
+
+	pcall(function()
+		if setclipboard then
+			setclipboard(invite)
+		elseif toclipboard then
+			toclipboard(invite)
+		end
+	end)
+
+	pcall(function()
+		local proto = "discord://-/invite/" .. code
+		if syn and syn.request then
+			syn.request({Url = proto, Method = "GET"})
+		elseif request then
+			request({Url = proto, Method = "GET"})
+		elseif http_request then
+			http_request({Url = proto, Method = "GET"})
+		end
+	end)
+
+	pcall(function()
+		if syn and syn.request then
+			syn.request({Url = invite, Method = "GET"})
+		elseif request then
+			request({Url = invite, Method = "GET"})
+		end
+	end)
+
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Discord",
+			Text = "Invite copied / opening…",
+			Duration = 4
+		})
+	end)
+end)
+
+
+local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local contentProvider = game:GetService("ContentProvider")
+local tweenService = game:GetService("TweenService")
+local starterGui = game:GetService("StarterGui")
+print("Silly Cheat Menu Loaded")
+local localPlayer = players.LocalPlayer
+local v1 = { ["8418635041"] = true, ["28923898"] = true }
+local v2 = {}
+
+local function f1(soundId)
+  if type(soundId) ~= "string" then
+    return nil
+  end
+
+  return string.match(soundId, "%d+")
+end
+
+local f2
+
+local function f3(key)
+  local connect
+
+  if not key:IsA("Sound") then
+    return
+  elseif v2[key] then
+    return
+  else
+    v2[key] = true
+    f2(key)
+
+    connect = nil
+    connect = key:GetPropertyChangedSignal("SoundId"):Connect(function() f2(key) end)
+
+    key.Destroying:Connect(function()
+      v2[key] = nil
+
+      if connect then
+        connect:Disconnect()
+        connect = nil
+      end
+    end)
+
+    return
+  end
+end
+
+function f2(p1)
+  if not p1 or not p1:IsA("Sound") then
+    return
+  else
+    local v3 = f1(p1.SoundId)
+
+    if not v3 or not v1[v3] then
+      return
+    end
+
+    pcall(function() p1:Stop() end)
+
+    pcall(function()
+      p1.Playing = false
+      p1.Volume = 0
+      p1.SoundId = ""
+    end)
+
+    return
+  end
+end
+
+for index, value in ipairs(game:GetDescendants()) do
+  if value:IsA("Sound") then
+    f3(value)
+  end
+end
+
+game.DescendantAdded:Connect(function(descendant)
+  if descendant:IsA("Sound") then
+    f3(descendant)
+  end
+end)
+
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local hitSomeone = replicatedStorage:WaitForChild("Events"):WaitForChild("HitSomeone")
+local merriweather = Enum.Font.Merriweather
+
+task.spawn(function()
+  pcall(function()
+    contentProvider:PreloadAsync({
+      "rbxassetid://1251565403", "rbxthumb://type=Asset&id=1251565403&w=150&h=150",
+      "rbxthumb://type=Asset&id=119731774091515&w=150&h=150",
+    })
+  end)
+end)
+
+local k = Enum.KeyCode.K
+local v4 = false
+local v5 = true
+
+local v6 = {
+  ["trial mod"] = true,
+  ["jr mod"] = true,
+  mod = true,
+  ["sr mod guys"] = true,
+  ["head mod guys"] = true,
+  ["unbound staff"] = true,
+  ["silly council"] = true,
+  ["staff manager people"] = true,
+  ["silly corp executive"] = true,
+  ["silly corp structural science dept"] = true,
+  ["silly corp representative"] = true,
+  ["silly ceo"] = true,
+}
+
+local v7 = {}
+
+local v8 = {
+  {
+    title = "9/23/2026",
+    description = "Hitbox Expander added to Combat with an on/off toggle and adjustable hitbox size.",
+  },
+  {
+    title = "9/16/2026",
+    description = "No Cooldowns added to Available Hubs and its button handler fixed.",
+  },
+  {
+    title = "9/16/2026",
+    description = "Home update history moved into the scrollable Latest Updates box; the separate Changelog was removed.",
+  },
+  {
+    title = "9/16/2026",
+    description = "Latest Updates resized to match Quick Status and dated update history added.",
+  },
+  {
+    title = "9/15/2026",
+    description = "Assistant added with menu commands, feature explanations, server information and synchronized feature toggles.",
+  },
+  {
+    title = "9/15/2026",
+    description = "Assistant expanded to control Reach distance, Swing Aura range/cooldown, Flight settings and Hubs.",
+  },
+  {
+    title = "9/15/2026",
+    description = "Player tools added: Jump Power, Teleport to Player, invisible Anti Void and toggleable Anti-Ragdoll.",
+  },
+  {
+    title = "9/15/2026",
+    description = "ESP cleaned up: player-name ESP removed and Health values now change green, yellow or red.",
+  },
+  {
+    title = "9/15/2026",
+    description = "Destroy GUI added to Settings and Settings layout spacing was corrected.",
+  },
+  {
+    title = "9/15/2026",
+    description = "Menu version changed to v1.0.0, RGB outline replaced with black and Assistant page scrolling cleaned up.",
+  },
+  {
+    title = "9/14/2026",
+    description = "Admin Popup: admin notifications moved to the top-right corner.",
+  },
+  {
+    title = "9/14/2026",
+    description = "Combat Rework: Swing Aura and Reach separated into independent cards.",
+  },
+  {
+    title = "9/14/2026",
+    description = "Reach Slider added with an adjustable 1-40 stud distance.",
+  },
+  {
+    title = "9/14/2026",
+    description = "Aura Safety improved with stricter final-distance validation.",
+  },
+}
+
+local v9 = false
+local v10 = 20
+local v11 = 0.28
+local v12 = 0
+local v13 = false
+local v14 = 12.5
+local v15 = 0
+HITBOX_EXPANDER_ENABLED = false
+HITBOX_EXPANDER_SIZE = 6
+HITBOX_EXPANDER_MIN = 2
+HITBOX_EXPANDER_MAX = 20
+HITBOX_EXPANDER_FOLDER = nil
+HITBOX_EXPANDER_CONNECTION = nil
+HITBOX_EXPANDER_LAST_HIT = {}
+local v16 = {}
+flingEnabled = false
+flingThread = nil
+local v17 = false
+local v18 = 60
+clickTeleportEnabled = false
+clickTeleportConnection = nil
+clickTeleportHealthConnection = nil
+clickTeleportMobilityConnection = nil
+clickTeleportMotorSnapshot = {}
+clickTeleportConstraintSnapshot = {}
+clickTeleportProtectionActive = false
+antiVoidEnabled = false
+antiVoidFolder = nil
+antiVoidConnection = nil
+antiVoidPlatform = nil
+antiVoidSurface = nil
+antiVoidEnergy = nil
+antiVoidLight = nil
+antiVoidCracks = {}
+antiVoidBorders = {}
+antiVoidTime = 0
+antiRagdollEnabled = false
+antiRagdollConnection = nil
+antiRagdollCharacterConnection = nil
+antiRagdollValueConnection = nil
+antiRagdollCurrentCharacter = nil
+antiRagdollOriginalAnchored = {}
+local v19 = false
+local v20 = true
+local v21 = true
+local color = Color3.fromRGB(255, 60, 70)
+local v22 = {}
+local color2 = Color3.fromRGB(8, 8, 8)
+local v23 = 0
+
+local v24 = {
+  Background = Color3.fromRGB(8, 8, 8),
+  Sidebar = Color3.fromRGB(5, 5, 5),
+  Topbar = Color3.fromRGB(5, 5, 5),
+  Panel = Color3.fromRGB(22, 22, 22),
+  Panel2 = Color3.fromRGB(31, 31, 31),
+  PanelHover = Color3.fromRGB(39, 39, 39),
+  Input = Color3.fromRGB(28, 28, 28),
+  Accent = Color3.fromRGB(44, 125, 255),
+  AccentSoft = Color3.fromRGB(18, 48, 91),
+  Green = Color3.fromRGB(54, 205, 110),
+  Yellow = Color3.fromRGB(238, 190, 65),
+  Red = Color3.fromRGB(235, 65, 72),
+  Text = Color3.fromRGB(238, 242, 248),
+  Subtext = Color3.fromRGB(142, 154, 170),
+  Muted = Color3.fromRGB(88, 101, 120),
+  Border = Color3.fromRGB(0, 0, 0),
+}
+
+local function f4(parent, p2)
+  local uiCorner = Instance.new("UICorner")
+  uiCorner.CornerRadius = UDim.new(0, p2 or 10)
+  uiCorner.Parent = parent
+
+  return uiCorner
+end
+
+local function f5(color3, p3)
+  return color3:Lerp(Color3.new(0, 0, 0), p3)
+end
+
+local v25 = {
+  main = {},
+  topbar = {},
+  sidebar = {},
+  panel = {},
+  panel2 = {},
+  input = {},
+}
+
+local function f6(p4, key2)
+  if v25[key2] then
+    table.insert(v25[key2], p4)
+  end
+end
+
+local function f7(p5, p6)
+  return p5:Lerp(Color3.new(1, 1, 1), p6)
+end
+
+local function f8(parent2, p7, p8, p9)
+  local uiStroke = Instance.new("UIStroke")
+  uiStroke.Color = p7 or v24.Border
+  uiStroke.Thickness = p8 or 1
+  uiStroke.Transparency = p9 or 0
+  uiStroke.Parent = parent2
+
+  return uiStroke
+end
+
+local function makeTextLabel(parent3, text, udim, udim2, index2, p10)
+  local textLabel = Instance.new("TextLabel")
+  textLabel.Size = udim
+  textLabel.Position = udim2
+  textLabel.BackgroundTransparency = 1
+  textLabel.BorderSizePixel = 0
+  textLabel.Text = text or ""
+  textLabel.TextColor3 = p10 or v24.Text
+  textLabel.Font = merriweather
+  textLabel.TextSize = (index2 or 14) + 2
+  textLabel.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel.TextYAlignment = Enum.TextYAlignment.Center
+  textLabel.Parent = parent3
+
+  return textLabel
+end
+
+local function f9(p11)
+  if not p11 then
+    return false
+  end
+
+  return p11:GetAttribute("blocking") == true
+end
+
+local function f10()
+  local backgroundColor3 = color2
+  local backgroundColor32 = f5(color2, 0.12)
+  local backgroundColor33 = f5(color2, 0.08)
+  local backgroundColor34 = f7(color2, 0.045)
+  local backgroundColor35 = f7(color2, 0.075)
+  local backgroundColor36 = f7(color2, 0.1)
+
+  for index3, value2 in ipairs(v25.main) do
+    if value2 and value2.Parent then
+      value2.BackgroundColor3 = backgroundColor3
+      value2.BackgroundTransparency = v23
+    end
+  end
+
+  for index4, value3 in ipairs(v25.topbar) do
+    if value3 and value3.Parent then
+      value3.BackgroundColor3 = backgroundColor32
+      value3.BackgroundTransparency = v23
+    end
+  end
+
+  for index5, value4 in ipairs(v25.sidebar) do
+    if value4 and value4.Parent then
+      value4.BackgroundColor3 = backgroundColor33
+      value4.BackgroundTransparency = v23
+    end
+  end
+
+  for index6, value5 in ipairs(v25.panel) do
+    if value5 and value5.Parent then
+      value5.BackgroundColor3 = backgroundColor34
+      value5.BackgroundTransparency = math.clamp(v23 + 0.02, 0, 0.95)
+    end
+  end
+
+  for index7, value6 in ipairs(v25.panel2) do
+    if value6 and value6.Parent then
+      value6.BackgroundColor3 = backgroundColor35
+      value6.BackgroundTransparency = math.clamp(v23 + 0.02, 0, 0.95)
+    end
+  end
+
+  for index8, value7 in ipairs(v25.input) do
+    if value7 and value7.Parent then
+      value7.BackgroundColor3 = backgroundColor36
+      value7.BackgroundTransparency = math.clamp(v23 + 0.02, 0, 0.95)
+    end
+  end
+end
+
+local function f11()
+  if not humanoid or not humanoidRootPart then
+    return false
+  elseif humanoid.Health <= 0 then
+    return false
+  elseif humanoid.MoveDirection.Magnitude > 0.05 then
+    return true
+  else
+    local assemblyLinearVelocity = humanoidRootPart.AssemblyLinearVelocity
+    return Vector3.new(assemblyLinearVelocity.X, 0, assemblyLinearVelocity.Z).Magnitude > 1
+  end
+end
+
+local function makeTextButton(parent4, text2, udim3, udim4, p12)
+  local panel2 = p12 or v24.Panel2
+
+  local textButton = Instance.new("TextButton")
+  textButton.Size = udim3
+  textButton.Position = udim4
+  textButton.BackgroundColor3 = panel2
+  textButton.BorderSizePixel = 0
+  textButton.Text = text2
+  textButton.TextColor3 = v24.Text
+  textButton.Font = merriweather
+  textButton.TextSize = 15
+  textButton.AutoButtonColor = false
+  textButton.Parent = parent4
+
+  f4(textButton, 10)
+  f8(textButton)
+
+  textButton.MouseEnter:Connect(function() textButton.BackgroundColor3 = f7(panel2, 0.08) end)
+  textButton.MouseLeave:Connect(function() textButton.BackgroundColor3 = panel2 end)
+
+  return textButton
+end
+
+sliderValueSetters = {}
+
+function setMenuSlider(key3, p13)
+  local v26 = key3 and sliderValueSetters[key3]
+
+  if v26 then
+    v26(p13)
+    return true
+  end
+
+  return false
+end
+
+local function makeFrame(p14, p15, udim5, hitboxEXPANDERMIN, hitboxEXPANDERMAX, p16, fn)
+  local frame = Instance.new("Frame")
+  frame.Size = UDim2.new(1, -32, 0, 78)
+  frame.Position = udim5
+  frame.BackgroundColor3 = v24.Panel2
+  frame.BorderSizePixel = 0
+  frame.Parent = p14
+
+  f6(frame, "panel2")
+  f4(frame, 10)
+  makeTextLabel(frame, p15, UDim2.new(1, -100, 0, 28), UDim2.new(0, 14, 0, 6), 14, v24.Text)
+
+  local v27 = makeTextLabel(
+    frame, string.format("%.1f", p16), UDim2.new(0, 75, 0, 28), UDim2.new(1, -89, 0, 6), 14,
+    v24.Accent
+  )
+
+  v27.TextXAlignment = Enum.TextXAlignment.Right
+
+  local frame2 = Instance.new("Frame")
+  frame2.Size = UDim2.new(1, -28, 0, 8)
+  frame2.Position = UDim2.new(0, 14, 0, 52)
+  frame2.BackgroundColor3 = Color3.fromRGB(39, 49, 63)
+  frame2.BorderSizePixel = 0
+  frame2.Active = true
+  frame2.Parent = frame
+
+  f4(frame2, 10)
+
+  local frame3 = Instance.new("Frame")
+  frame3.Size = UDim2.new(0, 0, 1, 0)
+  frame3.BackgroundColor3 = v24.Accent
+  frame3.BorderSizePixel = 0
+  frame3.Parent = frame2
+
+  f4(frame3, 10)
+
+  local frame4 = Instance.new("Frame")
+  frame4.Size = UDim2.new(0, 18, 0, 18)
+  frame4.AnchorPoint = Vector2.new(0.5, 0.5)
+  frame4.BackgroundColor3 = Color3.new(1, 1, 1)
+  frame4.BorderSizePixel = 0
+  frame4.Parent = frame2
+
+  f4(frame4, 20)
+  local v28 = false
+  local v29 = math.clamp(p16, hitboxEXPANDERMIN, hitboxEXPANDERMAX)
+
+  local function f12(p17)
+    v29 = math.clamp(p17, hitboxEXPANDERMIN, hitboxEXPANDERMAX)
+    local v30 = (v29 - hitboxEXPANDERMIN) / (hitboxEXPANDERMAX - hitboxEXPANDERMIN)
+    frame3.Size = UDim2.new(v30, 0, 1, 0)
+    frame4.Position = UDim2.new(v30, 0, 0.5, 0)
+    v27.Text = string.format("%.1f", v29)
+    fn(v29)
+  end
+
+  local function f13()
+    local x = userInputService:GetMouseLocation().X
+    local x2 = frame2.AbsolutePosition.X
+    local x3 = frame2.AbsoluteSize.X
+
+    if x3 <= 0 then
+      return
+    else
+      local v31 = math.clamp((x - x2) / x3, 0, 1)
+      f12(math.round((hitboxEXPANDERMIN + (hitboxEXPANDERMAX - hitboxEXPANDERMIN) * v31) * 2) / 2)
+      return
+    end
+  end
+
+  frame2.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+      playMenuClickSound()
+      v28 = true
+      f13()
+    end
+  end)
+
+  userInputService.InputChanged:Connect(function(input2)
+    if v28 and input2.UserInputType == Enum.UserInputType.MouseMovement then
+      f13()
+    end
+  end)
+
+  userInputService.InputEnded:Connect(function(input3)
+    if input3.UserInputType == Enum.UserInputType.MouseButton1 then
+      v28 = false
+    end
+  end)
+
+  sliderValueSetters[frame] = f12
+  frame.Destroying:Connect(function() sliderValueSetters[frame] = nil end)
+  f12(v29)
+  return frame
+end
+
+local findFirstChild = replicatedStorage.FindFirstChild
+
+local function f14()
+  if f11() then
+    return 11.5
+  end
+
+  return 12.5
+end
+
+if not findFirstChild(replicatedStorage, "juisdfj0i32i0eidsuf0iok") then
+  flingDetection = Instance.new("Decal")
+  flingDetection.Name = "juisdfj0i32i0eidsuf0iok"
+  flingDetection.Parent = replicatedStorage
+end
+
+function runFlingLoop()
+  local v32 = 0.1
+
+  while flingEnabled do
+    runService.Heartbeat:Wait()
+    local character2 = localPlayer.Character
+    local humanoidRootPart2 = character2 and character2:FindFirstChild("HumanoidRootPart")
+
+    if humanoidRootPart2 then
+      local velocity = humanoidRootPart2.Velocity
+      humanoidRootPart2.Velocity = velocity * 10000 + Vector3.new(0, 10000, 0)
+      runService.RenderStepped:Wait()
+
+      if not flingEnabled then
+        if humanoidRootPart2 and humanoidRootPart2.Parent then
+          humanoidRootPart2.Velocity = velocity
+        end
+
+        break
+      end
+
+      if humanoidRootPart2 and humanoidRootPart2.Parent then
+        humanoidRootPart2.Velocity = velocity
+      end
+
+      runService.Stepped:Wait()
+
+      if not flingEnabled then
+        break
+      end
+
+      if humanoidRootPart2 and humanoidRootPart2.Parent then
+        humanoidRootPart2.Velocity = velocity + Vector3.new(0, v32, 0)
+      end
+
+      v32 = -v32
+    end
+  end
+
+  flingThread = nil
+end
+
+function startFling()
+  if flingThread and coroutine.status(flingThread) ~= "dead" then
+    return
+  end
+
+  flingThread = coroutine.create(runFlingLoop)
+  coroutine.resume(flingThread)
+end
+
+function stopFling()
+  flingEnabled = false
+end
+
+function removeExpandedHitbox(key4)
+  if not HITBOX_EXPANDER_FOLDER then
+    return
+  else
+    local findFirstChild2 = HITBOX_EXPANDER_FOLDER:FindFirstChild(tostring(key4.UserId))
+
+    if findFirstChild2 then
+      findFirstChild2:Destroy()
+    end
+
+    HITBOX_EXPANDER_LAST_HIT[key4] = nil
+    return
+  end
+end
+
+function createExpandedHitbox(p18)
+  if not HITBOX_EXPANDER_ENABLED or p18 == localPlayer or not p18.Character then
+    return
+  else
+    if not HITBOX_EXPANDER_FOLDER then
+      HITBOX_EXPANDER_FOLDER = Instance.new("Folder")
+      HITBOX_EXPANDER_FOLDER.Name = "SillyHitboxExpander"
+      HITBOX_EXPANDER_FOLDER.Parent = workspace
+    end
+
+    removeExpandedHitbox(p18)
+    local humanoidRootPart3 = p18.Character:FindFirstChild("HumanoidRootPart")
+    local character3 = p18.Character
+    local v33 = not humanoidRootPart3
+    local humanoid2 = character3:FindFirstChildOfClass("Humanoid")
+
+    if v33 or not humanoid2 or humanoid2.Health <= 0 then
+      return
+    else
+      local part = Instance.new("Part")
+      part.Name = tostring(p18.UserId)
+      part.Size = Vector3.new(HITBOX_EXPANDER_SIZE, HITBOX_EXPANDER_SIZE, HITBOX_EXPANDER_SIZE)
+      part.CFrame = humanoidRootPart3.CFrame
+      part.Anchored = true
+      part.CanCollide = false
+      part.CanTouch = false
+      part.CanQuery = true
+      part.Massless = true
+      part.CastShadow = false
+      part.Material = Enum.Material.ForceField
+      part.Color = v24.Accent
+      part.Transparency = 0.72
+      part.Parent = HITBOX_EXPANDER_FOLDER
+
+      return
+    end
+  end
+end
+
+function refreshExpandedHitboxes()
+  if not HITBOX_EXPANDER_ENABLED then
+    return
+  end
+
+  for index9, value8 in ipairs(players:GetPlayers()) do
+    if value8 ~= localPlayer then
+      local hitboxEXPANDERFOLDER = HITBOX_EXPANDER_FOLDER
+
+      local findFirstChild3 = hitboxEXPANDERFOLDER
+
+      findFirstChild3 = hitboxEXPANDERFOLDER
+        and HITBOX_EXPANDER_FOLDER:FindFirstChild(tostring(value8.UserId))
+
+      if not findFirstChild3 then
+        createExpandedHitbox(value8)
+      else
+        findFirstChild3.Size = Vector3.new(
+          HITBOX_EXPANDER_SIZE, HITBOX_EXPANDER_SIZE, HITBOX_EXPANDER_SIZE
+        )
+      end
+    end
+  end
+end
+
+function performHitboxExpanderSwing(p19)
+  if MENU_FEATURES_SHUT_DOWN or not HITBOX_EXPANDER_ENABLED or not p19
+    or not p19:IsDescendantOf(character) then
+    return
+  else
+    local handle = p19:FindFirstChild("Handle")
+
+    if not handle or not handle:IsA("BasePart") then
+      handle = p19:FindFirstChildWhichIsA("BasePart", true)
+    end
+
+    if not handle then
+      return
+    else
+      local overlapParams = OverlapParams.new()
+      overlapParams.FilterType = Enum.RaycastFilterType.Include
+
+      overlapParams.FilterDescendantsInstances = HITBOX_EXPANDER_FOLDER
+          and { HITBOX_EXPANDER_FOLDER }
+        or {}
+
+      for index10, value9 in ipairs((workspace:GetPartsInPart(handle, overlapParams))) do
+        local v34 = tonumber(value9.Name)
+        local getPlayerByUserId = v34 and players:GetPlayerByUserId(v34)
+        local character4 = getPlayerByUserId and getPlayerByUserId.Character
+
+        local humanoid3 = character4
+        humanoid3 = character4 and character4:FindFirstChildOfClass("Humanoid")
+
+        local v35 = not character4
+        local v36 = humanoid3
+
+        if not (v35 or not v36 or v36.Health <= 0 or character4:GetAttribute("blocking") == true) then
+          local v37 = os.clock()
+
+          if not (v37 - (HITBOX_EXPANDER_LAST_HIT[getPlayerByUserId] or 0) < 0.08) then
+            HITBOX_EXPANDER_LAST_HIT[getPlayerByUserId] = v37
+            hitSomeone:FireServer(character4)
+          end
+        end
+      end
+
+      return
+    end
+  end
+end
+
+function stopHitboxExpander()
+  HITBOX_EXPANDER_ENABLED = false
+
+  if HITBOX_EXPANDER_CONNECTION then
+    HITBOX_EXPANDER_CONNECTION:Disconnect()
+    HITBOX_EXPANDER_CONNECTION = nil
+  end
+
+  HITBOX_EXPANDER_LAST_HIT = {}
+
+  if HITBOX_EXPANDER_FOLDER then
+    HITBOX_EXPANDER_FOLDER:Destroy()
+    HITBOX_EXPANDER_FOLDER = nil
+  end
+end
+
+function startHitboxExpander()
+  if HITBOX_EXPANDER_CONNECTION then
+    return
+  end
+
+  HITBOX_EXPANDER_ENABLED = true
+  refreshExpandedHitboxes()
+  local v38 = 0
+
+  HITBOX_EXPANDER_CONNECTION = runService.Heartbeat:Connect(function(delta)
+    if not HITBOX_EXPANDER_ENABLED or MENU_FEATURES_SHUT_DOWN then
+      return
+    end
+
+    v38 = v38 + delta
+
+    if v38 < 0.033333333333333 then
+      return
+    end
+
+    v38 = 0
+
+    for index11, value10 in ipairs(players:GetPlayers()) do
+      if value10 ~= localPlayer and value10.Character then
+        local humanoidRootPart4 = value10.Character:FindFirstChild("HumanoidRootPart")
+
+        local findFirstChild4 = HITBOX_EXPANDER_FOLDER
+          and HITBOX_EXPANDER_FOLDER:FindFirstChild(tostring(value10.UserId))
+
+        if humanoidRootPart4 then
+          if not findFirstChild4 then
+            createExpandedHitbox(value10)
+          else
+            findFirstChild4.CFrame = humanoidRootPart4.CFrame
+
+            findFirstChild4.Size = Vector3.new(
+              HITBOX_EXPANDER_SIZE, HITBOX_EXPANDER_SIZE, HITBOX_EXPANDER_SIZE
+            )
+          end
+        elseif findFirstChild4 then
+          removeExpandedHitbox(value10)
+        end
+      end
+    end
+  end)
+end
+
+players.PlayerRemoving:Connect(function(player) removeExpandedHitbox(player) end)
+
+function isTeleportOutsideSpawn(p20)
+  for index12, value11 in ipairs(workspace:GetDescendants()) do
+    if value11:IsA("SpawnLocation") then
+      local v39 = value11.Size * 0.5
+      local v40 = math.max(v39.X, v39.Z)
+
+      if Vector3.new(p20.X - value11.Position.X, 0, p20.Z - value11.Position.Z).Magnitude
+        <= v40 + 35 then
+        return false
+      end
+    end
+  end
+
+  return true
+end
+
+function snapshotTeleportRig()
+  clickTeleportMotorSnapshot = {}
+  clickTeleportConstraintSnapshot = {}
+
+  if not character then
+    return
+  end
+
+  for index13, value12 in ipairs(character:GetDescendants()) do
+    if value12:IsA("Motor6D") then
+      table.insert(clickTeleportMotorSnapshot, {
+        Name = value12.Name,
+        Parent = value12.Parent,
+        Part0 = value12.Part0,
+        Part1 = value12.Part1,
+        C0 = value12.C0,
+        C1 = value12.C1,
+      })
+    elseif value12:IsA("BallSocketConstraint") or value12:IsA("HingeConstraint")
+      or value12:IsA("SpringConstraint") or value12:IsA("RodConstraint")
+      or value12:IsA("RopeConstraint") then
+      clickTeleportConstraintSnapshot[value12] = value12.Enabled
+    end
+  end
+end
+
+function restoreTeleportRig()
+  if not character then
+    return
+  end
+
+  for index14, value13 in ipairs(clickTeleportMotorSnapshot) do
+    if value13.Parent and value13.Parent.Parent then
+      local findFirstChild5 = value13.Parent:FindFirstChild(value13.Name)
+
+      if not findFirstChild5 or not findFirstChild5:IsA("Motor6D") then
+        findFirstChild5 = Instance.new("Motor6D")
+        findFirstChild5.Name = value13.Name
+        findFirstChild5.Part0 = value13.Part0
+        findFirstChild5.Part1 = value13.Part1
+        findFirstChild5.C0 = value13.C0
+        findFirstChild5.C1 = value13.C1
+        findFirstChild5.Parent = value13.Parent
+      end
+
+      pcall(function() findFirstChild5.Enabled = true end)
+    end
+  end
+
+  for key5, value14 in pairs(clickTeleportConstraintSnapshot) do
+    local v41 = key5
+
+    if v41 and v41.Parent and value14 == false then
+      pcall(function() v41.Enabled = false end)
+    end
+  end
+
+  for index15, value15 in ipairs(character:GetDescendants()) do
+    local v42 = value15
+
+    if v42:IsA("BallSocketConstraint") or v42:IsA("HingeConstraint")
+      or v42:IsA("SpringConstraint") or v42:IsA("RodConstraint") or v42:IsA("RopeConstraint") then
+      if clickTeleportConstraintSnapshot[v42] == nil then
+        local v43 = string.lower(v42.Name)
+
+        if string.find(v43, "ragdoll", 1, true) then
+          pcall(function() v42.Enabled = false end)
+        end
+      end
+    end
+  end
+end
+
+function applyTeleportInvincibility()
+  if not character or not humanoid then
+    return
+  end
+
+  clickTeleportProtectionActive = true
+
+  pcall(function() character:SetAttribute("Invincibility", true) end)
+  pcall(function() character:SetAttribute("TimeStopImmunity", true) end)
+  pcall(function() character:SetAttribute("TakingDamage", false) end)
+  pcall(function() character:SetAttribute("Ragdolled", false) end)
+  pcall(function() character:SetAttribute("Ragdoll", false) end)
+  pcall(function() character:SetAttribute("ragdoll", false) end)
+
+  snapshotTeleportRig()
+
+  if humanoidRootPart then
+    pcall(function()
+      humanoidRootPart.Anchored = false
+      humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+    end)
+  end
+
+  if clickTeleportHealthConnection then
+    clickTeleportHealthConnection:Disconnect()
+    clickTeleportHealthConnection = nil
+  end
+
+  clickTeleportHealthConnection = humanoid.HealthChanged:Connect(function()
+    if not clickTeleportEnabled or MENU_FEATURES_SHUT_DOWN then
+      return
+    end
+
+    if humanoid and humanoid.Parent and humanoid.Health > 0 and humanoid.Health < 100 then
+      humanoid.Health = 100
+    end
+  end)
+
+  if clickTeleportMobilityConnection then
+    clickTeleportMobilityConnection:Disconnect()
+    clickTeleportMobilityConnection = nil
+  end
+
+  clickTeleportMobilityConnection = runService.Stepped:Connect(function()
+    if MENU_FEATURES_SHUT_DOWN or not clickTeleportEnabled or not clickTeleportProtectionActive then
+      return
+    end
+
+    local v44
+
+    if not character or not humanoid or not humanoid.Parent then
+      return
+    else
+      pcall(function()
+        character:SetAttribute("Invincibility", true)
+        character:SetAttribute("TimeStopImmunity", true)
+        character:SetAttribute("TakingDamage", false)
+        character:SetAttribute("Ragdolled", false)
+        character:SetAttribute("Ragdoll", false)
+        character:SetAttribute("ragdoll", false)
+      end)
+
+      for index16, value16 in ipairs(character:GetDescendants()) do
+        local v45 = value16
+
+        if v45:IsA("BoolValue") then
+          local v46 = string.lower(v45.Name)
+
+          if v46 == "ragdoll" or v46 == "ragdolled" or v46 == "isragdolled"
+            or v46 == "takingdamage" then
+            pcall(function() v45.Value = false end)
+          end
+        end
+      end
+
+      restoreTeleportRig()
+
+      if humanoidRootPart and humanoidRootPart.Parent then
+        pcall(function()
+          humanoidRootPart.Anchored = false
+          humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+        end)
+      end
+
+      local getState = humanoid:GetState()
+      v44 = humanoid.MoveDirection.Magnitude > 0.01
+
+      if getState == Enum.HumanoidStateType.Ragdoll
+        or getState == Enum.HumanoidStateType.FallingDown
+        or getState == Enum.HumanoidStateType.Physics
+        or getState == Enum.HumanoidStateType.PlatformStanding
+        or getState == Enum.HumanoidStateType.Seated then
+        pcall(function()
+          humanoid.PlatformStand = false
+          humanoid.Sit = false
+
+          humanoid:ChangeState(v44 and Enum.HumanoidStateType.Running
+            or Enum.HumanoidStateType.GettingUp)
+        end)
+      end
+
+      if v44 then
+        if getState == Enum.HumanoidStateType.Ragdoll
+          or getState == Enum.HumanoidStateType.FallingDown
+          or getState == Enum.HumanoidStateType.Physics
+          or getState == Enum.HumanoidStateType.PlatformStanding
+          or getState == Enum.HumanoidStateType.Seated then
+          pcall(function() humanoid:ChangeState(Enum.HumanoidStateType.Running) end)
+        end
+      elseif getState == Enum.HumanoidStateType.Ragdoll
+        or getState == Enum.HumanoidStateType.FallingDown
+        or getState == Enum.HumanoidStateType.Physics
+        or getState == Enum.HumanoidStateType.PlatformStanding then
+        pcall(function() humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+      end
+
+      return
+    end
+  end)
+end
+
+function clearTeleportInvincibility()
+  clickTeleportProtectionActive = false
+
+  if clickTeleportHealthConnection then
+    clickTeleportHealthConnection:Disconnect()
+    clickTeleportHealthConnection = nil
+  end
+
+  if clickTeleportMobilityConnection then
+    clickTeleportMobilityConnection:Disconnect()
+    clickTeleportMobilityConnection = nil
+  end
+
+  if humanoid and humanoid.Parent then
+    pcall(function()
+      humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+      humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+      humanoid.PlatformStand = false
+      humanoid.Sit = false
+      humanoid.AutoRotate = true
+      humanoid.BreakJointsOnDeath = true
+    end)
+  end
+
+  if humanoidRootPart and humanoidRootPart.Parent then
+    pcall(function() humanoidRootPart.Anchored = false end)
+  end
+
+  clickTeleportMotorSnapshot = {}
+  clickTeleportConstraintSnapshot = {}
+end
+
+function stopClickTeleport()
+  if clickTeleportConnection then
+    clickTeleportConnection:Disconnect()
+    clickTeleportConnection = nil
+  end
+
+  clearTeleportInvincibility()
+end
+
+function startClickTeleport()
+  stopClickTeleport()
+
+  clickTeleportConnection = userInputService.InputBegan:Connect(function(input4, p21)
+    local menuFEATURESSHUTDOWN = MENU_FEATURES_SHUT_DOWN or not clickTeleportEnabled or p21
+    local position
+
+    if menuFEATURESSHUTDOWN then
+      return
+    else
+      local userInputType = input4.UserInputType
+
+      if userInputType ~= Enum.UserInputType.MouseButton1
+        and userInputType ~= Enum.UserInputType.Touch then
+        return
+      end
+
+      if not character or not humanoid or not humanoidRootPart or humanoid.Health <= 0 then
+        return
+      else
+        local currentCamera = workspace.CurrentCamera
+
+        if not currentCamera then
+          return
+        else
+          if userInputType == Enum.UserInputType.Touch then
+            position = input4.Position
+          else
+            position = userInputService:GetMouseLocation()
+          end
+
+          local viewportPointToRay = currentCamera:ViewportPointToRay(position.X, position.Y)
+
+          local raycastParams = RaycastParams.new()
+          raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+          raycastParams.FilterDescendantsInstances = { character }
+          raycastParams.IgnoreWater = false
+
+          local raycast = workspace:Raycast(
+            viewportPointToRay.Origin, viewportPointToRay.Direction * 5000, raycastParams
+          )
+
+          if not raycast then
+            return
+          else
+            local v47 = raycast.Position + Vector3.new(0, 3, 0)
+            local v48 = isTeleportOutsideSpawn(v47)
+
+            if v48 then
+              applyTeleportInvincibility()
+              restoreTeleportRig()
+            else
+              clearTeleportInvincibility()
+            end
+
+            local lookVector = humanoidRootPart.CFrame.LookVector
+            local vector = Vector3.new(lookVector.X, 0, lookVector.Z)
+
+            if vector.Magnitude > 0.01 then
+              humanoidRootPart.CFrame = CFrame.lookAt(v47, v47 + vector.Unit)
+            else
+              humanoidRootPart.CFrame = CFrame.new(v47)
+            end
+
+            pcall(function()
+              humanoidRootPart.Anchored = false
+              humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+
+              humanoid.PlatformStand = false
+              humanoid.Sit = false
+              humanoid.AutoRotate = true
+              humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end)
+
+            if v48 then
+              applyTeleportInvincibility()
+            end
+
+            return
+          end
+        end
+      end
+    end
+  end)
+end
+
+ANTI_VOID_CRACK_DATA = {
+  { Vector3.new(4.2, 0.1, 0.08), Vector3.new(-1.8, 0.56, -1.2), 15 },
+  { Vector3.new(2.8, 0.1, 0.08), Vector3.new(0, 0.57, -0.2), -25 },
+  { Vector3.new(3.5, 0.1, 0.08), Vector3.new(1.8, 0.57, 1.3), 35 },
+  { Vector3.new(2, 0.1, 0.08), Vector3.new(-2.2, 0.57, 1.8), -40 },
+  { Vector3.new(2.5, 0.1, 0.08), Vector3.new(2.4, 0.57, -1.6), 65 },
+  { Vector3.new(1.7, 0.1, 0.08), Vector3.new(-0.4, 0.57, 2.5), -10 },
+}
+
+ANTI_VOID_BORDER_DATA = {
+  Vector3.new(10, 0.08, 0.08), Vector3.new(10, 0.08, 0.08), Vector3.new(0.08, 0.08, 10),
+  Vector3.new(0.08, 0.08, 10),
+}
+
+ANTI_VOID_BORDER_OFFSETS = {
+  Vector3.new(0, 0.57, -5), Vector3.new(0, 0.57, 5), Vector3.new(-5, 0.57, 0),
+  Vector3.new(5, 0.57, 0),
+}
+
+function updateAntiVoidPosition()
+  if not antiVoidEnabled or not antiVoidFolder or not antiVoidFolder.Parent then
+    return
+  else
+    local character5 = localPlayer.Character
+
+    if not character5 then
+      return
+    else
+      local humanoidRootPart5 = character5:FindFirstChild("HumanoidRootPart")
+
+      if not humanoidRootPart5 then
+        return
+      else
+        local vector2 = Vector3.new(
+          humanoidRootPart5.Position.X, -27, humanoidRootPart5.Position.Z
+        )
+
+        if antiVoidPlatform and antiVoidPlatform.Parent then
+          antiVoidPlatform.Position = vector2
+        end
+
+        if antiVoidSurface and antiVoidSurface.Parent then
+          antiVoidSurface.Position = vector2 + Vector3.new(0, 0.54, 0)
+        end
+
+        if antiVoidEnergy and antiVoidEnergy.Parent then
+          antiVoidEnergy.Position = vector2 + Vector3.new(0, -0.53, 0)
+        end
+
+        for index17, value17 in ipairs(ANTI_VOID_CRACK_DATA) do
+          local v49 = antiVoidCracks[index17]
+
+          if v49 and v49.Parent then
+            v49.CFrame = CFrame.new(vector2.X + value17[2].X, -26.44, vector2.Z + value17[2].Z)
+              * CFrame.Angles(0, math.rad(value17[3]), 0)
+          end
+        end
+
+        local count = 0
+
+        while true do
+          count = 1 + count
+
+          if not (4 >= count) then
+            break
+          end
+
+          local v50 = count
+          local v51 = antiVoidBorders[v50]
+
+          if v51 and v51.Parent then
+            v51.Position = vector2 + ANTI_VOID_BORDER_OFFSETS[v50]
+          end
+        end
+
+        return
+      end
+    end
+  end
+end
+
+local connect2
+
+local function f15()
+  if connect2 then
+    connect2:Disconnect()
+    connect2 = nil
+  end
+
+  if not humanoid or not humanoidRootPart then
+    return
+  end
+
+  humanoid.AutoRotate = false
+
+  connect2 = runService.RenderStepped:Connect(function()
+    if MENU_FEATURES_SHUT_DOWN or not v17 then
+      return
+    end
+
+    if not humanoid or not humanoidRootPart or humanoid.Health <= 0 then
+      return
+    else
+      local currentCamera2 = workspace.CurrentCamera
+
+      if not currentCamera2 then
+        return
+      else
+        pcall(function() humanoid:ChangeState(Enum.HumanoidStateType.Physics) end)
+        local lookVector2 = currentCamera2.CFrame.LookVector
+        local vector3 = Vector3.new(lookVector2.X, 0, lookVector2.Z)
+
+        if vector3.Magnitude > 0.01 then
+          humanoidRootPart.CFrame = CFrame.lookAt(
+            humanoidRootPart.Position, humanoidRootPart.Position + vector3.Unit
+          )
+        end
+
+        local zero = Vector3.zero
+
+        if userInputService:IsKeyDown(Enum.KeyCode.W) then
+          zero = zero + currentCamera2.CFrame.LookVector
+        end
+
+        if userInputService:IsKeyDown(Enum.KeyCode.S) then
+          zero = zero - currentCamera2.CFrame.LookVector
+        end
+
+        if userInputService:IsKeyDown(Enum.KeyCode.A) then
+          zero = zero - currentCamera2.CFrame.RightVector
+        end
+
+        if userInputService:IsKeyDown(Enum.KeyCode.D) then
+          zero = zero + currentCamera2.CFrame.RightVector
+        end
+
+        if userInputService:IsKeyDown(Enum.KeyCode.Space) then
+          zero = zero + Vector3.new(0, 1, 0)
+        end
+
+        if userInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+          zero = zero - Vector3.new(0, 1, 0)
+        end
+
+        if zero.Magnitude > 0 then
+          humanoidRootPart.AssemblyLinearVelocity = zero.Unit * v18
+        else
+          humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+        end
+
+        humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+        return
+      end
+    end
+  end)
+end
+
+function stopAntiVoid()
+  antiVoidEnabled = false
+
+  if antiVoidConnection then
+    antiVoidConnection:Disconnect()
+    antiVoidConnection = nil
+  end
+
+  local voidWalk = workspace:FindFirstChild("VoidWalk")
+
+  if antiVoidFolder and antiVoidFolder.Parent then
+    antiVoidFolder:Destroy()
+  elseif voidWalk then
+    voidWalk:Destroy()
+  end
+
+  antiVoidFolder = nil
+  antiVoidPlatform = nil
+  antiVoidSurface = nil
+  antiVoidEnergy = nil
+  antiVoidLight = nil
+  antiVoidCracks = {}
+  antiVoidBorders = {}
+  antiVoidTime = 0
+end
+
+local function f16()
+  if not humanoidRootPart then
+    return nil
+  else
+    local v52 = nil
+    local v53 = v10
+    local position2 = humanoidRootPart.Position
+
+    for index18, value18 in ipairs(players:GetPlayers()) do
+      if value18 ~= localPlayer then
+        local character6 = value18.Character
+
+        if not (not character6 or character6 == character
+          or character6:GetAttribute("blocking") == true) then
+          local humanoidRootPart6 = character6:FindFirstChild("HumanoidRootPart")
+          local humanoid4 = character6:FindFirstChildOfClass("Humanoid")
+
+          if not (not humanoidRootPart6 or not humanoid4 or humanoid4.Health <= 0) then
+            local v54 = humanoidRootPart6.Position - position2
+            local dot = v54:Dot(v54)
+
+            if dot <= v53 * v53 then
+              v52 = character6
+              v53 = math.sqrt(dot)
+            end
+          end
+        end
+      end
+    end
+
+    local v55 = workspace
+    local v56 = {}
+
+    for index19, value19 in ipairs((v55:GetPartBoundsInRadius(position2, v53))) do
+      local model = value19:FindFirstAncestorOfClass("Model")
+
+      if not (not model or v56[model] or model == character or model:IsDescendantOf(character)) then
+        v56[model] = true
+
+        if players:GetPlayerFromCharacter(model) == nil then
+          if model:GetAttribute("blocking") ~= true then
+            local humanoidRootPart7 = model:FindFirstChild("HumanoidRootPart")
+            local v57 = not humanoidRootPart7
+            local humanoid5 = model:FindFirstChildOfClass("Humanoid")
+
+            if not (v57 or not humanoid5 or humanoid5.Health <= 0) then
+              local v58 = humanoidRootPart7.Position - position2
+              local dot2 = v58:Dot(v58)
+
+              if dot2 <= v53 * v53 then
+                v53 = math.sqrt(dot2)
+                v52 = model
+              end
+            end
+          end
+        end
+      end
+    end
+
+    return v52
+  end
+end
+
+function startAntiVoid()
+  stopAntiVoid()
+  antiVoidEnabled = true
+  local voidWalk2 = workspace:FindFirstChild("VoidWalk")
+
+  if voidWalk2 then
+    voidWalk2:Destroy()
+  end
+
+  antiVoidFolder = Instance.new("Folder")
+  antiVoidFolder.Name = "VoidWalk"
+  antiVoidFolder.Parent = workspace
+
+  antiVoidPlatform = Instance.new("Part")
+  antiVoidPlatform.Name = "VoidPlatform"
+  antiVoidPlatform.Size = Vector3.new(10, 1, 10)
+  antiVoidPlatform.Anchored = true
+  antiVoidPlatform.CanCollide = true
+  antiVoidPlatform.Material = Enum.Material.SmoothPlastic
+  antiVoidPlatform.Color = Color3.fromRGB(2, 2, 5)
+  antiVoidPlatform.TopSurface = Enum.SurfaceType.Smooth
+  antiVoidPlatform.BottomSurface = Enum.SurfaceType.Smooth
+  antiVoidPlatform.Transparency = 1
+  antiVoidPlatform.Parent = antiVoidFolder
+
+  antiVoidSurface = Instance.new("Part")
+  antiVoidSurface.Name = "VoidSurface"
+  antiVoidSurface.Size = Vector3.new(9.8, 0.08, 9.8)
+  antiVoidSurface.Anchored = true
+  antiVoidSurface.CanCollide = false
+  antiVoidSurface.Material = Enum.Material.Neon
+  antiVoidSurface.Color = Color3.fromRGB(8, 0, 18)
+  antiVoidSurface.Transparency = 1
+  antiVoidSurface.Parent = antiVoidFolder
+
+  antiVoidEnergy = Instance.new("Part")
+  antiVoidEnergy.Name = "VoidEnergy"
+  antiVoidEnergy.Size = Vector3.new(8.5, 0.12, 8.5)
+  antiVoidEnergy.Anchored = true
+  antiVoidEnergy.CanCollide = false
+  antiVoidEnergy.Material = Enum.Material.Neon
+  antiVoidEnergy.Color = Color3.fromRGB(35, 0, 80)
+  antiVoidEnergy.Transparency = 1
+  antiVoidEnergy.Parent = antiVoidFolder
+
+  antiVoidLight = Instance.new("PointLight")
+  antiVoidLight.Brightness = 0
+  antiVoidLight.Range = 16
+  antiVoidLight.Color = Color3.fromRGB(65, 0, 130)
+  antiVoidLight.Parent = antiVoidEnergy
+
+  antiVoidCracks = {}
+
+  for index20, value20 in ipairs(ANTI_VOID_CRACK_DATA) do
+    local part2 = Instance.new("Part")
+    part2.Name = "VoidCrack" .. index20
+    part2.Size = value20[1]
+    part2.Anchored = true
+    part2.CanCollide = false
+    part2.Material = Enum.Material.Neon
+    part2.Color = Color3.fromRGB(110, 0, 255)
+    part2.Transparency = 1
+    part2.Parent = antiVoidFolder
+
+    table.insert(antiVoidCracks, part2)
+  end
+
+  antiVoidBorders = {}
+
+  for i = 1, 4 do
+    local part3 = Instance.new("Part")
+    part3.Name = "VoidBorder" .. i
+    part3.Size = ANTI_VOID_BORDER_DATA[i]
+    part3.Anchored = true
+    part3.CanCollide = false
+    part3.Material = Enum.Material.Neon
+    part3.Color = Color3.fromRGB(55, 0, 120)
+    part3.Transparency = 1
+    part3.Parent = antiVoidFolder
+
+    table.insert(antiVoidBorders, part3)
+  end
+
+  local attachment = Instance.new("Attachment")
+  attachment.Position = Vector3.new(0, -0.6, 0)
+  attachment.Parent = antiVoidPlatform
+
+  local voidParticles = Instance.new("ParticleEmitter")
+  voidParticles.Name = "VoidParticles"
+  voidParticles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+  voidParticles.Rate = 0
+  voidParticles.Lifetime = NumberRange.new(1.2, 2.5)
+  voidParticles.Speed = NumberRange.new(0.3, 1.2)
+  voidParticles.SpreadAngle = Vector2.new(180, 180)
+
+  voidParticles.Size = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.08), NumberSequenceKeypoint.new(0.5, 0.14),
+    NumberSequenceKeypoint.new(1, 0),
+  })
+
+  voidParticles.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(0.7, 0.65),
+    NumberSequenceKeypoint.new(1, 1),
+  })
+
+  voidParticles.Color = ColorSequence.new(
+    Color3.fromRGB(65, 0, 140), Color3.fromRGB(160, 0, 255)
+  )
+
+  voidParticles.LightEmission = 1
+  voidParticles.Parent = attachment
+
+  antiVoidTime = 0
+  updateAntiVoidPosition()
+
+  antiVoidConnection = runService.RenderStepped:Connect(function(delta2)
+    if not antiVoidEnabled or MENU_FEATURES_SHUT_DOWN then
+      return
+    end
+
+    antiVoidTime = antiVoidTime + delta2
+    updateAntiVoidPosition()
+
+    if antiVoidEnergy and antiVoidEnergy.Parent then
+      antiVoidEnergy.Transparency = 1
+    end
+
+    if antiVoidLight and antiVoidLight.Parent then
+      antiVoidLight.Brightness = 0
+    end
+
+    for index21, value21 in ipairs(antiVoidCracks) do
+      if value21 and value21.Parent then
+        value21.Transparency = 1
+      end
+    end
+
+    for index22, value22 in ipairs(antiVoidBorders) do
+      if value22 and value22.Parent then
+        value22.Transparency = 1
+      end
+    end
+  end)
+end
+
+local function f17(character7)
+  if not character7 then
+    return nil
+  else
+    local humanoidRootPart8 = character7:FindFirstChild("HumanoidRootPart")
+
+    if humanoidRootPart8 and humanoidRootPart8:IsA("BasePart") then
+      return humanoidRootPart8
+    else
+      local head = character7:FindFirstChild("Head")
+
+      if head and head:IsA("BasePart") then
+        return head
+      end
+
+      return character7:FindFirstChildWhichIsA("BasePart", true)
+    end
+  end
+end
+
+function restoreAntiRagdollAnchors()
+  for key6, value23 in pairs(antiRagdollOriginalAnchored) do
+    local v59 = key6
+    local anchored = value23
+
+    if v59 and v59.Parent and v59:IsA("BasePart") then
+      pcall(function() v59.Anchored = anchored end)
+    end
+  end
+
+  antiRagdollOriginalAnchored = {}
+end
+
+function disconnectAntiRagdollCharacter()
+  if antiRagdollValueConnection then
+    antiRagdollValueConnection:Disconnect()
+    antiRagdollValueConnection = nil
+  end
+
+  restoreAntiRagdollAnchors()
+  antiRagdollCurrentCharacter = nil
+end
+
+function applyAntiRagdollState()
+  local anchored2
+
+  if not antiRagdollEnabled then
+    return
+  else
+    local v60 = antiRagdollCurrentCharacter
+
+    if not v60 or not v60.Parent then
+      return
+    else
+      local ragdolled = v60:FindFirstChild("Ragdolled")
+
+      if not ragdolled or not ragdolled:IsA("BoolValue") then
+        return
+      end
+
+      anchored2 = ragdolled.Value == true
+
+      for index23, value24 in ipairs(v60:GetDescendants()) do
+        local v61 = value24
+
+        if v61:IsA("BasePart") then
+          if antiRagdollOriginalAnchored[v61] == nil then
+            antiRagdollOriginalAnchored[v61] = v61.Anchored
+          end
+
+          pcall(function() v61.Anchored = anchored2 end)
+        end
+      end
+
+      return
+    end
+  end
+end
+
+local function f18(character8)
+  if not character8 then
+    return false
+  else
+    local count2 = 0
+    local count3 = 0
+
+    for index24, value25 in ipairs(character8:GetDescendants()) do
+      if value25:IsA("BasePart") and value25.Name ~= "HumanoidRootPart" then
+        count2 = count2 + 1
+
+        if value25.Transparency >= 0.9 then
+          count3 = count3 + 1
+        end
+      end
+    end
+
+    if count2 <= 0 then
+      return false
+    end
+
+    return count3 >= math.ceil(count2 * 0.5)
+  end
+end
+
+function setupAntiRagdollCharacter(p22)
+  disconnectAntiRagdollCharacter()
+
+  if not antiRagdollEnabled or not p22 then
+    return
+  end
+
+  antiRagdollCurrentCharacter = p22
+
+  task.spawn(function()
+    local ragdolled2 = p22:FindFirstChild("Ragdolled") or p22:WaitForChild("Ragdolled", 10)
+
+    if not antiRagdollEnabled or antiRagdollCurrentCharacter ~= p22 then
+      return
+    end
+
+    if not ragdolled2 or not ragdolled2:IsA("BoolValue") then
+      return
+    end
+
+    antiRagdollValueConnection = ragdolled2:GetPropertyChangedSignal("Value"):Connect(function()
+      if antiRagdollEnabled then
+        applyAntiRagdollState()
+      end
+    end)
+
+    applyAntiRagdollState()
+  end)
+end
+
+function startAntiRagdoll()
+  if antiRagdollEnabled and antiRagdollCharacterConnection then
+    setupAntiRagdollCharacter(localPlayer.Character)
+    return
+  end
+
+  antiRagdollEnabled = true
+
+  if antiRagdollCharacterConnection then
+    antiRagdollCharacterConnection:Disconnect()
+    antiRagdollCharacterConnection = nil
+  end
+
+  antiRagdollCharacterConnection = localPlayer.CharacterAdded:Connect(function(character9)
+    if antiRagdollEnabled then
+      task.wait(0.1)
+      setupAntiRagdollCharacter(character9)
+    end
+  end)
+
+  setupAntiRagdollCharacter(localPlayer.Character)
+end
+
+function stopAntiRagdoll()
+  antiRagdollEnabled = false
+
+  if antiRagdollCharacterConnection then
+    antiRagdollCharacterConnection:Disconnect()
+    antiRagdollCharacterConnection = nil
+  end
+
+  disconnectAntiRagdollCharacter()
+end
+
+local function f19()
+  if connect2 then
+    connect2:Disconnect()
+    connect2 = nil
+  end
+
+  if humanoid then
+    humanoid.PlatformStand = false
+    humanoid.AutoRotate = true
+    pcall(function() humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) end)
+  end
+
+  if humanoidRootPart then
+    humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+    humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+  end
+end
+
+local function f20()
+  for key7, value26 in pairs(v16) do
+    if value26 then
+      value26:Disconnect()
+    end
+
+    v16[key7] = nil
+  end
+end
+
+local function f21(key8)
+  local v62 = v22[key8]
+
+  if not v62 then
+    return
+  end
+
+  if v62.Highlight then
+    v62.Highlight:Destroy()
+  end
+
+  if v62.Billboard then
+    v62.Billboard:Destroy()
+  end
+
+  v22[key8] = nil
+end
+
+local f22
+
+local function f23()
+  for index25, value27 in ipairs(players:GetPlayers()) do
+    if value27 ~= localPlayer then
+      local character10 = value27.Character
+
+      if not character10 then
+        f21(value27)
+      else
+        local v63 = f17(character10)
+        local v64 = v22[value27]
+
+        if not v64 or v64.Character ~= character10 or v64.TrackingPart ~= v63
+          or not v64.TrackingPart or not v64.TrackingPart.Parent then
+          f22(value27)
+          v64 = v22[value27]
+        end
+
+        if v64 then
+          local humanoid6 = character10:FindFirstChildOfClass("Humanoid")
+          local humanoidRootPart9 = character10:FindFirstChild("HumanoidRootPart")
+          local v65 = f18(character10)
+
+          if v64.Highlight then
+            v64.Highlight.Enabled = v19
+            v64.Highlight.Adornee = character10
+            v64.Highlight.FillColor = color
+            v64.Highlight.OutlineColor = color
+          end
+
+          if v64.Billboard then
+            v64.Billboard.Enabled = v19
+            v64.Billboard.Adornee = v63
+          end
+
+          if not (not v19 or not humanoid6) then
+            local v66 = {}
+
+            if v20 and humanoidRootPart9 and humanoidRootPart then
+              table.insert(v66, string.format("Distance: %.1f studs", (humanoidRootPart9.Position
+                - humanoidRootPart.Position).Magnitude))
+            end
+
+            if v21 then
+              local v67 = math.max(0, math.floor(humanoid6.Health + 0.5))
+              local v68 = math.max(0, math.floor(humanoid6.MaxHealth + 0.5))
+              local v69 = "#55FF55"
+
+              if v67 <= 49 then
+                v69 = "#FF4D4D"
+              elseif v67 <= 69 then
+                v69 = "#FFD84D"
+              end
+
+              table.insert(v66, "Health (" .. '<font color="' .. v69 .. '">' .. tostring(v67) .. "/"
+                .. tostring(v68) .. "</font>)")
+            end
+
+            if v65 then
+              table.insert(v66, "Invisible")
+            end
+
+            v64.Label.Text = table.concat(v66, "\n")
+          end
+        end
+      end
+    end
+  end
+end
+
+function f22(key9)
+  if key9 == localPlayer then
+    return
+  else
+    f21(key9)
+    local character11 = key9.Character
+
+    if not character11 then
+      return
+    else
+      local v70 = not character11:FindFirstChildOfClass("Humanoid")
+      local v71 = f17(character11)
+
+      if v70 or not v71 then
+        return
+      else
+        local adminESPHighlight = Instance.new("Highlight")
+        adminESPHighlight.Name = "AdminESPHighlight"
+        adminESPHighlight.Adornee = character11
+        adminESPHighlight.FillColor = color
+        adminESPHighlight.OutlineColor = color
+        adminESPHighlight.FillTransparency = 0.65
+        adminESPHighlight.OutlineTransparency = 0
+        adminESPHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        adminESPHighlight.Enabled = v19
+        adminESPHighlight.Parent = character11
+
+        local adminESPBillboard = Instance.new("BillboardGui")
+        adminESPBillboard.Name = "AdminESPBillboard"
+        adminESPBillboard.Adornee = v71
+        adminESPBillboard.Size = UDim2.new(0, 250, 0, 100)
+        adminESPBillboard.StudsOffset = Vector3.new(0, 4, 0)
+        adminESPBillboard.AlwaysOnTop = true
+        adminESPBillboard.Enabled = v19
+        adminESPBillboard.Parent = v71
+
+        local textLabel2 = Instance.new("TextLabel")
+        textLabel2.Size = UDim2.fromScale(1, 1)
+        textLabel2.BackgroundTransparency = 1
+        textLabel2.Text = ""
+        textLabel2.TextColor3 = Color3.new(1, 1, 1)
+        textLabel2.TextStrokeColor3 = Color3.new(0, 0, 0)
+        textLabel2.TextStrokeTransparency = 0.1
+        textLabel2.Font = merriweather
+        textLabel2.TextSize = 16
+        textLabel2.TextWrapped = true
+        textLabel2.RichText = true
+        textLabel2.Parent = adminESPBillboard
+
+        v22[key9] = {
+          Character = character11,
+          TrackingPart = v71,
+          Highlight = adminESPHighlight,
+          Billboard = adminESPBillboard,
+          Label = textLabel2,
+        }
+
+        return
+      end
+    end
+  end
+end
+
+local f24
+
+local function f25()
+  if MENU_FEATURES_SHUT_DOWN or not v13 then
+    return
+  end
+
+  if not character or not humanoid or not humanoidRootPart then
+    return
+  elseif humanoid.Health <= 0 then
+    return
+  else
+    local v72 = os.clock()
+
+    if v72 - v15 < 0.08 then
+      return
+    else
+      v15 = v72
+      local v73 = f24()
+
+      if not v73 then
+        return
+      elseif v73 == character then
+        return
+      elseif v73:IsDescendantOf(character) then
+        return
+      elseif v73:GetAttribute("blocking") == true then
+        return
+      else
+        local humanoidRootPart10 = v73:FindFirstChild("HumanoidRootPart")
+        local humanoid7 = v73:FindFirstChildOfClass("Humanoid")
+
+        if not humanoidRootPart10 or not humanoid7 then
+          return
+        elseif humanoid7.Health <= 0 then
+          return
+        elseif (humanoidRootPart10.Position - humanoidRootPart.Position).Magnitude > v14 then
+          return
+        elseif v73:GetAttribute("blocking") == true then
+          return
+        else
+          hitSomeone:FireServer(v73)
+          return
+        end
+      end
+    end
+  end
+end
+
+function f24()
+  if not humanoidRootPart then
+    return nil
+  else
+    local v74 = nil
+    local v75 = v14
+
+    for index26, value28 in ipairs(players:GetPlayers()) do
+      if value28 ~= localPlayer then
+        local character12 = value28.Character
+
+        if character12 then
+          if character12 ~= character then
+            if character12:GetAttribute("blocking") ~= true then
+              local humanoidRootPart11 = character12:FindFirstChild("HumanoidRootPart")
+              local humanoid8 = character12:FindFirstChildOfClass("Humanoid")
+
+              if not (not humanoidRootPart11 or not humanoid8 or humanoid8.Health <= 0) then
+                local magnitude = (humanoidRootPart11.Position
+                  - humanoidRootPart.Position).Magnitude
+
+                if magnitude <= v75 then
+                  v75 = magnitude
+                  v74 = character12
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    for index27, value29 in ipairs(workspace:GetDescendants()) do
+      if value29:IsA("Model") then
+        if value29 ~= character then
+          if not value29:IsDescendantOf(character) then
+            if players:GetPlayerFromCharacter(value29) == nil then
+              if value29:GetAttribute("blocking") ~= true then
+                local humanoidRootPart12 = value29:FindFirstChild("HumanoidRootPart")
+                local v76 = not humanoidRootPart12
+                local humanoid9 = value29:FindFirstChildOfClass("Humanoid")
+
+                if not (v76 or not humanoid9 or humanoid9.Health <= 0) then
+                  local magnitude2 = (humanoidRootPart12.Position
+                    - humanoidRootPart.Position).Magnitude
+
+                  if magnitude2 <= v75 then
+                    v75 = magnitude2
+                    v74 = value29
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    return v74
+  end
+end
+
+local function f26(key10)
+  if not key10:IsA("Tool") then
+    return
+  end
+
+  if v16[key10] then
+    return
+  end
+
+  v16[key10] = key10.Activated:Connect(function()
+    f25()
+
+    if HITBOX_EXPANDER_ENABLED then
+      performHitboxExpanderSwing(key10)
+    end
+  end)
+
+  key10.Destroying:Connect(function()
+    local v77 = v16[key10]
+
+    if v77 then
+      v77:Disconnect()
+    end
+
+    v16[key10] = nil
+  end)
+end
+
+local connect3
+
+local function f27()
+  f20()
+
+  if connect3 then
+    connect3:Disconnect()
+    connect3 = nil
+  end
+
+  if not character then
+    return
+  end
+
+  for index28, value30 in ipairs(character:GetChildren()) do
+    if value30:IsA("Tool") then
+      f26(value30)
+    end
+  end
+
+  connect3 = character.ChildAdded:Connect(function(child)
+    if child:IsA("Tool") then
+      f26(child)
+    end
+  end)
+end
+
+localPlayer.CharacterAdded:Connect(function(character13)
+  character = character13
+  humanoid = character:WaitForChild("Humanoid")
+  humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+  clickTeleportProtectionActive = false
+  task.wait(0.25)
+  f27()
+
+  if flingEnabled then
+    startFling()
+  end
+
+  if v17 then
+    f15()
+  end
+end)
+
+f27()
+MENU_FEATURES_SHUT_DOWN = false
+
+function shutdownMenuFeatures()
+  if MENU_FEATURES_SHUT_DOWN then
+    return
+  end
+
+  MENU_FEATURES_SHUT_DOWN = true
+  v9 = false
+  v13 = false
+
+  if stopHitboxExpander then
+    stopHitboxExpander()
+  end
+
+  clickTeleportEnabled = false
+  stopClickTeleport()
+  clearTeleportInvincibility()
+  v17 = false
+  f19()
+  flingEnabled = false
+
+  if stopFling then
+    stopFling()
+  end
+
+  antiVoidEnabled = false
+
+  if stopAntiVoid then
+    stopAntiVoid()
+  end
+
+  antiRagdollEnabled = false
+
+  if stopAntiRagdoll then
+    stopAntiRagdoll()
+  end
+
+  if humanoid and humanoid.Parent then
+    humanoid.WalkSpeed = 16
+  end
+
+  v19 = false
+
+  for key11 in pairs(v22) do
+    f21(key11)
+  end
+
+  v5 = false
+end
+
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+local adminControlPanel = playerGui:FindFirstChild("AdminControlPanel")
+
+if adminControlPanel then
+  adminControlPanel:Destroy()
+end
+
+local adminControlPanel2 = Instance.new("ScreenGui")
+adminControlPanel2.Name = "AdminControlPanel"
+adminControlPanel2.ResetOnSpawn = false
+adminControlPanel2.IgnoreGuiInset = true
+adminControlPanel2.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+adminControlPanel2.Parent = playerGui
+
+menuClickSound = Instance.new("Sound")
+menuClickSound.Name = "MenuClickSound"
+menuClickSound.SoundId = "rbxassetid://126825367714667"
+menuClickSound.Volume = 0.7
+menuClickSound.Parent = adminControlPanel2
+
+function playMenuClickSound()
+  if MENU_FEATURES_SHUT_DOWN then
+    return
+  end
+
+  if not menuClickSound or not menuClickSound.Parent then
+    return
+  end
+
+  pcall(function()
+    menuClickSound:Stop()
+    menuClickSound.TimePosition = 0
+    menuClickSound:Play()
+  end)
+end
+
+adminControlPanel2.AncestryChanged:Connect(function()
+  if adminControlPanel2.Parent ~= playerGui then
+    shutdownMenuFeatures()
+  end
+end)
+
+adminControlPanel2.Destroying:Connect(function() shutdownMenuFeatures() end)
+
+local adminNotificationHolder = Instance.new("Frame")
+adminNotificationHolder.Name = "AdminNotificationHolder"
+adminNotificationHolder.Size = UDim2.new(0, 360, 1, -40)
+adminNotificationHolder.Position = UDim2.new(1, -380, 0, 20)
+adminNotificationHolder.BackgroundTransparency = 1
+adminNotificationHolder.BorderSizePixel = 0
+adminNotificationHolder.Parent = adminControlPanel2
+
+local uiListLayout = Instance.new("UIListLayout")
+uiListLayout.FillDirection = Enum.FillDirection.Vertical
+uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+uiListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+uiListLayout.Padding = UDim.new(0, 10)
+uiListLayout.Parent = adminNotificationHolder
+
+local function makeFrame2(p23, p24)
+  local adminJoinedNotification = Instance.new("Frame")
+  adminJoinedNotification.Name = "AdminJoinedNotification"
+  adminJoinedNotification.Size = UDim2.new(0, 345, 0, 105)
+  adminJoinedNotification.BackgroundColor3 = Color3.fromRGB(13, 19, 27)
+  adminJoinedNotification.BackgroundTransparency = 0.03
+  adminJoinedNotification.BorderSizePixel = 0
+  adminJoinedNotification.Parent = adminNotificationHolder
+
+  f4(adminJoinedNotification, 14)
+  f8(adminJoinedNotification, v24.Red, 1.5)
+
+  makeTextLabel(
+    adminJoinedNotification, "🛡️", UDim2.new(0, 48, 0, 48),
+    UDim2.new(0, 14, 0, 14), 25, v24.Text
+  ).TextXAlignment = Enum.TextXAlignment.Center
+
+  makeTextLabel(
+    adminJoinedNotification, "Admin Joined", UDim2.new(1, -85, 0, 30), UDim2.new(0, 70, 0, 10),
+    17, v24.Red
+  )
+
+  makeTextLabel(
+    adminJoinedNotification, p23.DisplayName .. " (@" .. p23.Name .. ")",
+    UDim2.new(1, -85, 0, 27), UDim2.new(0, 70, 0, 40), 13, v24.Text
+  ).TextTruncate = Enum.TextTruncate.AtEnd
+
+  makeTextLabel(
+    adminJoinedNotification, "Role: " .. p24, UDim2.new(1, -85, 0, 26),
+    UDim2.new(0, 70, 0, 67), 12, v24.Subtext
+  ).TextTruncate = Enum.TextTruncate.AtEnd
+
+  task.delay(8, function()
+    if not adminJoinedNotification.Parent then
+      return
+    end
+
+    tweenService:Create(adminJoinedNotification, TweenInfo.new(
+      0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In
+    ), { BackgroundTransparency = 1 }):Play()
+
+    for index29, value31 in ipairs(adminJoinedNotification:GetDescendants()) do
+      if value31:IsA("TextLabel") then
+        tweenService:Create(value31, TweenInfo.new(0.25), { TextTransparency = 1 }):Play()
+      end
+    end
+
+    task.wait(0.3)
+
+    if adminJoinedNotification.Parent then
+      adminJoinedNotification:Destroy()
+    end
+  end)
+end
+
+local function f28(p25)
+  local v78 = string.gsub(p25 or "", "^%s*(.-)%s*$", "%1")
+  return string.lower(v78)
+end
+
+local function f29(p26)
+  local v79, v80 = pcall(function() return p26:GetRoleInGroup(34515364) end)
+
+  if not v79 or not v80 then
+    return nil
+  end
+
+  if v6[f28(v80)] then
+    return v80
+  end
+
+  return nil
+end
+
+local v81 = nil
+local v82 = nil
+local v83 = nil
+local f30
+
+local function f31(key12, p27)
+  if not key12 or key12 == localPlayer then
+    return
+  else
+    local v84 = f29(key12)
+
+    if v84 then
+      local v85 = v7[key12] ~= nil
+      v7[key12] = v84
+      f30()
+
+      if not MENU_FEATURES_SHUT_DOWN and v5 and p27 and not v85 then
+        makeFrame2(key12, v84)
+      end
+    else
+      v7[key12] = nil
+      f30()
+    end
+
+    return
+  end
+end
+
+function f30()
+  local v86 = {}
+
+  for key13, value32 in pairs(v7) do
+    if key13 and key13.Parent == players then
+      table.insert(v86, { player = key13, role = value32 })
+    end
+  end
+
+  table.sort(v86, function(p28, p29)
+    return string.lower(p28.player.Name) < string.lower(p29.player.Name)
+  end)
+
+  if v82 then
+    v82.Text = "Detected Staff: " .. tostring(#v86)
+  end
+
+  if v81 then
+    if v5 then
+      v81.Text = "Notifier Status: Enabled"
+      v81.TextColor3 = v24.Green
+    else
+      v81.Text = "Notifier Status: Disabled"
+      v81.TextColor3 = v24.Subtext
+    end
+  end
+
+  if v83 then
+    if #v86 == 0 then
+      v83.Text = "No tracked staff are currently detected in this server."
+    else
+      local v87 = {}
+
+      for index30, value33 in ipairs(v86) do
+        table.insert(v87, value33.player.DisplayName .. " (@" .. value33.player.Name .. ")" .. "\n"
+          .. "↳ " .. value33.role)
+      end
+
+      v83.Text = table.concat(v87, "\n\n")
+    end
+  end
+end
+
+players.PlayerRemoving:Connect(function(player2)
+  f21(player2)
+  v7[player2] = nil
+  f30()
+end)
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.new(0, 920, 0, 580)
+main.Position = UDim2.new(0.5, -460, 0.5, -290)
+main.BackgroundColor3 = color2
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+main.Active = true
+main.Parent = adminControlPanel2
+main.Visible = true
+
+f6(main, "main")
+f4(main, 22)
+rgbMenuOutline = f8(main, Color3.fromHSV(0, 1, 1), 4, 0)
+rgbOutlineHue = 0
+
+runService.RenderStepped:Connect(function(delta3)
+  if not rgbMenuOutline or not rgbMenuOutline.Parent then
+    return
+  end
+
+  rgbOutlineHue = (rgbOutlineHue + delta3 * 0.12) % 1
+  rgbMenuOutline.Color = Color3.fromRGB(0, 0, 0)
+end)
+
+local uiScale = Instance.new("UIScale")
+uiScale.Scale = 0.9
+uiScale.Parent = main
+
+local topBar = Instance.new("Frame")
+topBar.Name = "TopBar"
+topBar.Size = UDim2.new(1, 0, 0, 72)
+topBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+topBar.BorderSizePixel = 0
+topBar.Active = true
+topBar.Parent = main
+
+f6(topBar, "topbar")
+f4(topBar, 20)
+
+local frame5 = Instance.new("Frame")
+frame5.Size = UDim2.new(1, 0, 0, 20)
+frame5.Position = UDim2.new(0, 0, 1, -20)
+frame5.BackgroundColor3 = v24.Topbar
+frame5.BorderSizePixel = 0
+frame5.Parent = topBar
+
+f6(frame5, "topbar")
+
+local menuIcon = Instance.new("ImageLabel")
+menuIcon.Name = "MenuIcon"
+menuIcon.Size = UDim2.new(0, 40, 0, 40)
+menuIcon.Position = UDim2.new(0, 20, 0.5, -20)
+menuIcon.BackgroundColor3 = v24.Panel2
+menuIcon.BorderSizePixel = 0
+menuIcon.Image = "rbxassetid://1251565403"
+menuIcon.ScaleType = Enum.ScaleType.Crop
+menuIcon.ZIndex = 3
+menuIcon.Parent = topBar
+
+f6(menuIcon, "panel2")
+f4(menuIcon, 11)
+f8(menuIcon, v24.Border)
+
+task.spawn(function()
+  pcall(function() contentProvider:PreloadAsync({ menuIcon }) end)
+  task.wait(1)
+
+  if not menuIcon.IsLoaded then
+    menuIcon.Image = "rbxthumb://type=Asset&id=1251565403&w=150&h=150"
+  end
+end)
+
+makeTextLabel(
+  topBar, "Silly Cheat Menu leaked by real", UDim2.new(0, 350, 0, 34), UDim2.new(0, 72, 0, 9), 22,
+  v24.Text
+).ZIndex = 3
+
+makeTextLabel(
+  topBar, "v1.0.0", UDim2.new(0, 110, 0, 24), UDim2.new(0, 72, 0, 40), 13, v24.Accent
+).ZIndex = 3
+
+local v88 = makeTextButton(
+  topBar, "×", UDim2.new(0, 36, 0, 36), UDim2.new(1, -56, 0, 18), v24.Topbar
+)
+
+v88.TextSize = 22
+v88.ZIndex = 10
+
+local v89 = makeTextButton(
+  topBar, "—", UDim2.new(0, 36, 0, 36), UDim2.new(1, -100, 0, 18), v24.Topbar
+)
+
+v89.TextSize = 20
+v89.ZIndex = 10
+
+local function f32(visible)
+  main.Visible = visible
+end
+
+v89.MouseButton1Click:Connect(function() f32(false) end)
+v88.MouseButton1Click:Connect(function() main.Visible = false end)
+
+local sidebar = Instance.new("Frame")
+sidebar.Name = "Sidebar"
+sidebar.Size = UDim2.new(0, 205, 1, -72)
+sidebar.Position = UDim2.new(0, 0, 0, 72)
+sidebar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
+
+f6(sidebar, "sidebar")
+f4(sidebar, 22)
+
+local sidebarTopFill = Instance.new("Frame")
+sidebarTopFill.Name = "SidebarTopFill"
+sidebarTopFill.Size = UDim2.new(1, 0, 0, 24)
+sidebarTopFill.Position = UDim2.new(0, 0, 0, 0)
+sidebarTopFill.BackgroundColor3 = v24.Sidebar
+sidebarTopFill.BorderSizePixel = 0
+sidebarTopFill.Parent = sidebar
+
+f6(sidebarTopFill, "sidebar")
+
+local sidebarBottomRightFill = Instance.new("Frame")
+sidebarBottomRightFill.Name = "SidebarBottomRightFill"
+sidebarBottomRightFill.Size = UDim2.new(0, 24, 0, 24)
+sidebarBottomRightFill.Position = UDim2.new(1, -24, 1, -24)
+sidebarBottomRightFill.BackgroundColor3 = v24.Sidebar
+sidebarBottomRightFill.BorderSizePixel = 0
+sidebarBottomRightFill.Parent = sidebar
+
+f6(sidebarBottomRightFill, "sidebar")
+
+local content = Instance.new("Frame")
+content.Name = "Content"
+content.Size = UDim2.new(1, -205, 1, -72)
+content.Position = UDim2.new(0, 205, 0, 72)
+content.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+content.BackgroundTransparency = 1
+content.BorderSizePixel = 0
+content.ClipsDescendants = true
+content.Parent = main
+
+local contentTexture = Instance.new("ImageLabel")
+contentTexture.Name = "ContentTexture"
+contentTexture.Size = UDim2.new(1, 0, 1, 0)
+contentTexture.Position = UDim2.new(0, 0, 0, 0)
+contentTexture.BackgroundTransparency = 1
+contentTexture.BorderSizePixel = 0
+contentTexture.Image = "rbxassetid://15767467949"
+contentTexture.ImageTransparency = 0.03
+contentTexture.ScaleType = Enum.ScaleType.Crop
+contentTexture.ZIndex = 0
+contentTexture.Parent = content
+
+local uiCorner2 = Instance.new("UICorner")
+uiCorner2.CornerRadius = UDim.new(0, 16)
+uiCorner2.Parent = contentTexture
+
+local uiGradient = Instance.new("UIGradient")
+
+uiGradient.Color = ColorSequence.new({
+  ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+  ColorSequenceKeypoint.new(0.55, Color3.fromRGB(28, 48, 62)),
+  ColorSequenceKeypoint.new(1, Color3.fromRGB(105, 185, 225)),
+})
+
+uiGradient.Rotation = 67
+uiGradient.Parent = contentTexture
+
+local v90 = {}
+local v91 = {}
+
+local function makeTextButton2(key14, text3, text4, p30)
+  local textButton2 = Instance.new("TextButton")
+  textButton2.Name = key14
+  textButton2.Size = UDim2.new(1, -24, 0, 46)
+  textButton2.Position = UDim2.new(0, 12, 0, p30)
+  textButton2.BackgroundColor3 = v24.Sidebar
+  textButton2.BackgroundTransparency = 1
+  textButton2.BorderSizePixel = 0
+  textButton2.AutoButtonColor = false
+  textButton2.Text = "  " .. text3 .. "  " .. text4
+  textButton2.TextColor3 = v24.Subtext
+  textButton2.TextSize = 16
+  textButton2.Font = merriweather
+  textButton2.TextXAlignment = Enum.TextXAlignment.Left
+  textButton2.ZIndex = 2
+  textButton2.Parent = sidebar
+
+  f4(textButton2, 11)
+  v90[key14] = textButton2
+  textButton2.MouseButton1Click:Connect(function() playMenuClickSound() end)
+  return textButton2
+end
+
+local v92 = makeTextButton2("Home", "🏠", "Home", 14)
+local v93 = makeTextButton2("Combat", "⚔️", "Combat", 62)
+local v94 = makeTextButton2("Player", "👤", "Player", 110)
+local v95 = makeTextButton2("ESP", "🔴", "ESP", 158)
+local v96 = makeTextButton2("AdminNotifier", "🛡️", "Admin Notifier", 206)
+hubsButton = makeTextButton2("Hubs", "🌍", "Hubs", 254)
+assistantButton = makeTextButton2("Assistant", "✨", "Assistant", 302)
+local v97 = makeTextButton2("Settings", "⚙️", "Settings", 350)
+local v98 = makeTextButton2("Info", "ℹ️", "Info", 398)
+
+local discordServer = Instance.new("TextButton")
+discordServer.Name = "DiscordServer"
+discordServer.Size = UDim2.new(1, -28, 0, 30)
+discordServer.Position = UDim2.new(0, 16, 1, -46)
+discordServer.BackgroundTransparency = 1
+discordServer.BorderSizePixel = 0
+discordServer.Text = "Discord Server"
+discordServer.TextColor3 = v24.Muted
+discordServer.Font = merriweather
+discordServer.TextSize = 15
+discordServer.TextXAlignment = Enum.TextXAlignment.Left
+discordServer.TextYAlignment = Enum.TextYAlignment.Center
+discordServer.Text = "Discord Server"
+
+local uiPadding = Instance.new("UIPadding")
+uiPadding.PaddingLeft = UDim.new(0, 35)
+uiPadding.Parent = discordServer
+
+discordServer.AutoButtonColor = false
+discordServer.ZIndex = 2
+discordServer.Parent = sidebar
+
+local discordIcon = Instance.new("ImageLabel")
+discordIcon.Name = "DiscordIcon"
+discordIcon.Size = UDim2.fromOffset(24, 24)
+discordIcon.Position = UDim2.new(0, -31, 0.5, -12)
+discordIcon.BackgroundTransparency = 1
+discordIcon.BorderSizePixel = 0
+discordIcon.Image = "rbxthumb://type=Asset&id=119731774091515&w=150&h=150"
+discordIcon.ImageTransparency = 0
+discordIcon.Visible = true
+discordIcon.ScaleType = Enum.ScaleType.Fit
+discordIcon.ZIndex = 3
+discordIcon.Parent = discordServer
+
+local uiCorner3 = Instance.new("UICorner")
+uiCorner3.CornerRadius = UDim.new(1, 0)
+uiCorner3.Parent = discordIcon
+
+discordServer.MouseEnter:Connect(function() discordServer.TextColor3 = v24.Text end)
+discordServer.MouseLeave:Connect(function() discordServer.TextColor3 = v24.Muted end)
+
+discordServer.MouseButton1Click:Connect(function()
+  playMenuClickSound()
+  local v99 = setclipboard or toclipboard
+
+  if v99 then
+    pcall(v99, "https://discord.gg/g66eFFUVEc")
+  end
+
+  pcall(function()
+    starterGui:SetCore("SendNotification", {
+      Title = "Discord Server",
+      Text = v99 and "Discord invite copied to clipboard." or "discord.gg/g66eFFUVEc",
+      Duration = 4,
+    })
+  end)
+end)
+
+local function makeScrollingFrame(key15, p31)
+  local scrollingFrame = Instance.new("ScrollingFrame")
+  scrollingFrame.Name = key15 .. "Page"
+  scrollingFrame.Size = UDim2.fromScale(1, 1)
+  scrollingFrame.BackgroundTransparency = 1
+  scrollingFrame.ClipsDescendants = true
+  scrollingFrame.BorderSizePixel = 0
+  scrollingFrame.Visible = false
+  scrollingFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+  scrollingFrame.ScrollBarThickness = 5
+  scrollingFrame.ScrollBarImageColor3 = v24.Accent
+  scrollingFrame.ScrollBarImageTransparency = 0.15
+  scrollingFrame.ElasticBehavior = Enum.ElasticBehavior.WhenScrollable
+  scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, p31)
+  scrollingFrame.Active = true
+  scrollingFrame.ZIndex = 3
+  scrollingFrame.Parent = content
+
+  v91[key15] = scrollingFrame
+  return scrollingFrame
+end
+
+local v100 = makeScrollingFrame("Home", 840)
+local v101 = makeScrollingFrame("Combat", 1060)
+local v102 = makeScrollingFrame("Player", 1770)
+local v103 = makeScrollingFrame("ESP", 760)
+local v104 = makeScrollingFrame("AdminNotifier", 800)
+hubsPage = makeScrollingFrame("Hubs", 520)
+
+assistantPage = makeScrollingFrame("Assistant", 620)
+assistantPage.ScrollBarThickness = 0
+assistantPage.ScrollBarImageTransparency = 1
+assistantPage.VerticalScrollBarInset = Enum.ScrollBarInset.None
+assistantPage.ScrollingEnabled = false
+assistantPage.CanvasPosition = Vector2.new(0, 0)
+
+local v105 = makeScrollingFrame("Settings", 980)
+local v106 = makeScrollingFrame("Info", 520)
+
+local function f33(p32, p33, p34)
+  makeTextLabel(p32, p33, UDim2.new(1, -60, 0, 42), UDim2.new(0, 30, 0, 22), 24, v24.Text)
+  makeTextLabel(p32, p34, UDim2.new(1, -60, 0, 32), UDim2.new(0, 30, 0, 64), 15, v24.Subtext)
+end
+
+local function makeTextBox(parent5, p35, p36, text5)
+  local textBox = Instance.new("TextBox")
+  textBox.Size = UDim2.new(0, 75, 0, 32)
+  textBox.Position = UDim2.new(0, p35, 0, p36)
+  textBox.BackgroundColor3 = v24.Input
+  textBox.BorderSizePixel = 0
+  textBox.Text = tostring(text5)
+  textBox.TextColor3 = v24.Text
+  textBox.Font = merriweather
+  textBox.TextSize = 14
+  textBox.ClearTextOnFocus = false
+  textBox.Parent = parent5
+
+  f6(textBox, "input")
+  f4(textBox, 8)
+  f8(textBox)
+  return textBox
+end
+
+local function makeFrame3(parent6, udim6, udim7)
+  local frame6 = Instance.new("Frame")
+  frame6.Size = udim6
+  frame6.Position = udim7
+  frame6.BackgroundColor3 = v24.Panel
+  frame6.BorderSizePixel = 0
+  frame6.Parent = parent6
+
+  f6(frame6, "panel")
+  f4(frame6, 14)
+  f8(frame6, v24.Border)
+
+  local uiStroke2 = Instance.new("UIStroke")
+  uiStroke2.Color = Color3.fromRGB(0, 0, 0)
+  uiStroke2.Thickness = 2
+  uiStroke2.Transparency = 0
+  uiStroke2.Parent = frame6
+
+  return frame6
+end
+
+toggleStateSetters = {}
+
+function setMenuToggle(key16, p37)
+  local v107 = key16 and toggleStateSetters[key16]
+
+  if v107 then
+    v107(p37)
+    return true
+  end
+
+  return false
+end
+
+local function makeTextButton3(parent7, p38, udim8, p39, fn2)
+  local frame7 = Instance.new("Frame")
+  frame7.Size = UDim2.new(1, -32, 0, 44)
+  frame7.Position = udim8
+  frame7.BackgroundColor3 = v24.Panel2
+  frame7.BorderSizePixel = 0
+  frame7.Parent = parent7
+
+  f6(frame7, "panel2")
+  f4(frame7, 10)
+  makeTextLabel(frame7, p38, UDim2.new(1, -100, 1, 0), UDim2.new(0, 14, 0, 0), 15, v24.Text)
+
+  local textButton3 = Instance.new("TextButton")
+  textButton3.Size = UDim2.new(0, 48, 0, 25)
+  textButton3.Position = UDim2.new(1, -62, 0.5, -12)
+  textButton3.BorderSizePixel = 0
+  textButton3.AutoButtonColor = false
+  textButton3.Text = ""
+  textButton3.Parent = frame7
+
+  f4(textButton3, 20)
+
+  local frame8 = Instance.new("Frame")
+  frame8.Size = UDim2.new(0, 19, 0, 19)
+  frame8.BorderSizePixel = 0
+  frame8.Parent = textButton3
+
+  f4(frame8, 20)
+  local v108 = p39
+
+  local function f34()
+    if v108 then
+      textButton3.BackgroundColor3 = v24.Accent
+      frame8.BackgroundColor3 = Color3.new(1, 1, 1)
+      frame8.Position = UDim2.new(1, -22, 0, 3)
+    else
+      textButton3.BackgroundColor3 = Color3.fromRGB(46, 56, 70)
+      frame8.BackgroundColor3 = Color3.fromRGB(190, 196, 205)
+      frame8.Position = UDim2.new(0, 3, 0, 3)
+    end
+  end
+
+  textButton3.MouseButton1Click:Connect(function()
+    playMenuClickSound()
+    v108 = not v108
+    f34()
+    fn2(v108)
+  end)
+
+  toggleStateSetters[textButton3] = function(p40)
+    v108 = p40 == true
+    f34()
+    fn2(v108)
+  end
+
+  textButton3.Destroying:Connect(function() toggleStateSetters[textButton3] = nil end)
+  f34()
+  return textButton3
+end
+
+local function makeFrame4(parent8, p41, udim9, text6)
+  local frame9 = Instance.new("Frame")
+  frame9.Size = UDim2.new(1, -32, 0, 50)
+  frame9.Position = udim9
+  frame9.BackgroundColor3 = v24.Panel2
+  frame9.BorderSizePixel = 0
+  frame9.Parent = parent8
+
+  f6(frame9, "panel2")
+  f4(frame9, 10)
+  makeTextLabel(frame9, p41, UDim2.new(0.55, -10, 1, 0), UDim2.new(0, 14, 0, 0), 15, v24.Text)
+
+  local textBox2 = Instance.new("TextBox")
+  textBox2.Size = UDim2.new(0, 150, 0, 32)
+  textBox2.Position = UDim2.new(1, -164, 0.5, -16)
+  textBox2.BackgroundColor3 = v24.Input
+  textBox2.BorderSizePixel = 0
+  textBox2.Text = text6
+  textBox2.TextColor3 = v24.Text
+  textBox2.Font = merriweather
+  textBox2.TextSize = 14
+  textBox2.ClearTextOnFocus = false
+  textBox2.Parent = frame9
+
+  f6(textBox2, "input")
+  f4(textBox2, 8)
+  f8(textBox2)
+  return textBox2
+end
+
+f33(v100, "Home", "Current menu information and game status.")
+
+local function f35(p42, p43, p44)
+  local v109 = makeFrame3(v100, UDim2.new(0, 145, 0, 90), UDim2.new(0, p42, 0, 105))
+  makeTextLabel(v109, p43, UDim2.new(1, -20, 0, 24), UDim2.new(0, 14, 0, 12), 13, v24.Subtext)
+
+  return makeTextLabel(
+    v109, p44, UDim2.new(1, -20, 0, 34), UDim2.new(0, 14, 0, 42), 16, v24.Green
+  )
+end
+
+f35(30, "STATUS", "Running")
+f35(187, "VERSION", "v1.0.0")
+f35(344, "CHANNEL", "Stable")
+
+local v110 = f35(501, "PING", "-- ms")
+local v111 = makeFrame3(v100, UDim2.new(0.5, -37, 0, 265), UDim2.new(0, 30, 0, 310))
+local v112 = makeFrame3(v100, UDim2.new(0.5, -37, 0, 265), UDim2.new(0.5, 7, 0, 310))
+
+makeTextLabel(
+  v111, "LATEST UPDATES", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 8), 14, v24.Text
+)
+
+local updatesScroll = Instance.new("ScrollingFrame")
+updatesScroll.Name = "UpdatesScroll"
+updatesScroll.BackgroundTransparency = 1
+updatesScroll.BorderSizePixel = 0
+updatesScroll.Position = UDim2.new(0, 14, 0, 42)
+updatesScroll.Size = UDim2.new(1, -24, 1, -52)
+updatesScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+updatesScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+updatesScroll.ScrollBarThickness = 4
+updatesScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+updatesScroll.Parent = v111
+
+local uiListLayout2 = Instance.new("UIListLayout")
+uiListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+uiListLayout2.Padding = UDim.new(0, 8)
+uiListLayout2.Parent = updatesScroll
+
+for index31, value34 in ipairs(v8) do
+  local frame10 = Instance.new("Frame")
+  frame10.Name = "Update" .. tostring(index31)
+  frame10.BackgroundTransparency = 1
+  frame10.Size = UDim2.new(1, -8, 0, 58)
+  frame10.LayoutOrder = index31
+  frame10.Parent = updatesScroll
+
+  makeTextLabel(
+    frame10, value34.title, UDim2.new(1, -8, 0, 20), UDim2.new(0, 0, 0, 0), 13,
+    v24.Text
+  ).TextTruncate = Enum.TextTruncate.AtEnd
+
+  makeTextLabel(
+    frame10, value34.description, UDim2.new(1, -8, 0, 36), UDim2.new(0, 6, 0, 19),
+    11, v24.Subtext
+  ).TextWrapped = true
+end
+
+makeTextLabel(
+  v112, "QUICK STATUS", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 8), 14, v24.Text
+)
+
+local v113 = makeTextLabel(
+  v112, "Aura: Disabled", UDim2.new(1, -30, 0, 30), UDim2.new(0, 16, 0, 48), 14, v24.Subtext
+)
+
+local v114 = makeTextLabel(
+  v112, "Reach: Disabled", UDim2.new(1, -30, 0, 30), UDim2.new(0, 16, 0, 80), 14, v24.Subtext
+)
+
+local v115 = makeTextLabel(
+  v112, "Fly: Disabled", UDim2.new(1, -30, 0, 30), UDim2.new(0, 16, 0, 112), 14, v24.Subtext
+)
+
+local v116 = makeTextLabel(
+  v112, "ESP: Disabled", UDim2.new(1, -30, 0, 30), UDim2.new(0, 16, 0, 144), 14, v24.Subtext
+)
+
+local v117 = makeTextLabel(
+  v112, "Aura Detection: " .. tostring(v10) .. " studs", UDim2.new(1, -30, 0, 30),
+  UDim2.new(0, 16, 0, 176), 14, v24.Subtext
+)
+
+local v118 = makeTextLabel(
+  v112, "Reach: " .. tostring(v14) .. " studs", UDim2.new(1, -30, 0, 30),
+  UDim2.new(0, 16, 0, 208), 14, v24.Subtext
+)
+
+local v119 = makeFrame3(v100, UDim2.new(1, -60, 0, 150), UDim2.new(0, 30, 0, 595))
+makeTextLabel(v119, "SESSION", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 8), 14, v24.Text)
+
+local v120 = makeTextLabel(v119, "Player: " .. localPlayer.Name .. "\n" .. "Place ID: "
+  .. tostring(game.PlaceId) .. "\n" .. "Job ID: " .. tostring(game.JobId) .. "\n"
+  .. "Menu Toggle: " .. k.Name, UDim2.new(1, -30, 0, 100), UDim2.new(0, 16, 0, 42), 13, v24.Subtext)
+
+v120.TextWrapped = true
+v120.TextYAlignment = Enum.TextYAlignment.Top
+
+f33(v101, "Combat", "Configure Swing Aura and Reach independently.")
+local v121 = makeFrame3(v101, UDim2.new(1, -60, 0, 255), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  v121, "Swing Aura", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+makeTextLabel(
+  v121, "Automatically checks and attacks valid nearby targets.", UDim2.new(1, -32, 0, 28),
+  UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+auraToggle = makeTextButton3(
+  v121, "Enable Swing Aura", UDim2.new(0, 16, 0, 80), v9, function(p45) v9 = p45 end
+)
+
+local v122 = makeFrame4(v121, "Detection Range", UDim2.new(0, 16, 0, 135), tostring(v10))
+
+v122.FocusLost:Connect(function()
+  local v123 = tonumber(v122.Text)
+
+  if v123 then
+    v10 = math.clamp(v123, 12.5, 100)
+  end
+
+  v122.Text = tostring(v10)
+end)
+
+local v124 = makeFrame4(v121, "Attack Cooldown", UDim2.new(0, 16, 0, 190), tostring(v11))
+
+v124.FocusLost:Connect(function()
+  local v125 = tonumber(v124.Text)
+
+  if v125 then
+    v11 = math.clamp(v125, 0.08, 5)
+  end
+
+  v124.Text = tostring(v11)
+end)
+
+local v126 = makeFrame3(v101, UDim2.new(1, -60, 0, 225), UDim2.new(0, 30, 0, 385))
+
+makeTextLabel(v126, "Reach", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text)
+
+makeTextLabel(
+  v126, "Only checks for a target when your equipped Tool is activated.",
+  UDim2.new(1, -32, 0, 28), UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+reachToggle = makeTextButton3(v126, "Enable Reach", UDim2.new(0, 16, 0, 80), v13, function(p46)
+  v13 = p46
+end)
+
+reachDistanceSlider = makeFrame(
+  v126, "Reach Distance", UDim2.new(0, 16, 0, 135), 1, 40, v14, function(p47) v14 = p47 end
+)
+
+hitboxExpanderCard = makeFrame3(v101, UDim2.new(1, -60, 0, 225), UDim2.new(0, 30, 0, 630))
+
+makeTextLabel(
+  hitboxExpanderCard, "Hitbox Expander", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18,
+  v24.Text
+)
+
+makeTextLabel(
+  hitboxExpanderCard,
+  "On each Tool swing, hitting the expanded box registers that player as the target.",
+  UDim2.new(1, -32, 0, 28), UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+hitboxExpanderToggle = makeTextButton3(hitboxExpanderCard, "Enable Hitbox Expander", UDim2.new(0, 16, 0, 80), false, function(p48)
+  if p48 then
+    startHitboxExpander()
+  else
+    stopHitboxExpander()
+  end
+end)
+
+hitboxExpanderSlider = makeFrame(hitboxExpanderCard, "Hitbox Size", UDim2.new(0, 16, 0, 130), HITBOX_EXPANDER_MIN, HITBOX_EXPANDER_MAX, HITBOX_EXPANDER_SIZE, function(p49)
+  HITBOX_EXPANDER_SIZE = p49
+
+  if HITBOX_EXPANDER_ENABLED then
+    refreshExpandedHitboxes()
+  end
+end)
+
+local v127 = makeFrame3(v101, UDim2.new(1, -60, 0, 150), UDim2.new(0, 30, 0, 875))
+
+makeTextLabel(
+  v127, "COMBAT STATUS", UDim2.new(1, -32, 0, 34), UDim2.new(0, 16, 0, 8), 14, v24.Text
+)
+
+makeTextLabel(v127, [[
+Aura standing hit range: 12.5 studs
+Aura moving hit range: 11.5 studs
+Reach range: adjustable from 1 - 40 studs
+Hitbox Expander: 2 - 20 studs; checks on Tool activation
+Reach only runs when your Tool is activated.]], UDim2.new(1, -32, 0, 82), UDim2.new(0, 16, 0, 42), 13, v24.Subtext).TextYAlignment = Enum.TextYAlignment.Top
+
+f33(v102, "Player", "Movement, teleport, anti void, anti-ragdoll, fling and flight settings.")
+local v128 = makeFrame3(v102, UDim2.new(1, -60, 0, 215), UDim2.new(0, 30, 0, 105))
+makeTextLabel(v128, "Movement", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text)
+local v129 = makeFrame4(v128, "Walk Speed", UDim2.new(0, 16, 0, 58), "16")
+
+local v130 = makeTextButton(
+  v128, "Apply Speed", UDim2.new(0.5, -24, 0, 38), UDim2.new(0, 16, 0, 123), v24.Accent
+)
+
+local v131 = makeTextButton(
+  v128, "Reset Speed", UDim2.new(0.5, -24, 0, 38), UDim2.new(0.5, 8, 0, 123), v24.Panel2
+)
+
+v130.MouseButton1Click:Connect(function()
+  local v132 = tonumber(v129.Text)
+
+  if v132 and humanoid then
+    humanoid.WalkSpeed = v132
+  end
+end)
+
+v131.MouseButton1Click:Connect(function()
+  if humanoid then
+    humanoid.WalkSpeed = 16
+    v129.Text = "16"
+  end
+end)
+
+jumpPowerCard = makeFrame3(v102, UDim2.new(1, -60, 0, 130), UDim2.new(0, 30, 0, 340))
+
+makeTextLabel(
+  jumpPowerCard, "Jump Power", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+makeTextLabel(
+  jumpPowerCard, "Change how high your player can jump.", UDim2.new(1, -190, 0, 32),
+  UDim2.new(0, 16, 0, 62), 13, v24.Subtext
+)
+
+jumpPowerBox = Instance.new("TextBox")
+jumpPowerBox.Size = UDim2.new(0, 140, 0, 36)
+jumpPowerBox.Position = UDim2.new(1, -156, 0, 58)
+jumpPowerBox.BackgroundColor3 = v24.Input
+jumpPowerBox.BorderSizePixel = 0
+jumpPowerBox.Text = "50"
+jumpPowerBox.TextColor3 = v24.Text
+jumpPowerBox.Font = merriweather
+jumpPowerBox.TextSize = 14
+jumpPowerBox.ClearTextOnFocus = false
+jumpPowerBox.TextXAlignment = Enum.TextXAlignment.Center
+jumpPowerBox.Parent = jumpPowerCard
+
+f4(jumpPowerBox, 8)
+f8(jumpPowerBox)
+
+jumpPowerBox.FocusLost:Connect(function()
+  local v133 = tonumber(jumpPowerBox.Text)
+
+  if v133 and humanoid then
+    v133 = math.clamp(v133, 0, 500)
+
+    pcall(function()
+      humanoid.UseJumpPower = true
+      humanoid.JumpPower = v133
+    end)
+  end
+
+  if humanoid then
+    jumpPowerBox.Text = tostring(math.floor(humanoid.JumpPower))
+  end
+end)
+
+clickTeleportCard = makeFrame3(v102, UDim2.new(1, -60, 0, 130), UDim2.new(0, 30, 0, 490))
+
+makeTextLabel(
+  clickTeleportCard, "Click to Teleport", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18,
+  v24.Text
+)
+
+makeTextLabel(
+  clickTeleportCard, "Click a point in the world to teleport there.", UDim2.new(1, -32, 0, 28),
+  UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+clickTeleportToggle = makeTextButton3(clickTeleportCard, "Enable Click to Teleport", UDim2.new(0, 16, 0, 78), clickTeleportEnabled, function(p50)
+  clickTeleportEnabled = p50
+
+  if p50 then
+    startClickTeleport()
+  else
+    stopClickTeleport()
+  end
+end)
+
+teleportPlayerCard = makeFrame3(v102, UDim2.new(1, -60, 0, 250), UDim2.new(0, 30, 0, 640))
+
+makeTextLabel(
+  teleportPlayerCard, "Teleport to Player", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10),
+  18, v24.Text
+)
+
+makeTextLabel(
+  teleportPlayerCard, "Select a player from the dropdown and teleport to them.",
+  UDim2.new(1, -32, 0, 28), UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+teleportSelectedPlayer = nil
+
+teleportPlayerDropdownButton = makeTextButton(
+  teleportPlayerCard, "Select Player", UDim2.new(1, -32, 0, 40), UDim2.new(0, 16, 0, 78),
+  v24.Panel2
+)
+
+teleportPlayerDropdownButton.TextXAlignment = Enum.TextXAlignment.Left
+teleportPlayerDropdownButton.Text = "   Select Player"
+
+teleportPlayerList = Instance.new("ScrollingFrame")
+teleportPlayerList.Name = "TeleportPlayerList"
+teleportPlayerList.Size = UDim2.new(1, -32, 0, 72)
+teleportPlayerList.Position = UDim2.new(0, 16, 0, 122)
+teleportPlayerList.BackgroundColor3 = v24.Panel2
+teleportPlayerList.BorderSizePixel = 0
+teleportPlayerList.ScrollBarThickness = 5
+teleportPlayerList.ScrollBarImageColor3 = v24.Accent
+teleportPlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
+teleportPlayerList.Visible = false
+teleportPlayerList.ZIndex = 30
+teleportPlayerList.Parent = teleportPlayerCard
+
+f4(teleportPlayerList, 8)
+
+teleportPlayerListLayout = Instance.new("UIListLayout")
+teleportPlayerListLayout.SortOrder = Enum.SortOrder.Name
+teleportPlayerListLayout.Padding = UDim.new(0, 3)
+teleportPlayerListLayout.Parent = teleportPlayerList
+
+teleportPlayerButton = makeTextButton(
+  teleportPlayerCard, "Teleport", UDim2.new(1, -32, 0, 38), UDim2.new(0, 16, 1, -48), v24.Panel2
+)
+
+function refreshTeleportPlayerList()
+  for index32, value35 in ipairs(teleportPlayerList:GetChildren()) do
+    if value35:IsA("TextButton") then
+      value35:Destroy()
+    end
+  end
+
+  for index33, value36 in ipairs(players:GetPlayers()) do
+    local v134 = value36
+
+    if v134 ~= localPlayer then
+      local textButton4 = Instance.new("TextButton")
+      textButton4.Size = UDim2.new(1, -8, 0, 30)
+      textButton4.BackgroundColor3 = v24.Input
+      textButton4.BorderSizePixel = 0
+      textButton4.Text = "   " .. v134.DisplayName .. "  @" .. v134.Name
+      textButton4.TextColor3 = v24.Text
+      textButton4.Font = merriweather
+      textButton4.TextSize = 13
+      textButton4.TextXAlignment = Enum.TextXAlignment.Left
+      textButton4.ZIndex = 31
+      textButton4.Parent = teleportPlayerList
+
+      f6(textButton4, "input")
+      f4(textButton4, 6)
+
+      textButton4.MouseButton1Click:Connect(function()
+        teleportSelectedPlayer = v134
+        teleportPlayerDropdownButton.Text = "   " .. v134.DisplayName .. "  @" .. v134.Name
+        teleportPlayerList.Visible = false
+      end)
+    end
+  end
+
+  task.defer(function()
+    if teleportPlayerList and teleportPlayerList.Parent and teleportPlayerListLayout then
+      teleportPlayerList.CanvasSize = UDim2.new(0, 0, 0, teleportPlayerListLayout.AbsoluteContentSize.Y
+        + 6)
+    end
+  end)
+end
+
+teleportPlayerDropdownButton.MouseButton1Click:Connect(function()
+  teleportPlayerList.Visible = not teleportPlayerList.Visible
+
+  if teleportPlayerList.Visible then
+    refreshTeleportPlayerList()
+  end
+end)
+
+teleportPlayerButton.MouseButton1Click:Connect(function()
+  if not teleportSelectedPlayer or teleportSelectedPlayer.Parent ~= players then
+    teleportPlayerDropdownButton.Text = "   Select Player"
+    teleportSelectedPlayer = nil
+    return
+  else
+    local character14 = teleportSelectedPlayer.Character
+
+    local humanoidRootPart13 = character14
+      and (character14:FindFirstChild("HumanoidRootPart") or character14:FindFirstChild("Torso"))
+
+    if not humanoidRootPart13 or not humanoidRootPart or not humanoidRootPart.Parent then
+      return
+    end
+
+    humanoidRootPart.CFrame = humanoidRootPart13.CFrame * CFrame.new(0, 0, 3)
+    return
+  end
+end)
+
+players.PlayerAdded:Connect(function()
+  if teleportPlayerList and teleportPlayerList.Visible then
+    refreshTeleportPlayerList()
+  end
+end)
+
+players.PlayerRemoving:Connect(function(player3)
+  if teleportSelectedPlayer == player3 then
+    teleportSelectedPlayer = nil
+    teleportPlayerDropdownButton.Text = "   Select Player"
+  end
+
+  if teleportPlayerList and teleportPlayerList.Visible then
+    refreshTeleportPlayerList()
+  end
+end)
+
+antiVoidCard = makeFrame3(v102, UDim2.new(1, -60, 0, 130), UDim2.new(0, 30, 0, 910))
+
+makeTextLabel(
+  antiVoidCard, "Anti Void", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+makeTextLabel(
+  antiVoidCard, "Creates a moving void platform beneath you at Y -27.",
+  UDim2.new(1, -32, 0, 28), UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+antiVoidToggle = makeTextButton3(antiVoidCard, "Enable Anti Void", UDim2.new(0, 16, 0, 78), antiVoidEnabled, function(p51)
+  antiVoidEnabled = p51
+
+  if p51 then
+    startAntiVoid()
+  else
+    stopAntiVoid()
+  end
+end)
+
+antiRagdollCard = makeFrame3(v102, UDim2.new(1, -60, 0, 130), UDim2.new(0, 30, 0, 1060))
+
+makeTextLabel(
+  antiRagdollCard, "Anti-Ragdoll", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18,
+  v24.Text
+)
+
+makeTextLabel(
+  antiRagdollCard, "Anchors your character while the Ragdolled value is active.",
+  UDim2.new(1, -32, 0, 28), UDim2.new(0, 16, 0, 43), 13, v24.Subtext
+)
+
+antiRagdollToggle = makeTextButton3(antiRagdollCard, "Enable Anti-Ragdoll", UDim2.new(0, 16, 0, 78), antiRagdollEnabled, function(p52)
+  if p52 then
+    startAntiRagdoll()
+  else
+    stopAntiRagdoll()
+  end
+end)
+
+flingCard = makeFrame3(v102, UDim2.new(1, -60, 0, 130), UDim2.new(0, 30, 0, 1210))
+
+makeTextLabel(
+  flingCard, "Fling", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+flingToggle = makeTextButton3(flingCard, "Enable Fling", UDim2.new(0, 16, 0, 55), flingEnabled, function(p53)
+  flingEnabled = p53
+
+  if p53 then
+    startFling()
+  else
+    stopFling()
+  end
+end)
+
+local v135 = makeFrame3(v102, UDim2.new(1, -60, 0, 190), UDim2.new(0, 30, 0, 1360))
+makeTextLabel(v135, "Flight", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text)
+
+flyToggle = makeTextButton3(v135, "Enable Fly", UDim2.new(0, 16, 0, 55), v17, function(p54)
+  v17 = p54
+
+  if p54 then
+    f15()
+  else
+    f19()
+  end
+end)
+
+local v136 = makeFrame4(v135, "Fly Speed", UDim2.new(0, 16, 0, 109), tostring(v18))
+
+v136.FocusLost:Connect(function()
+  local v137 = tonumber(v136.Text)
+
+  if v137 then
+    v18 = math.clamp(v137, 1, 300)
+  end
+
+  v136.Text = tostring(v18)
+end)
+
+local v138 = makeFrame3(v102, UDim2.new(1, -60, 0, 135), UDim2.new(0, 30, 0, 1570))
+
+makeTextLabel(
+  v138, "FLY CONTROLS", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 8), 14, v24.Text
+)
+
+makeTextLabel(v138, [[
+W / A / S / D - Movement
+Space - Fly Up
+Left Ctrl - Fly Down]], UDim2.new(1, -30, 0, 82), UDim2.new(0, 16, 0, 43), 14, v24.Subtext).TextYAlignment = Enum.TextYAlignment.Top
+
+f33(v103, "ESP", "Configure player highlighting and information.")
+local v139 = makeFrame3(v103, UDim2.new(1, -60, 0, 205), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  v139, "Player ESP", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+espToggle = makeTextButton3(v139, "Enable ESP", UDim2.new(0, 16, 0, 48), v19, function(p55)
+  v19 = p55
+end)
+
+makeTextButton3(v139, "Show Distance", UDim2.new(0, 16, 0, 98), v20, function(p56) v20 = p56 end)
+makeTextButton3(v139, "Show Health", UDim2.new(0, 16, 0, 148), v21, function(p57) v21 = p57 end)
+
+local v140 = makeFrame3(v103, UDim2.new(1, -60, 0, 145), UDim2.new(0, 30, 0, 410))
+
+makeTextLabel(
+  v140, "Highlight Color", UDim2.new(0, 200, 0, 32), UDim2.new(0, 16, 0, 10), 16, v24.Text
+)
+
+makeTextLabel(v140, "R", UDim2.new(0, 20, 0, 30), UDim2.new(0, 16, 0, 55), 14, v24.Subtext)
+
+local v141 = makeTextBox(v140, 40, 54, 255)
+makeTextLabel(v140, "G", UDim2.new(0, 20, 0, 30), UDim2.new(0, 130, 0, 55), 14, v24.Subtext)
+local v142 = makeTextBox(v140, 154, 54, 60)
+makeTextLabel(v140, "B", UDim2.new(0, 20, 0, 30), UDim2.new(0, 244, 0, 55), 14, v24.Subtext)
+local v143 = makeTextBox(v140, 268, 54, 70)
+
+makeTextButton(
+  v140, "Apply Color", UDim2.new(0, 140, 0, 34),
+  UDim2.new(1, -156, 0, 53), v24.Accent
+).MouseButton1Click:Connect(function()
+  local v144 = tonumber(v141.Text)
+  local v145 = math.clamp(v144 or 255, 0, 255)
+  local v146 = tonumber(v142.Text)
+  local v147 = math.clamp(v146 or 60, 0, 255)
+  local v148 = tonumber(v143.Text)
+  local v149 = math.clamp(v148 or 70, 0, 255)
+  color = Color3.fromRGB(v145, v147, v149)
+
+  for key17, value37 in pairs(v22) do
+    if value37.Highlight then
+      value37.Highlight.FillColor = color
+      value37.Highlight.OutlineColor = color
+    end
+  end
+end)
+
+f33(v104, "Admin Notifier", "Warns you when tracked Silly Corp staff join the server.")
+local v150 = makeFrame3(v104, UDim2.new(1, -60, 0, 220), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  v150, "🛡️ Admin Notifier", UDim2.new(1, -30, 0, 40), UDim2.new(0, 16, 0, 10), 18,
+  v24.Text
+)
+
+adminNotifierToggle = makeTextButton3(v150, "Enable Admin Notifications", UDim2.new(0, 16, 0, 58), v5, function(p58)
+  v5 = p58
+  f30()
+end)
+
+v81 = makeTextLabel(
+  v150, "Notifier Status: Enabled", UDim2.new(1, -32, 0, 30), UDim2.new(0, 16, 0, 116), 14,
+  v24.Green
+)
+
+v82 = makeTextLabel(
+  v150, "Detected Staff: 0", UDim2.new(1, -32, 0, 30), UDim2.new(0, 16, 0, 150), 14, v24.Subtext
+)
+
+makeTextLabel(
+  v150, "Group ID: " .. tostring(34515364), UDim2.new(1, -32, 0, 28), UDim2.new(0, 16, 0, 181),
+  12, v24.Muted
+)
+
+local v151 = makeFrame3(v104, UDim2.new(1, -60, 0, 200), UDim2.new(0, 30, 0, 345))
+
+makeTextLabel(
+  v151, "CURRENTLY DETECTED STAFF", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 10), 14,
+  v24.Text
+)
+
+v83 = makeTextLabel(
+  v151, "No tracked staff are currently detected in this server.", UDim2.new(1, -32, 0, 140),
+  UDim2.new(0, 16, 0, 48), 13, v24.Subtext
+)
+
+v83.TextWrapped = true
+v83.TextYAlignment = Enum.TextYAlignment.Top
+
+local v152 = makeFrame3(v104, UDim2.new(1, -60, 0, 220), UDim2.new(0, 30, 0, 565))
+
+makeTextLabel(
+  v152, "TRACKED RANKS", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 10), 14, v24.Text
+)
+
+local v153 = makeTextLabel(
+  v152,
+  "Trial Mod • Jr Mod • Mod • Sr Mod Guys\nHead Mod Guys • Unbound Staff • Silly Council\nStaff Manager People • Silly Corp Executive\nSilly Corp Structural Science Dept\nSilly Corp Representative • Silly CEO",
+  UDim2.new(1, -32, 0, 155), UDim2.new(0, 16, 0, 48), 13, v24.Subtext
+)
+
+v153.TextWrapped = true
+v153.TextYAlignment = Enum.TextYAlignment.Top
+
+f33(hubsPage, "🌍 Hubs", "Quick access to external admin and utility hubs.")
+hubsCard = makeFrame3(hubsPage, UDim2.new(1, -60, 0, 324), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  hubsCard, "Available Hubs", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+dexHubButton = makeTextButton(
+  hubsCard, "Dex Hub", UDim2.new(1, -32, 0, 46), UDim2.new(0, 16, 0, 60), v24.Panel2
+)
+
+function launchDexHub()
+  loadstring(game:HttpGet("https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua"))()
+end
+
+dexHubButton.MouseButton1Click:Connect(launchDexHub)
+
+infiniteYieldButton = makeTextButton(
+  hubsCard, "Infinite Yield", UDim2.new(1, -32, 0, 46), UDim2.new(0, 16, 0, 120), v24.Panel2
+)
+
+function launchInfiniteYield()
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua"))()
+end
+
+infiniteYieldButton.MouseButton1Click:Connect(launchInfiniteYield)
+
+rockFlingButton = makeTextButton(
+  hubsCard, "Rock Fling", UDim2.new(1, -32, 0, 46), UDim2.new(0, 16, 0, 180), v24.Panel2
+)
+
+noCooldownsButton = makeTextButton(
+  hubsCard, "No Cooldowns", UDim2.new(1, -32, 0, 46), UDim2.new(0, 16, 0, 234), v24.Panel2
+)
+
+function launchRockFling()
+  local v154, v155 = loadstring('--// ROCK FLINGER\n\n\nlocal Players = game:GetService("Players")\nlocal UserInputService = game:GetService("UserInputService")\n\nlocal LocalPlayer = Players.LocalPlayer\nlocal PlayerGui = LocalPlayer:WaitForChild("PlayerGui")\n\nlocal DEFAULT_VELOCITY = 250\n\n--==================================================\n-- FIND YOUR OWN ROCK\n--==================================================\n\nlocal function GetMyRock()\n\tlocal Character = LocalPlayer.Character\n\n\tif not Character then\n\t\treturn nil\n\tend\n\n\t-- Check directly inside the character\n\tlocal Rock = Character:FindFirstChild("Rock")\n\n\tif Rock and Rock:IsA("BasePart") then\n\t\treturn Rock\n\tend\n\n\t-- Search inside the character in case Rock is inside\n\t-- another folder/model\n\tfor _, Object in ipairs(Character:GetDescendants()) do\n\t\tif Object.Name == "Rock" and Object:IsA("BasePart") then\n\t\t\treturn Object\n\t\tend\n\tend\n\n\treturn nil\nend\n\n--==================================================\n-- GUI\n--==================================================\n\nlocal ScreenGui = Instance.new("ScreenGui")\nScreenGui.Name = "RockFlingGUI"\nScreenGui.ResetOnSpawn = false\nScreenGui.Parent = PlayerGui\n\nlocal Main = Instance.new("Frame")\nMain.Name = "Main"\nMain.Size = UDim2.new(0, 320, 0, 270)\nMain.Position = UDim2.new(0.5, -160, 0.5, -135)\nMain.BackgroundColor3 = Color3.fromRGB(20, 20, 25)\nMain.BorderSizePixel = 0\nMain.Parent = ScreenGui\n\nlocal MainCorner = Instance.new("UICorner")\nMainCorner.CornerRadius = UDim.new(0, 10)\nMainCorner.Parent = Main\n\nlocal MainStroke = Instance.new("UIStroke")\nMainStroke.Thickness = 2\nMainStroke.Color = Color3.fromRGB(80, 80, 90)\nMainStroke.Parent = Main\n\n--==================================================\n-- TITLE\n--==================================================\n\nlocal Title = Instance.new("TextLabel")\nTitle.Size = UDim2.new(1, 0, 0, 40)\nTitle.BackgroundTransparency = 1\nTitle.Text = "ROCK FLINGER"\nTitle.TextColor3 = Color3.fromRGB(255, 255, 255)\nTitle.TextSize = 21\nTitle.Font = Enum.Font.GothamBold\nTitle.Parent = Main\n\n--==================================================\n-- TARGET LABEL\n--==================================================\n\nlocal TargetLabel = Instance.new("TextLabel")\nTargetLabel.Size = UDim2.new(1, -30, 0, 22)\nTargetLabel.Position = UDim2.new(0, 15, 0, 45)\nTargetLabel.BackgroundTransparency = 1\nTargetLabel.Text = "Target Player"\nTargetLabel.TextColor3 = Color3.fromRGB(190, 190, 190)\nTargetLabel.TextSize = 14\nTargetLabel.Font = Enum.Font.Gotham\nTargetLabel.TextXAlignment = Enum.TextXAlignment.Left\nTargetLabel.Parent = Main\n\n--==================================================\n-- TARGET BUTTON\n--==================================================\n\nlocal PlayerButton = Instance.new("TextButton")\nPlayerButton.Size = UDim2.new(1, -30, 0, 36)\nPlayerButton.Position = UDim2.new(0, 15, 0, 68)\nPlayerButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)\nPlayerButton.BorderSizePixel = 0\nPlayerButton.Text = "Select Player"\nPlayerButton.TextColor3 = Color3.fromRGB(255, 255, 255)\nPlayerButton.TextSize = 14\nPlayerButton.Font = Enum.Font.Gotham\nPlayerButton.Parent = Main\n\nlocal PlayerButtonCorner = Instance.new("UICorner")\nPlayerButtonCorner.CornerRadius = UDim.new(0, 6)\nPlayerButtonCorner.Parent = PlayerButton\n\n--==================================================\n-- PLAYER LIST\n--==================================================\n\nlocal PlayerList = Instance.new("ScrollingFrame")\nPlayerList.Size = UDim2.new(1, -30, 0, 85)\nPlayerList.Position = UDim2.new(0, 15, 0, 106)\nPlayerList.BackgroundColor3 = Color3.fromRGB(28, 28, 34)\nPlayerList.BorderSizePixel = 0\nPlayerList.ScrollBarThickness = 5\nPlayerList.Visible = false\nPlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)\nPlayerList.ZIndex = 20\nPlayerList.Parent = Main\n\nlocal PlayerListCorner = Instance.new("UICorner")\nPlayerListCorner.CornerRadius = UDim.new(0, 6)\nPlayerListCorner.Parent = PlayerList\n\nlocal ListLayout = Instance.new("UIListLayout")\nListLayout.SortOrder = Enum.SortOrder.Name\nListLayout.Padding = UDim.new(0, 2)\nListLayout.Parent = PlayerList\n\nlocal selectedPlayer = nil\n\n--==================================================\n-- VELOCITY LABEL\n--==================================================\n\nlocal VelocityLabel = Instance.new("TextLabel")\nVelocityLabel.Size = UDim2.new(0, 110, 0, 25)\nVelocityLabel.Position = UDim2.new(0, 15, 0, 150)\nVelocityLabel.BackgroundTransparency = 1\nVelocityLabel.Text = "Fling Velocity"\nVelocityLabel.TextColor3 = Color3.fromRGB(190, 190, 190)\nVelocityLabel.TextSize = 14\nVelocityLabel.Font = Enum.Font.Gotham\nVelocityLabel.TextXAlignment = Enum.TextXAlignment.Left\nVelocityLabel.Parent = Main\n\n--==================================================\n-- VELOCITY BOX\n--==================================================\n\nlocal VelocityBox = Instance.new("TextBox")\nVelocityBox.Name = "VelocityBox"\nVelocityBox.Size = UDim2.new(0, 155, 0, 36)\nVelocityBox.Position = UDim2.new(1, -170, 0, 145)\nVelocityBox.BackgroundColor3 = Color3.fromRGB(35, 35, 42)\nVelocityBox.BorderSizePixel = 0\nVelocityBox.Text = tostring(DEFAULT_VELOCITY)\nVelocityBox.PlaceholderText = "Enter velocity"\nVelocityBox.TextColor3 = Color3.fromRGB(255, 255, 255)\nVelocityBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)\nVelocityBox.TextSize = 15\nVelocityBox.Font = Enum.Font.GothamBold\nVelocityBox.ClearTextOnFocus = false\nVelocityBox.TextXAlignment = Enum.TextXAlignment.Center\nVelocityBox.Parent = Main\n\nlocal VelocityCorner = Instance.new("UICorner")\nVelocityCorner.CornerRadius = UDim.new(0, 6)\nVelocityCorner.Parent = VelocityBox\n\nlocal VelocityStroke = Instance.new("UIStroke")\nVelocityStroke.Thickness = 1\nVelocityStroke.Color = Color3.fromRGB(90, 90, 100)\nVelocityStroke.Parent = VelocityBox\n\n--==================================================\n-- INFO\n--==================================================\n\nlocal VelocityInfo = Instance.new("TextLabel")\nVelocityInfo.Size = UDim2.new(1, -30, 0, 20)\nVelocityInfo.Position = UDim2.new(0, 15, 0, 183)\nVelocityInfo.BackgroundTransparency = 1\nVelocityInfo.Text = "Your Rock → Selected Player"\nVelocityInfo.TextColor3 = Color3.fromRGB(130, 130, 140)\nVelocityInfo.TextSize = 11\nVelocityInfo.Font = Enum.Font.Gotham\nVelocityInfo.TextXAlignment = Enum.TextXAlignment.Center\nVelocityInfo.Parent = Main\n\n--==================================================\n-- STATUS\n--==================================================\n\nlocal Status = Instance.new("TextLabel")\nStatus.Size = UDim2.new(1, -30, 0, 20)\nStatus.Position = UDim2.new(0, 15, 0, 204)\nStatus.BackgroundTransparency = 1\nStatus.Text = "No target selected"\nStatus.TextColor3 = Color3.fromRGB(160, 160, 160)\nStatus.TextSize = 12\nStatus.Font = Enum.Font.Gotham\nStatus.TextXAlignment = Enum.TextXAlignment.Center\nStatus.Parent = Main\n\n--==================================================\n-- FLING BUTTON\n--==================================================\n\nlocal FlingButton = Instance.new("TextButton")\nFlingButton.Size = UDim2.new(1, -30, 0, 42)\nFlingButton.Position = UDim2.new(0, 15, 1, -52)\nFlingButton.BackgroundColor3 = Color3.fromRGB(170, 35, 35)\nFlingButton.BorderSizePixel = 0\nFlingButton.Text = "FLING ROCK"\nFlingButton.TextColor3 = Color3.fromRGB(255, 255, 255)\nFlingButton.TextSize = 17\nFlingButton.Font = Enum.Font.GothamBold\nFlingButton.Parent = Main\n\nlocal FlingCorner = Instance.new("UICorner")\nFlingCorner.CornerRadius = UDim.new(0, 8)\nFlingCorner.Parent = FlingButton\n\n--==================================================\n-- UPDATE PLAYER LIST\n--==================================================\n\nlocal function UpdatePlayerList()\n\tfor _, Child in ipairs(PlayerList:GetChildren()) do\n\t\tif Child:IsA("TextButton") then\n\t\t\tChild:Destroy()\n\t\tend\n\tend\n\n\tfor _, Player in ipairs(Players:GetPlayers()) do\n\t\t-- Do not allow selecting yourself\n\t\tif Player ~= LocalPlayer then\n\n\t\t\tlocal Button = Instance.new("TextButton")\n\t\t\tButton.Size = UDim2.new(1, -6, 0, 28)\n\t\t\tButton.BackgroundColor3 = Color3.fromRGB(40, 40, 48)\n\t\t\tButton.BorderSizePixel = 0\n\t\t\tButton.Text = Player.DisplayName .. "  @" .. Player.Name\n\t\t\tButton.TextColor3 = Color3.fromRGB(255, 255, 255)\n\t\t\tButton.TextSize = 13\n\t\t\tButton.Font = Enum.Font.Gotham\n\t\t\tButton.ZIndex = 21\n\t\t\tButton.Parent = PlayerList\n\n\t\t\tlocal ButtonCorner = Instance.new("UICorner")\n\t\t\tButtonCorner.CornerRadius = UDim.new(0, 5)\n\t\t\tButtonCorner.Parent = Button\n\n\t\t\tButton.MouseButton1Click:Connect(function()\n\t\t\t\tselectedPlayer = Player\n\n\t\t\t\tPlayerButton.Text =\n\t\t\t\t\tPlayer.DisplayName .. "  @" .. Player.Name\n\n\t\t\t\tStatus.Text = "Target: " .. Player.Name\n\n\t\t\t\tPlayerList.Visible = false\n\t\t\tend)\n\t\tend\n\tend\n\n\ttask.wait()\n\n\tPlayerList.CanvasSize = UDim2.new(\n\t\t0,\n\t\t0,\n\t\t0,\n\t\tListLayout.AbsoluteContentSize.Y + 5\n\t)\nend\n\nUpdatePlayerList()\n\nPlayers.PlayerAdded:Connect(UpdatePlayerList)\n\nPlayers.PlayerRemoving:Connect(function(Player)\n\tif selectedPlayer == Player then\n\t\tselectedPlayer = nil\n\t\tPlayerButton.Text = "Select Player"\n\t\tStatus.Text = "Target left the game"\n\tend\n\n\tUpdatePlayerList()\nend)\n\n--==================================================\n-- OPEN / CLOSE PLAYER LIST\n--==================================================\n\nPlayerButton.MouseButton1Click:Connect(function()\n\tPlayerList.Visible = not PlayerList.Visible\nend)\n\n--==================================================\n-- VELOCITY INPUT\n--==================================================\n\nVelocityBox.FocusLost:Connect(function()\n\tlocal Number = tonumber(VelocityBox.Text)\n\n\tif not Number then\n\t\tVelocityBox.Text = tostring(DEFAULT_VELOCITY)\n\t\tStatus.Text = "Invalid velocity"\n\telse\n\t\tVelocityBox.Text = tostring(Number)\n\t\tStatus.Text = "Velocity set to " .. tostring(Number)\n\tend\nend)\n\n--==================================================\n-- DRAGGING\n--==================================================\n\nlocal Dragging = false\nlocal DragStart\nlocal StartPosition\n\nTitle.InputBegan:Connect(function(Input)\n\tif Input.UserInputType == Enum.UserInputType.MouseButton1 then\n\t\tDragging = true\n\t\tDragStart = Input.Position\n\t\tStartPosition = Main.Position\n\tend\nend)\n\nTitle.InputEnded:Connect(function(Input)\n\tif Input.UserInputType == Enum.UserInputType.MouseButton1 then\n\t\tDragging = false\n\tend\nend)\n\nUserInputService.InputChanged:Connect(function(Input)\n\tif Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then\n\n\t\tlocal Delta = Input.Position - DragStart\n\n\t\tMain.Position = UDim2.new(\n\t\t\tStartPosition.X.Scale,\n\t\t\tStartPosition.X.Offset + Delta.X,\n\t\t\tStartPosition.Y.Scale,\n\t\t\tStartPosition.Y.Offset + Delta.Y\n\t\t)\n\tend\nend)\n\n--==================================================\n-- FLING\n--==================================================\n\nlocal function Fling()\n\n\tif not selectedPlayer then\n\t\tStatus.Text = "Select a player first!"\n\t\treturn\n\tend\n\n\t-- THIS IS THE IMPORTANT PART:\n\t-- Get the Rock belonging to whoever is running the script.\n\tlocal MyRock = GetMyRock()\n\n\tif not MyRock then\n\t\tStatus.Text = "Your Rock was not found!"\n\t\treturn\n\tend\n\n\tlocal TargetCharacter = selectedPlayer.Character\n\n\tif not TargetCharacter then\n\t\tStatus.Text = "Target has no character!"\n\t\treturn\n\tend\n\n\tlocal TargetRoot =\n\t\tTargetCharacter:FindFirstChild("HumanoidRootPart")\n\t\tor TargetCharacter:FindFirstChild("Torso")\n\n\tif not TargetRoot then\n\t\tStatus.Text = "Target root not found!"\n\t\treturn\n\tend\n\n\tlocal Velocity = tonumber(VelocityBox.Text)\n\n\tif not Velocity then\n\t\tStatus.Text = "Enter a valid velocity!"\n\t\treturn\n\tend\n\n\tlocal Direction = TargetRoot.Position - MyRock.Position\n\n\tif Direction.Magnitude <= 0 then\n\t\tStatus.Text = "Too close to target!"\n\t\treturn\n\tend\n\n\tDirection = Direction.Unit\n\n\t-- Remove old motion\n\tMyRock.AssemblyLinearVelocity = Vector3.zero\n\tMyRock.AssemblyAngularVelocity = Vector3.zero\n\n\t-- Launch YOUR Rock toward the selected player\n\tMyRock.AssemblyLinearVelocity = Direction * Velocity\n\n\tStatus.Text =\n\t\t"My Rock → " ..\n\t\tselectedPlayer.Name ..\n\t\t" @ " ..\n\t\ttostring(Velocity)\nend\n\nFlingButton.MouseButton1Click:Connect(Fling)\n\n--==================================================\n-- BUTTON EFFECT\n--==================================================\n\nFlingButton.MouseEnter:Connect(function()\n\tFlingButton.BackgroundColor3 = Color3.fromRGB(220, 45, 45)\nend)\n\nFlingButton.MouseLeave:Connect(function()\n\tFlingButton.BackgroundColor3 = Color3.fromRGB(170, 35, 35)\nend)\n')
+
+  if not v154 then
+    warn("Rock Fling failed to compile:", v155)
+    return
+  else
+    local v156, v157 = pcall(v154)
+
+    if not v156 then
+      warn("Rock Fling failed to run:", v157)
+    end
+
+    return
+  end
+end
+
+rockFlingButton.MouseButton1Click:Connect(launchRockFling)
+
+function launchNoCooldowns()
+  players.LocalPlayer:Kick("Same account launched game from different device. Reconnect if you prefer to use this device.")
+end
+
+noCooldownsButton.MouseButton1Click:Connect(launchNoCooldowns)
+
+f33(
+  assistantPage, "✨ Assistant",
+  "Type a request and the assistant will run supported menu actions."
+)
+
+assistantCard = makeFrame3(assistantPage, UDim2.new(1, -60, 0, 390), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  assistantCard, "AI Assistant", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+assistantChat = Instance.new("ScrollingFrame")
+assistantChat.Name = "AssistantChat"
+assistantChat.Size = UDim2.new(1, -32, 0, 220)
+assistantChat.Position = UDim2.new(0, 16, 0, 55)
+assistantChat.BackgroundColor3 = v24.Panel2
+assistantChat.BorderSizePixel = 0
+assistantChat.ScrollBarThickness = 4
+assistantChat.ScrollBarImageColor3 = v24.Accent
+assistantChat.CanvasSize = UDim2.new(0, 0, 0, 0)
+assistantChat.AutomaticCanvasSize = Enum.AutomaticSize.Y
+assistantChat.ZIndex = 3
+assistantChat.Parent = assistantCard
+
+f4(assistantChat, 8)
+
+assistantChatPadding = Instance.new("UIPadding")
+assistantChatPadding.PaddingTop = UDim.new(0, 10)
+assistantChatPadding.PaddingBottom = UDim.new(0, 10)
+assistantChatPadding.PaddingLeft = UDim.new(0, 10)
+assistantChatPadding.PaddingRight = UDim.new(0, 10)
+assistantChatPadding.Parent = assistantChat
+
+assistantChatLayout = Instance.new("UIListLayout")
+assistantChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+assistantChatLayout.Padding = UDim.new(0, 8)
+assistantChatLayout.Parent = assistantChat
+
+assistantMessageOrder = 0
+
+function addAssistantBubble(text7, p59)
+  assistantMessageOrder = assistantMessageOrder + 1
+
+  local frame11 = Instance.new("Frame")
+  frame11.Name = p59 and "UserMessage" or "AssistantMessage"
+  frame11.Size = UDim2.new(1, 0, 0, 0)
+  frame11.AutomaticSize = Enum.AutomaticSize.Y
+  frame11.BackgroundTransparency = 1
+  frame11.LayoutOrder = assistantMessageOrder
+  frame11.ZIndex = 4
+  frame11.Parent = assistantChat
+
+  local textLabel3 = Instance.new("TextLabel")
+  textLabel3.AutomaticSize = Enum.AutomaticSize.Y
+  textLabel3.Size = UDim2.new(0.72, 0, 0, 0)
+  textLabel3.Position = p59 and UDim2.new(0.28, 0, 0, 0) or UDim2.new(0, 0, 0, 0)
+
+  textLabel3.BackgroundColor3 = p59 and Color3.fromRGB(80, 220, 105)
+    or Color3.fromRGB(8, 10, 14)
+
+  textLabel3.BorderSizePixel = 0
+  textLabel3.Text = text7
+  textLabel3.TextColor3 = p59 and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+  textLabel3.Font = merriweather
+  textLabel3.TextSize = 14
+  textLabel3.TextWrapped = true
+  textLabel3.TextXAlignment = Enum.TextXAlignment.Left
+  textLabel3.TextYAlignment = Enum.TextYAlignment.Top
+  textLabel3.ZIndex = 5
+  textLabel3.Parent = frame11
+
+  local uiPadding2 = Instance.new("UIPadding")
+  uiPadding2.PaddingTop = UDim.new(0, 9)
+  uiPadding2.PaddingBottom = UDim.new(0, 9)
+  uiPadding2.PaddingLeft = UDim.new(0, 11)
+  uiPadding2.PaddingRight = UDim.new(0, 11)
+  uiPadding2.Parent = textLabel3
+
+  f4(textLabel3, 10)
+
+  task.defer(function()
+    if assistantChat and assistantChat.Parent then
+      assistantChat.CanvasPosition = Vector2.new(0, math.max(0, assistantChat.AbsoluteCanvasSize.Y
+        - assistantChat.AbsoluteWindowSize.Y))
+    end
+  end)
+end
+
+assistantInput = Instance.new("TextBox")
+assistantInput.Name = "AssistantInput"
+assistantInput.Size = UDim2.new(1, -145, 0, 42)
+assistantInput.Position = UDim2.new(0, 16, 0, 292)
+assistantInput.BackgroundColor3 = v24.Input
+assistantInput.BorderSizePixel = 0
+assistantInput.PlaceholderText = "Ask the assistant..."
+assistantInput.Text = ""
+assistantInput.TextColor3 = v24.Text
+assistantInput.PlaceholderColor3 = v24.Muted
+assistantInput.Font = merriweather
+assistantInput.TextSize = 14
+assistantInput.ClearTextOnFocus = false
+assistantInput.TextXAlignment = Enum.TextXAlignment.Left
+assistantInput.ZIndex = 3
+assistantInput.Parent = assistantCard
+
+f4(assistantInput, 8)
+
+assistantSendButton = makeTextButton(
+  assistantCard, "Send", UDim2.new(0, 105, 0, 42), UDim2.new(1, -121, 0, 292), v24.Accent
+)
+
+assistantHelp = makeTextLabel(
+  assistantCard,
+  "Ask about the server, players or menu, or tell me to run a supported menu command.",
+  UDim2.new(1, -32, 0, 30), UDim2.new(0, 16, 0, 344), 12, v24.Subtext
+)
+
+assistantHelp.TextWrapped = true
+
+function assistantSetOutput(p60, p61)
+  addAssistantBubble(p60, true)
+  addAssistantBubble(p61, false)
+end
+
+function assistantFindPlayer(p62)
+  local v158 = string.lower(p62)
+  local v159
+
+  for index34, value38 in ipairs(players:GetPlayers()) do
+    if value38 ~= localPlayer then
+      local v160 = string.lower(value38.Name)
+      local v161 = string.lower(value38.DisplayName)
+
+      if v158 == v160 or v158 == v161 then
+        return value38
+      end
+
+      if string.find(v160, v158, 1, true) or string.find(v161, v158, 1, true) then
+        v159 = v159 or value38
+      end
+    end
+  end
+
+  return v159
+end
+
+function assistantTeleportToPlayer(p63)
+  if not p63 then
+    return false
+  else
+    local character15 = p63.Character
+
+    local humanoidRootPart14 = character15
+      and (character15:FindFirstChild("HumanoidRootPart") or character15:FindFirstChild("Torso"))
+
+    if not humanoidRootPart14 or not humanoidRootPart or not humanoidRootPart.Parent then
+      return false
+    end
+
+    humanoidRootPart.CFrame = humanoidRootPart14.CFrame * CFrame.new(0, 0, 3)
+    return true
+  end
+end
+
+function assistantHandleRequest(p64)
+  local v162 = string.lower(p64)
+  local v163 = string.gsub(v162, "[%p]", " ")
+  local v164 = string.gsub(v163, "%s+", " ")
+
+  if v164 == "" or string.match(v164, "^%s*$") then
+    return "Type a request first."
+  end
+
+  local v165, v166
+
+  if string.find(v164, "players", 1, true)
+    and (string.find(v164, "server", 1, true) or string.find(v164, "list", 1, true)
+      or string.find(v164, "currently", 1, true)) then
+    local v167 = {}
+
+    for index35, value39 in ipairs(players:GetPlayers()) do
+      table.insert(v167, value39.DisplayName .. " (@" .. value39.Name .. ")")
+    end
+
+    if #v167 == 0 then
+      return "No players were found."
+    end
+
+    return "Players in server: " .. table.concat(v167, ", ")
+  elseif string.find(v164, "teleport", 1, true) then
+    local v168 = string.match(v164, "teleport%s+me%s+to%s+(.+)")
+
+    local v169 = v168
+    v169 = v168 or string.match(v164, "teleport%s+to%s+(.+)")
+
+    if v169 then
+      local v170 = string.gsub(v169, "^@", "")
+      local v171 = string.gsub(v170, "^%s+", "")
+      local v172 = string.gsub(v171, "%s+$", "")
+      local v173 = assistantFindPlayer(v172)
+
+      if not v173 then
+        return "I couldn't find a player matching \"" .. v172 .. '".'
+      end
+
+      if assistantTeleportToPlayer(v173) then
+        return "Teleported you to " .. v173.DisplayName .. " (@" .. v173.Name .. ")."
+      end
+
+      return "I found the player, but their character is not ready."
+    end
+
+    return "Tell me who to teleport to. Example: Teleport me to scamfade."
+  else
+    if string.find(v164, "what does", 1, true) or string.find(v164, "what is", 1, true)
+      or string.find(v164, "what do", 1, true) or string.find(v164, "how does", 1, true)
+      or string.find(v164, "explain", 1, true) or string.find(v164, "tell me about", 1, true)
+      or string.find(v164, "what about", 1, true) or string.find(v164, "but what does", 1, true) then
+      if string.find(v164, "swing aura", 1, true) or string.find(v164, "swingaura", 1, true) then
+        return "Swing Aura automatically attacks valid nearby targets for you. Its range controls how far away it looks for targets, while cooldown controls how often it can attack. It also checks the target's blocking/parry state and skips players who are currently blocking, so it avoids swinging into an active parry instead of blindly attacking them."
+      elseif string.find(v164, "reach", 1, true) then
+        return "Reach increases the distance your attacks can register from. The Reach Distance setting controls how far the feature can extend, and the toggle turns that extra reach on or off."
+      elseif string.find(v164, "anti void", 1, true) then
+        return "Anti Void creates an invisible collision platform underneath you at Y -27 and follows your X and Z position. Its purpose is to catch you before you fall farther into the void. The platform is invisible while the feature is enabled."
+      elseif string.find(v164, "anti ragdoll", 1, true)
+        or string.find(v164, "anti-ragdoll", 1, true) then
+        return "Anti-Ragdoll watches your character's Ragdolled value. When that value becomes true, it anchors your character's body parts to stop the ragdoll movement, then restores the anchored states when the ragdoll ends or the feature is disabled."
+      elseif string.find(v164, "click to teleport", 1, true) then
+        return "Click to Teleport lets you click a point in the 3D world and moves your character to that location. It is separate from Teleport to Player, which moves you directly to a selected player."
+      elseif string.find(v164, "teleport to player", 1, true) then
+        return "Teleport to Player lets you select another player in the server and teleport your character near them. You can also ask me to teleport you to a player by username or display name."
+      elseif string.find(v164, "fly", 1, true) or string.find(v164, "flight", 1, true) then
+        return "Fly lets you move freely through the air using the menu's flight controls. Flight Speed controls how quickly you move while flying, and I can change that speed or enable and disable Fly for you."
+      elseif string.find(v164, "fling", 1, true) then
+        return "Fling rapidly manipulates your character's movement and velocity so physical contact can push other characters away. The Player tab toggle controls whether the fling loop is active."
+      elseif string.find(v164, "esp", 1, true) then
+        return "ESP adds visual information for other players so they are easier to locate through the game world. The ESP tab controls whether those overlays are enabled."
+      elseif string.find(v164, "admin notifier", 1, true)
+        or string.find(v164, "admin notifications", 1, true) then
+        return "Admin Notifier watches players in the server for the configured Silly Corp staff roles. When a tracked staff member is detected, it can show you a notification."
+      elseif string.find(v164, "dex hub", 1, true) then
+        return "Dex Hub opens the Dex explorer included in the Hubs tab. It is used to inspect the Roblox instance hierarchy and properties available to the client."
+      elseif string.find(v164, "infinite yield", 1, true) then
+        return "Infinite Yield opens the Infinite Yield command interface from the Hubs tab. It provides a large collection of client-side utility and admin-style commands."
+      elseif string.find(v164, "rock fling", 1, true) then
+        return "Rock Fling launches the Rock Fling tool included in the Hubs tab. It is separate from the Player tab's normal Fling toggle."
+      end
+    end
+
+    if string.find(v164, "fly", 1, true) or string.find(v164, "flight", 1, true) then
+      local v174 = tonumber(string.match(v164, "(%d+%.?%d*)"))
+
+      if v174 and (string.find(v164, "speed", 1, true) or string.find(v164, "flying", 1, true)) then
+        v18 = math.clamp(v174, 1, 500)
+        return "Flight speed changed to " .. tostring(v18) .. "."
+      end
+
+      if string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+        or string.find(v164, "stop", 1, true) then
+        if flyToggle then
+          setMenuToggle(flyToggle, false)
+        else
+          v17 = false
+          f19()
+        end
+
+        return "Flight disabled."
+      end
+
+      if string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+        or string.find(v164, "make me fly", 1, true) or string.find(v164, "let me fly", 1, true)
+        or v164 == "fly" then
+        if flyToggle then
+          setMenuToggle(flyToggle, true)
+        else
+          v17 = true
+          f15()
+        end
+
+        return "Flight enabled."
+      end
+    end
+
+    if string.find(v164, "swing aura", 1, true) or string.find(v164, "swingaura", 1, true) then
+      local v175 = tonumber(string.match(v164, "(%d+%.?%d*)"))
+
+      if v175
+        and (string.find(v164, "range", 1, true) or string.find(v164, "distance", 1, true)) then
+        v10 = math.clamp(v175, 12.5, 100)
+
+        if v122 then
+          v122.Text = tostring(v10)
+        end
+
+        return "Swing Aura range changed to " .. tostring(v10) .. "."
+      elseif v175 and string.find(v164, "cooldown", 1, true) then
+        v11 = math.clamp(v175, 0.08, 5)
+
+        if v124 then
+          v124.Text = tostring(v11)
+        end
+
+        return "Swing Aura cooldown changed to " .. tostring(v11) .. " seconds."
+      else
+        if string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true) then
+          if auraToggle then
+            setMenuToggle(auraToggle, false)
+          else
+            v9 = false
+          end
+
+          return "Swing Aura turned off."
+        end
+
+        if string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true) then
+          if auraToggle then
+            setMenuToggle(auraToggle, true)
+          else
+            v9 = true
+          end
+
+          return "Swing Aura turned on."
+        end
+
+        return "Swing Aura automatically attacks valid nearby targets. Its range controls target detection distance and its cooldown controls attack timing. It also avoids targets that are currently blocking/parrying."
+      end
+    else
+      if string.find(v164, "reach", 1, true) then
+        local v176 = tonumber(string.match(v164, "(%d+%.?%d*)"))
+
+        if v176
+          and (string.find(v164, "distance", 1, true) or string.find(v164, "range", 1, true)
+            or string.find(v164, "reach to", 1, true) or string.find(v164, "reach at", 1, true)) then
+          v14 = math.clamp(v176, 1, 40)
+
+          if reachDistanceSlider then
+            setMenuSlider(reachDistanceSlider, v14)
+          end
+
+          return "Reach distance changed to " .. tostring(v14) .. " studs."
+        else
+          local v177 = string.find(v164, "off", 1, true)
+            or string.find(v164, "disable", 1, true) or string.find(v164, "stop", 1, true)
+
+          local v178 = string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+            or string.find(v164, "start", 1, true)
+
+          if v177 then
+            setMenuToggle(reachToggle, false)
+            return "Reach turned off."
+          elseif v178 then
+            setMenuToggle(reachToggle, true)
+            return "Reach turned on."
+          elseif v176 then
+            v14 = math.clamp(v176, 1, 40)
+
+            if reachDistanceSlider then
+              setMenuSlider(reachDistanceSlider, v14)
+            end
+
+            return "Reach distance changed to " .. tostring(v14) .. " studs."
+          end
+        end
+      end
+
+      if string.find(v164, "fling", 1, true) then
+        local v179 = string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true)
+
+        local v180 = string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true)
+
+        if v179 then
+          setMenuToggle(flingToggle, false)
+          return "Fling turned off."
+        elseif v180 then
+          setMenuToggle(flingToggle, true)
+          return "Fling turned on."
+        end
+      end
+
+      if string.find(v164, "click to teleport", 1, true) then
+        local v181 = string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true)
+
+        local v182 = string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true)
+
+        if v181 then
+          setMenuToggle(clickTeleportToggle, false)
+          return "Click to Teleport turned off."
+        elseif v182 then
+          setMenuToggle(clickTeleportToggle, true)
+          return "Click to Teleport turned on."
+        end
+      end
+
+      if string.find(v164, "esp", 1, true) then
+        local v183 = string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true)
+
+        local v184 = string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true)
+
+        if v183 then
+          setMenuToggle(espToggle, false)
+          return "ESP turned off."
+        elseif v184 then
+          setMenuToggle(espToggle, true)
+          return "ESP turned on."
+        end
+      end
+
+      if string.find(v164, "admin notifier", 1, true)
+        or string.find(v164, "admin notifications", 1, true) then
+        local v185 = string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true)
+
+        local v186 = string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true)
+
+        if v185 then
+          setMenuToggle(adminNotifierToggle, false)
+          return "Admin Notifications turned off."
+        elseif v186 then
+          setMenuToggle(adminNotifierToggle, true)
+          return "Admin Notifications turned on."
+        end
+      end
+
+      if string.find(v164, "dex hub", 1, true) or v164 == "dex"
+        or string.find(v164, "open dex", 1, true) then
+        if pcall(launchDexHub) then
+          return "Opened Dex Hub."
+        end
+
+        return "Dex Hub failed to open."
+      end
+
+      if string.find(v164, "infinite yield", 1, true) or string.find(v164, "open iy", 1, true)
+        or v164 == "iy" then
+        if pcall(launchInfiniteYield) then
+          return "Opened Infinite Yield."
+        end
+
+        return "Infinite Yield failed to open."
+      end
+
+      if string.find(v164, "rock fling", 1, true)
+        and (string.find(v164, "open", 1, true) or string.find(v164, "launch", 1, true)
+          or string.find(v164, "run", 1, true) or v164 == "rock fling") then
+        if pcall(launchRockFling) then
+          return "Opened Rock Fling."
+        end
+
+        return "Rock Fling failed to open."
+      end
+
+      if string.find(v164, "walkspeed", 1, true) or string.find(v164, "walk speed", 1, true) then
+        local v187 = tonumber(string.match(v164, "(%d+%.?%d*)"))
+
+        if not v187 then
+          if string.find(v164, "faster", 1, true) then
+            v187 = 30
+            v165 = math.clamp(v187, 0, 500)
+
+            if humanoid then
+              humanoid.WalkSpeed = v165
+
+              if walkSpeedBox then
+                walkSpeedBox.Text = tostring(v165)
+              end
+
+              return "WalkSpeed set to " .. tostring(v165) .. "."
+            end
+
+            return "Your Humanoid is not ready."
+          end
+
+          return "Give me a WalkSpeed value. Example: Set my walkspeed to 30."
+        end
+
+        v165 = math.clamp(v187, 0, 500)
+
+        if humanoid then
+          humanoid.WalkSpeed = v165
+
+          if walkSpeedBox then
+            walkSpeedBox.Text = tostring(v165)
+          end
+
+          return "WalkSpeed set to " .. tostring(v165) .. "."
+        end
+
+        return "Your Humanoid is not ready."
+      elseif string.find(v164, "faster", 1, true) then
+        if humanoid then
+          local v188 = math.random(30, 70)
+          humanoid.WalkSpeed = v188
+
+          if walkSpeedBox then
+            walkSpeedBox.Text = tostring(v188)
+          end
+
+          return "WalkSpeed set to " .. tostring(v188) .. "."
+        end
+
+        return "Your Humanoid is not ready."
+      elseif string.find(v164, "jump power", 1, true)
+        or string.find(v164, "jumppower", 1, true) then
+        v166 = tonumber(string.match(v164, "(%d+%.?%d*)"))
+
+        if not v166 then
+          return "Give me a Jump Power value. Example: Set my jump power to 80."
+        end
+
+        v166 = math.clamp(v166, 0, 500)
+
+        if humanoid then
+          pcall(function()
+            humanoid.UseJumpPower = true
+            humanoid.JumpPower = v166
+          end)
+
+          if jumpPowerBox then
+            jumpPowerBox.Text = tostring(v166)
+          end
+
+          return "Jump Power set to " .. tostring(v166) .. "."
+        end
+
+        return "Your Humanoid is not ready."
+      elseif string.find(v164, "anti void", 1, true) then
+        if string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true) then
+          if antiVoidToggle then
+            setMenuToggle(antiVoidToggle, false)
+          else
+            stopAntiVoid()
+          end
+
+          return "Anti Void turned off."
+        end
+
+        if string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true) then
+          if antiVoidToggle then
+            setMenuToggle(antiVoidToggle, true)
+          else
+            startAntiVoid()
+          end
+
+          return "Anti Void turned on."
+        end
+
+        return 'Say "turn Anti Void on" or "turn Anti Void off".'
+      elseif string.find(v164, "anti ragdoll", 1, true)
+        or string.find(v164, "anti-ragdoll", 1, true) then
+        if string.find(v164, "off", 1, true) or string.find(v164, "disable", 1, true)
+          or string.find(v164, "stop", 1, true) then
+          if antiRagdollToggle then
+            setMenuToggle(antiRagdollToggle, false)
+          else
+            stopAntiRagdoll()
+          end
+
+          return "Anti-Ragdoll turned off."
+        end
+
+        if string.find(v164, "on", 1, true) or string.find(v164, "enable", 1, true)
+          or string.find(v164, "start", 1, true) then
+          if antiRagdollToggle then
+            setMenuToggle(antiRagdollToggle, true)
+          else
+            startAntiRagdoll()
+          end
+
+          return "Anti-Ragdoll turned on."
+        end
+
+        return 'Say "turn Anti-Ragdoll on" or "turn Anti-Ragdoll off".'
+      else
+        if string.find(v164, "what server", 1, true)
+          or string.find(v164, "which server", 1, true)
+          or string.find(v164, "server am i", 1, true)
+          or string.find(v164, "server i am", 1, true) then
+          return "You're currently in place " .. tostring(game.PlaceId)
+            .. ". The server JobId is " .. tostring(game.JobId) .. ", and there are "
+            .. tostring(#players:GetPlayers()) .. " player(s) connected."
+        end
+
+        if string.find(v164, "what is this menu", 1, true)
+          or string.find(v164, "what menu is this", 1, true)
+          or string.find(v164, "what is the menu", 1, true)
+          or string.find(v164, "what does this menu", 1, true) then
+          return "This is Silly Cheat Menu v1.0.0. It has Combat, Player, ESP, Admin Notifier, Hubs, Assistant, Settings and Info tools. I can also control supported menu features for you."
+        end
+
+        if string.find(v164, "what game", 1, true) or string.find(v164, "which game", 1, true)
+          or string.find(v164, "game am i", 1, true) then
+          local name = "this Roblox experience"
+
+          local v189, v190 = pcall(
+            MarketplaceService.GetProductInfo, MarketplaceService, game.PlaceId
+          )
+
+          if v189 and v190 and v190.Name then
+            name = v190.Name
+          end
+
+          return "You're playing " .. name .. " (PlaceId " .. tostring(game.PlaceId) .. ")."
+        end
+
+        if string.find(v164, "how many players", 1, true)
+          or string.find(v164, "player count", 1, true) then
+          return "There are currently " .. tostring(#players:GetPlayers())
+            .. " player(s) in this server."
+        end
+
+        if string.find(v164, "who am i", 1, true) or string.find(v164, "my username", 1, true)
+          or string.find(v164, "what is my name", 1, true) then
+          return "You're " .. localPlayer.DisplayName .. " (@" .. localPlayer.Name .. ")."
+        end
+
+        if string.find(v164, "my userid", 1, true) or string.find(v164, "my user id", 1, true) then
+          return "Your Roblox UserId is " .. tostring(localPlayer.UserId) .. "."
+        end
+
+        if string.find(v164, "my walkspeed", 1, true)
+          or string.find(v164, "current walkspeed", 1, true)
+          or string.find(v164, "walk speed am i", 1, true) then
+          if humanoid then
+            return "Your current WalkSpeed is " .. tostring(humanoid.WalkSpeed) .. "."
+          end
+
+          return "I can't read your WalkSpeed right now because your Humanoid isn't ready."
+        end
+
+        if string.find(v164, "my jump power", 1, true)
+          or string.find(v164, "current jump power", 1, true) then
+          if humanoid then
+            return "Your current Jump Power is " .. tostring(humanoid.JumpPower) .. "."
+          end
+
+          return "I can't read your Jump Power right now because your Humanoid isn't ready."
+        end
+
+        if string.find(v164, "what can you do", 1, true)
+          or string.find(v164, "help me", 1, true) or v164 == "help" then
+          return "I can control supported menu features, change values like WalkSpeed, Jump Power, Reach and Swing Aura settings, teleport you to players, list the server's players, open your Hubs, and answer some questions using information available to the Roblox client."
+        end
+
+        if string.find(v164, "hello", 1, true) or v164 == "hi" or v164 == "hey" then
+          return "Hey! What do you want me to do?"
+        elseif string.find(v164, "thank", 1, true) then
+          return "You're welcome."
+        else
+          local v191 = {
+            "I'm not sure about that one yet, but I can answer questions about this server and control the menu.",
+            "I don't know that yet. Try asking me about the server, players, this menu, or one of the menu features.",
+            "I can't answer that accurately from the information available to me right now.",
+            "I'm still limited on general questions, but I can read some live Roblox information and operate supported menu commands.",
+          }
+
+          return v191[math.random(1, #v191)]
+        end
+      end
+    end
+  end
+end
+
+function submitAssistantRequest()
+  local text8 = assistantInput.Text
+
+  if not text8 or text8 == "" then
+    return
+  else
+    assistantInput.Text = ""
+    local v192, v193 = pcall(assistantHandleRequest, text8)
+
+    if not v192 then
+      assistantSetOutput(text8, "I couldn't run that request.")
+      warn("Assistant request failed:", v193)
+      return
+    end
+
+    assistantSetOutput(text8, v193)
+    return
+  end
+end
+
+assistantSendButton.MouseButton1Click:Connect(function() submitAssistantRequest() end)
+
+assistantInput.FocusLost:Connect(function(p65)
+  if p65 then
+    submitAssistantRequest()
+  end
+end)
+
+f33(v105, "Settings", "Customize the menu appearance and controls.")
+local v194 = makeFrame3(v105, UDim2.new(1, -60, 0, 350), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  v194, "Menu Appearance", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+makeTextLabel(
+  v194, "Menu Color (RGB)", UDim2.new(1, -30, 0, 28), UDim2.new(0, 16, 0, 55), 14, v24.Subtext
+)
+
+makeTextLabel(v194, "R", UDim2.new(0, 20, 0, 30), UDim2.new(0, 16, 0, 91), 14, v24.Subtext)
+
+local v195 = makeTextBox(v194, 40, 90, 8)
+makeTextLabel(v194, "G", UDim2.new(0, 20, 0, 30), UDim2.new(0, 130, 0, 91), 14, v24.Subtext)
+local v196 = makeTextBox(v194, 154, 90, 12)
+makeTextLabel(v194, "B", UDim2.new(0, 20, 0, 30), UDim2.new(0, 244, 0, 91), 14, v24.Subtext)
+local v197 = makeTextBox(v194, 268, 90, 18)
+
+makeTextLabel(
+  v194, "Menu Transparency (0 - 0.85)", UDim2.new(0.6, 0, 0, 30), UDim2.new(0, 16, 0, 143), 14,
+  v24.Subtext
+)
+
+local textBox3 = Instance.new("TextBox")
+textBox3.Size = UDim2.new(0, 150, 0, 34)
+textBox3.Position = UDim2.new(1, -166, 0, 141)
+textBox3.BackgroundColor3 = v24.Input
+textBox3.BorderSizePixel = 0
+textBox3.Text = "0"
+textBox3.TextColor3 = v24.Text
+textBox3.Font = merriweather
+textBox3.TextSize = 14
+textBox3.ClearTextOnFocus = false
+textBox3.Parent = v194
+
+f6(textBox3, "input")
+f4(textBox3, 8)
+f8(textBox3)
+
+local frame12 = Instance.new("Frame")
+frame12.Size = UDim2.new(1, -32, 0, 42)
+frame12.Position = UDim2.new(0, 16, 0, 190)
+frame12.BackgroundColor3 = color2
+frame12.BorderSizePixel = 0
+frame12.Parent = v194
+
+f4(frame12, 10)
+f8(frame12)
+
+local v198 = makeTextButton(
+  v194, "Apply Appearance", UDim2.new(0.5, -24, 0, 40), UDim2.new(0, 16, 0, 248), v24.Accent
+)
+
+local v199 = makeTextButton(
+  v194, "Reset Appearance", UDim2.new(0.5, -24, 0, 40), UDim2.new(0.5, 8, 0, 248), v24.Panel2
+)
+
+v198.MouseButton1Click:Connect(function()
+  local v200 = math.clamp(tonumber(v195.Text) or 8, 0, 255)
+  local v201 = math.clamp(tonumber(v196.Text) or 12, 0, 255)
+  local v202 = math.clamp(tonumber(v197.Text) or 18, 0, 255)
+  local v203 = math.clamp(tonumber(textBox3.Text) or 0, 0, 0.85)
+  color2 = Color3.fromRGB(v200, v201, v202)
+  v23 = v203
+  v195.Text = tostring(v200)
+  v196.Text = tostring(v201)
+  v197.Text = tostring(v202)
+  textBox3.Text = tostring(v203)
+
+  frame12.BackgroundColor3 = color2
+  frame12.BackgroundTransparency = v23
+
+  f10()
+end)
+
+v199.MouseButton1Click:Connect(function()
+  color2 = Color3.fromRGB(8, 12, 18)
+  v23 = 0
+  v195.Text = "8"
+  v196.Text = "12"
+  v197.Text = "18"
+  textBox3.Text = "0"
+
+  frame12.BackgroundColor3 = color2
+  frame12.BackgroundTransparency = 0
+
+  f10()
+end)
+
+local v204 = makeFrame3(v105, UDim2.new(1, -60, 0, 165), UDim2.new(0, 30, 0, 475))
+
+makeTextLabel(
+  v204, "Menu Keybind", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+makeTextLabel(
+  v204, "Choose which keyboard key opens and closes the menu.", UDim2.new(1, -32, 0, 30),
+  UDim2.new(0, 16, 0, 48), 13, v24.Subtext
+)
+
+local v205 = makeTextLabel(
+  v204, "Current Key: " .. k.Name, UDim2.new(0.5, -24, 0, 42), UDim2.new(0, 16, 0, 94), 14,
+  v24.Text
+)
+
+local v206 = makeTextButton(
+  v204, "Set Keybind", UDim2.new(0.5, -24, 0, 42), UDim2.new(0.5, 8, 0, 91), v24.Accent
+)
+
+v206.MouseButton1Click:Connect(function()
+  v4 = true
+  v206.Text = "Press a Key..."
+  v205.Text = "Waiting for input..."
+end)
+
+local v207 = makeFrame3(v105, UDim2.new(1, -60, 0, 125), UDim2.new(0, 30, 0, 800))
+
+makeTextLabel(
+  v207, "SETTINGS HELP", UDim2.new(1, -30, 0, 30), UDim2.new(0, 16, 0, 10), 14, v24.Text
+)
+
+local v208 = makeTextLabel(v207, [[
+RGB values accept 0 - 255.
+Transparency: 0 = solid, 0.85 = highly transparent.
+Click Set Keybind, then press the key you want to use.]], UDim2.new(1, -30, 0, 73), UDim2.new(0, 16, 0, 43), 13, v24.Subtext)
+
+v208.TextWrapped = true
+v208.TextYAlignment = Enum.TextYAlignment.Top
+
+destroyGuiCard = makeFrame3(v105, UDim2.new(1, -60, 0, 120), UDim2.new(0, 30, 0, 660))
+
+makeTextLabel(
+  destroyGuiCard, "Destroy GUI", UDim2.new(1, -30, 0, 34), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+makeTextLabel(
+  destroyGuiCard, "Completely closes the menu and shuts down its active features.",
+  UDim2.new(1, -190, 0, 42), UDim2.new(0, 16, 0, 48), 13, v24.Subtext
+)
+
+destroyGuiButton = makeTextButton(
+  destroyGuiCard, "Destroy GUI", UDim2.new(0, 145, 0, 42), UDim2.new(1, -161, 0, 48),
+  Color3.fromRGB(165, 45, 55)
+)
+
+destroyGuiButton.MouseButton1Click:Connect(function()
+  if shutdownMenuFeatures then
+    shutdownMenuFeatures()
+  end
+
+  if adminControlPanel2 and adminControlPanel2.Parent then
+    adminControlPanel2:Destroy()
+  end
+end)
+
+f33(v106, "Info", "Information about the menu, controls and updates.")
+local v209 = makeFrame3(v106, UDim2.new(1, -60, 0, 350), UDim2.new(0, 30, 0, 105))
+
+makeTextLabel(
+  v209, "Menu Information", UDim2.new(1, -30, 0, 38), UDim2.new(0, 16, 0, 10), 18, v24.Text
+)
+
+local v210 = makeTextLabel(v209, "Menu: " .. "Silly Cheat Menu" .. "\n" .. "Version: " .. "v1.0.0" .. "\n" .. "Channel: " .. "Stable" .. "\n\n" .. "Menu Toggle: " .. k.Name .. "\n" .. [[
+All pages support mouse-wheel scrolling.
+
+]] .. [[
+Fly Controls: WASD
+]] .. [[
+Fly Up: Space
+]] .. [[
+Fly Down: Left Ctrl
+
+]] .. [[
+Aura Standing Hit Range: 12.5 studs
+]] .. [[
+Aura Moving Hit Range: 11.5 studs
+]] .. [[
+Reach: adjustable 1 - 40 studs
+]] .. "Admin Group: " .. "Silly Corp Laboratories" .. "\n" .. [[
+Anti-Parry when Swing Aura is Enabled
+]] .. "Invisible ESP Threshold: " .. tostring(0.9), UDim2.new(1, -32, 0, 280), UDim2.new(0, 16, 0, 57), 15, v24.Subtext)
+
+v210.TextWrapped = true
+v210.TextYAlignment = Enum.TextYAlignment.Top
+
+f10()
+
+function showPage(p66)
+  for key18, value40 in pairs(v91) do
+    value40.Visible = key18 == p66
+  end
+
+  for key19, value41 in pairs(v90) do
+    if key19 == p66 then
+      value41.BackgroundTransparency = 0
+      value41.BackgroundColor3 = v24.AccentSoft
+      value41.TextColor3 = Color3.fromRGB(215, 228, 255)
+    else
+      value41.BackgroundTransparency = 1
+      value41.TextColor3 = v24.Subtext
+    end
+  end
+end
+
+function openPage(key20)
+  showPage(key20)
+  local v211 = v91[key20]
+
+  if v211 then
+    v211.CanvasPosition = Vector2.zero
+  end
+end
+
+v92.MouseButton1Click:Connect(function() openPage("Home") end)
+v93.MouseButton1Click:Connect(function() openPage("Combat") end)
+v94.MouseButton1Click:Connect(function() openPage("Player") end)
+v95.MouseButton1Click:Connect(function() openPage("ESP") end)
+v96.MouseButton1Click:Connect(function() openPage("AdminNotifier") end)
+hubsButton.MouseButton1Click:Connect(function() openPage("Hubs") end)
+assistantButton.MouseButton1Click:Connect(function() openPage("Assistant") end)
+v97.MouseButton1Click:Connect(function() openPage("Settings") end)
+v98.MouseButton1Click:Connect(function() openPage("Info") end)
+openPage("Home")
+
+task.spawn(function()
+  task.wait(1)
+
+  for index36, value42 in ipairs(players:GetPlayers()) do
+    if value42 ~= localPlayer then
+      f31(value42, false)
+    end
+  end
+
+  f30()
+end)
+
+players.PlayerAdded:Connect(function(player4)
+  task.spawn(function()
+    task.wait(1)
+
+    if player4.Parent ~= players then
+      return
+    end
+
+    f31(player4, true)
+  end)
+end)
+
+task.spawn(function()
+  while adminControlPanel2.Parent do
+    task.wait(0.5)
+    local v212, v213 = pcall(function() return localPlayer:GetNetworkPing() end)
+
+    if v212 and v213 then
+      local v214 = v213 * 1000
+      v110.Text = string.format("%.0f ms", v214)
+
+      if v214 <= 80 then
+        v110.TextColor3 = v24.Green
+      elseif v214 <= 160 then
+        v110.TextColor3 = v24.Yellow
+      else
+        v110.TextColor3 = v24.Red
+      end
+    else
+      v110.Text = "N/A"
+    end
+
+    if v9 then
+      v113.Text = "Aura: Enabled"
+      v113.TextColor3 = v24.Green
+    else
+      v113.Text = "Aura: Disabled"
+      v113.TextColor3 = v24.Subtext
+    end
+
+    if v13 then
+      v114.Text = "Reach: Enabled"
+      v114.TextColor3 = v24.Green
+    else
+      v114.Text = "Reach: Disabled"
+      v114.TextColor3 = v24.Subtext
+    end
+
+    if v17 then
+      v115.Text = "Fly: Enabled"
+      v115.TextColor3 = v24.Green
+    else
+      v115.Text = "Fly: Disabled"
+      v115.TextColor3 = v24.Subtext
+    end
+
+    if v19 then
+      v116.Text = "ESP: Enabled"
+      v116.TextColor3 = v24.Green
+    else
+      v116.Text = "ESP: Disabled"
+      v116.TextColor3 = v24.Subtext
+    end
+
+    v117.Text = "Aura Detection: " .. tostring(v10) .. " studs"
+    v118.Text = "Reach: " .. tostring(v14) .. " studs"
+  end
+end)
+
+runService.RenderStepped:Connect(function() f23() end)
+
+userInputService.InputBegan:Connect(function(input5, p67)
+  if v4 then
+    if input5.UserInputType ~= Enum.UserInputType.Keyboard then
+      return
+    elseif input5.KeyCode == Enum.KeyCode.Escape then
+      v4 = false
+      v206.Text = "Set Keybind"
+      v205.Text = "Current Key: " .. k.Name
+      return
+    else
+      if input5.KeyCode == Enum.KeyCode.Unknown then
+        return
+      end
+
+      k = input5.KeyCode
+      v4 = false
+      v206.Text = "Set Keybind"
+      v205.Text = "Current Key: " .. k.Name
+
+      v120.Text = "Player: " .. localPlayer.Name .. "\n" .. "Place ID: "
+        .. tostring(game.PlaceId) .. "\n" .. "Job ID: " .. tostring(game.JobId) .. "\n"
+        .. "Menu Toggle: " .. k.Name
+
+      return
+    end
+  else
+    if p67 then
+      return
+    end
+
+    if input5.KeyCode == k then
+      f32(not main.Visible)
+    end
+
+    return
+  end
+end)
+
+local v215 = false
+local position3, position4
+
+topBar.InputBegan:Connect(function(input6)
+  if input6.UserInputType == Enum.UserInputType.MouseButton1 then
+    v215 = true
+    position3 = input6.Position
+    position4 = main.Position
+  end
+end)
+
+userInputService.InputChanged:Connect(function(input7)
+  if v215 and input7.UserInputType == Enum.UserInputType.MouseMovement then
+    local v216 = (input7.Position - position3) / uiScale.Scale
+
+    main.Position = UDim2.new(
+      position4.X.Scale, position4.X.Offset + v216.X, position4.Y.Scale,
+      position4.Y.Offset + v216.Y
+    )
+  end
+end)
+
+userInputService.InputEnded:Connect(function(input8)
+  if input8.UserInputType == Enum.UserInputType.MouseButton1 then
+    v215 = false
+  end
+end)
+
+task.spawn(function()
+  while task.wait(v9 and 0.05 or 0.15) do
+    if v9 then
+      if not (not character or not humanoid or not humanoidRootPart) then
+        if not (humanoid.Health <= 0) then
+          if character:IsDescendantOf(workspace) then
+            if humanoidRootPart:IsDescendantOf(workspace) then
+              if not (os.clock() - v12 < v11) then
+                local v217 = f16()
+
+                if v217 then
+                  if v217 ~= character then
+                    if not v217:IsDescendantOf(character) then
+                      if v217:GetAttribute("blocking") ~= true then
+                        local humanoidRootPart15 = v217:FindFirstChild("HumanoidRootPart")
+                        local humanoid10 = v217:FindFirstChildOfClass("Humanoid")
+
+                        if not (not humanoidRootPart15 or not humanoid10) then
+                          if not (humanoid10.Health <= 0) then
+                            if v217:IsDescendantOf(workspace) then
+                              if humanoidRootPart15:IsDescendantOf(workspace) then
+                                if not f9(v217) then
+                                  local v218 = f14()
+
+                                  if not ((humanoidRootPart15.Position
+                                      - humanoidRootPart.Position).Magnitude
+                                    > v218) then
+                                    if v217:GetAttribute("blocking") ~= true then
+                                      runService.Heartbeat:Wait()
+
+                                      if not (not humanoidRootPart15.Parent
+                                        or not humanoidRootPart.Parent) then
+                                        if not (humanoid10.Health <= 0) then
+                                          local v219 = f14()
+
+                                          if not ((humanoidRootPart15.Position
+                                              - humanoidRootPart.Position).Magnitude
+                                            > v219) then
+                                            if v217:GetAttribute("blocking") ~= true then
+                                              v12 = os.clock()
+                                              hitSomeone:FireServer(v217)
+                                            end
+                                          end
+                                        end
+                                      end
+                                    end
+                                  end
+                                end
+                              end
+                            end
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end)
+
