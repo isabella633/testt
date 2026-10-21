@@ -1,0 +1,839 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+local LP = Players.LocalPlayer
+
+local Library = {
+	Flags = {},
+	Signals = {},
+	Defaults = {},
+	Connections = {},
+	Windows = {},
+	Theme = {
+		Bg = Color3.fromRGB(18, 18, 22),
+		Panel = Color3.fromRGB(24, 24, 30),
+		Accent = Color3.fromRGB(90, 140, 255),
+		Text = Color3.fromRGB(220, 220, 230),
+		Dim = Color3.fromRGB(140, 140, 160),
+		Stroke = Color3.fromRGB(40, 40, 50),
+		Success = Color3.fromRGB(40, 140, 80),
+		Off = Color3.fromRGB(50, 50, 60),
+	},
+	Hub = { Game = "Hub", UpdateLog = "" },
+	ConfigFolder = "GSConfigs",
+	_unloaded = false,
+}
+
+local function getHui()
+	if gethui then return gethui() end
+	local ok, r = pcall(function() return CoreGui end)
+	if ok then return r end
+	return LP:WaitForChild("PlayerGui")
+end
+
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 6)
+	c.Parent = o
+	return c
+end
+
+local function stroke(o, col, t)
+	local s = Instance.new("UIStroke")
+	s.Color = col or Library.Theme.Stroke
+	s.Thickness = t or 1
+	s.Parent = o
+	return s
+end
+
+local function pad(o, t, r, b, l)
+	local p = Instance.new("UIPadding")
+	p.PaddingTop = UDim.new(0, t or 0)
+	p.PaddingRight = UDim.new(0, r or 0)
+	p.PaddingBottom = UDim.new(0, b or 0)
+	p.PaddingLeft = UDim.new(0, l or 0)
+	p.Parent = o
+	return p
+end
+
+local function list(o, gap)
+	local l = Instance.new("UIListLayout")
+	l.Padding = UDim.new(0, gap or 4)
+	l.SortOrder = Enum.SortOrder.LayoutOrder
+	l.Parent = o
+	return l
+end
+
+local function tween(o, props, t)
+	TweenService:Create(o, TweenInfo.new(t or 0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+end
+
+function Library:SetHub(cfg)
+	cfg = cfg or {}
+	for k, v in pairs(cfg) do
+		self.Hub[k] = v
+	end
+end
+
+function Library:UpdateTheme(c)
+	if typeof(c) == "Color3" then
+		self.Theme.Accent = c
+	end
+end
+
+function Library:SetTheme() end
+
+function Library:Notify(title, text, duration)
+	duration = duration or 3
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "GSNotify"
+	gui.ResetOnSpawn = false
+	gui.Parent = getHui()
+	local f = Instance.new("Frame")
+	f.Size = UDim2.new(0, 260, 0, 56)
+	f.Position = UDim2.new(1, -280, 1, -80)
+	f.BackgroundColor3 = Library.Theme.Panel
+	f.BorderSizePixel = 0
+	f.Parent = gui
+	corner(f, 8)
+	stroke(f)
+	local t1 = Instance.new("TextLabel")
+	t1.Size = UDim2.new(1, -16, 0, 20)
+	t1.Position = UDim2.new(0, 10, 0, 6)
+	t1.BackgroundTransparency = 1
+	t1.Text = tostring(title or "")
+	t1.TextColor3 = Library.Theme.Text
+	t1.Font = Enum.Font.GothamBold
+	t1.TextSize = 13
+	t1.TextXAlignment = Enum.TextXAlignment.Left
+	t1.Parent = f
+	local t2 = Instance.new("TextLabel")
+	t2.Size = UDim2.new(1, -16, 0, 18)
+	t2.Position = UDim2.new(0, 10, 0, 28)
+	t2.BackgroundTransparency = 1
+	t2.Text = tostring(text or "")
+	t2.TextColor3 = Library.Theme.Dim
+	t2.Font = Enum.Font.Gotham
+	t2.TextSize = 12
+	t2.TextXAlignment = Enum.TextXAlignment.Left
+	t2.Parent = f
+	task.delay(duration, function()
+		tween(f, { BackgroundTransparency = 1 }, 0.2)
+		task.wait(0.2)
+		gui:Destroy()
+	end)
+end
+
+function Library:Log() end
+function Library:Info(m) print("[Info]", m) end
+function Library:Warn(m) warn("[Warn]", m) end
+function Library:Error(m) warn("[Error]", m) end
+function Library:CaptureOutput() end
+function Library:RegisterBind() end
+function Library:UpdateKeybindList() end
+function Library:CreateConsole()
+	return { Screen = nil, Frame = nil, SetOpen = function() end }
+end
+function Library:SetConsoleVisible() end
+
+function Library:InitWatermark()
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "GSWatermark"
+	gui.ResetOnSpawn = false
+	gui.Parent = getHui()
+	local f = Instance.new("Frame")
+	f.Size = UDim2.new(0, 180, 0, 24)
+	f.Position = UDim2.new(1, -190, 0, 10)
+	f.BackgroundColor3 = Library.Theme.Panel
+	f.BorderSizePixel = 0
+	f.Parent = gui
+	corner(f, 4)
+	stroke(f)
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1, -8, 1, 0)
+	lbl.Position = UDim2.new(0, 4, 0, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.TextColor3 = Library.Theme.Text
+	lbl.Font = Enum.Font.Code
+	lbl.TextSize = 11
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = f
+	local frames, last = 0, tick()
+	Library.Connections[#Library.Connections + 1] = RunService.RenderStepped:Connect(function()
+		frames = frames + 1
+		if tick() - last >= 1 then
+			local ping = 0
+			pcall(function()
+				ping = math.floor(LP:GetNetworkPing() * 1000)
+			end)
+			lbl.Text = string.format("%s | %d FPS | %dms", Library.Hub.Game or "GS", frames, ping)
+			frames = 0
+			last = tick()
+		end
+	end)
+	Library._watermark = gui
+end
+
+local function ensureFolder(name)
+	if not makefolder then return end
+	pcall(function() makefolder(name) end)
+end
+
+function Library:SaveConfig(name)
+	name = tostring(name or "default")
+	ensureFolder(self.ConfigFolder)
+	local data = {}
+	for k, v in pairs(self.Flags) do
+		if typeof(v) == "Color3" then
+			data[k] = { __c3 = true, r = v.R, g = v.G, b = v.B }
+		else
+			data[k] = v
+		end
+	end
+	local ok, enc = pcall(function()
+		return HttpService:JSONEncode(data)
+	end)
+	if not ok then return false end
+	local path = self.ConfigFolder .. "/" .. name .. ".json"
+	local w = false
+	pcall(function()
+		if writefile then
+			writefile(path, enc)
+			w = true
+		end
+	end)
+	return w
+end
+
+function Library:LoadConfig(name)
+	name = tostring(name or "default")
+	local path = self.ConfigFolder .. "/" .. name .. ".json"
+	local raw
+	pcall(function()
+		if readfile then raw = readfile(path) end
+	end)
+	if not raw then return false end
+	local ok, data = pcall(function()
+		return HttpService:JSONDecode(raw)
+	end)
+	if not ok or type(data) ~= "table" then return false end
+	for k, v in pairs(data) do
+		if type(v) == "table" and v.__c3 then
+			v = Color3.new(v.r, v.g, v.b)
+		end
+		if self.Signals[k] then
+			pcall(function() self.Signals[k](v) end)
+		else
+			self.Flags[k] = v
+		end
+	end
+	return true
+end
+
+function Library:DeleteConfig(name)
+	name = tostring(name or "default")
+	pcall(function()
+		if delfile then delfile(self.ConfigFolder .. "/" .. name .. ".json") end
+	end)
+end
+
+function Library:ConfigExists(name)
+	name = tostring(name or "default")
+	local ok, raw = pcall(function()
+		return readfile and readfile(self.ConfigFolder .. "/" .. name .. ".json")
+	end)
+	return ok and type(raw) == "string" and #raw > 0
+end
+
+function Library:GetConfigs()
+	local out = {}
+	pcall(function()
+		if listfiles then
+			for _, f in ipairs(listfiles(self.ConfigFolder) or {}) do
+				local n = tostring(f):match("([^/\\]+)%.json$")
+				if n then out[#out + 1] = n end
+			end
+		end
+	end)
+	table.sort(out)
+	return out
+end
+
+function Library:Unload()
+	if self._unloaded then return end
+	self._unloaded = true
+	for _, c in ipairs(self.Connections) do
+		pcall(function() c:Disconnect() end)
+	end
+	for _, w in ipairs(self.Windows) do
+		pcall(function() w:Destroy() end)
+	end
+	if self._watermark then
+		pcall(function() self._watermark:Destroy() end)
+	end
+end
+
+function Library:CreateWindow(opts)
+	opts = opts or {}
+	self.ConfigFolder = opts.ConfigFolder or self.ConfigFolder
+	ensureFolder(self.ConfigFolder)
+
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "GSLib_" .. (opts.Name or "Window")
+	gui.ResetOnSpawn = false
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.Parent = getHui()
+	self.Windows[#self.Windows + 1] = gui
+
+	local main = Instance.new("Frame")
+	main.Name = "Main"
+	main.Size = UDim2.new(0, 560, 0, 400)
+	main.Position = UDim2.new(0.5, -280, 0.5, -200)
+	main.BackgroundColor3 = Library.Theme.Bg
+	main.BorderSizePixel = 0
+	main.Active = true
+	main.Parent = gui
+	corner(main, 8)
+	stroke(main)
+
+	local top = Instance.new("Frame")
+	top.Size = UDim2.new(1, 0, 0, 36)
+	top.BackgroundColor3 = Library.Theme.Panel
+	top.BorderSizePixel = 0
+	top.Parent = main
+	corner(top, 8)
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -80, 1, 0)
+	title.Position = UDim2.new(0, 12, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = opts.Name or Library.Hub.Game or "Window"
+	title.TextColor3 = Library.Theme.Text
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 14
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = top
+
+	local close = Instance.new("TextButton")
+	close.Size = UDim2.new(0, 28, 0, 28)
+	close.Position = UDim2.new(1, -32, 0.5, -14)
+	close.BackgroundColor3 = Color3.fromRGB(50, 30, 35)
+	close.Text = "X"
+	close.TextColor3 = Color3.fromRGB(255, 120, 120)
+	close.Font = Enum.Font.GothamBold
+	close.TextSize = 12
+	close.BorderSizePixel = 0
+	close.Parent = top
+	corner(close, 4)
+	close.MouseButton1Click:Connect(function()
+		gui.Enabled = not gui.Enabled
+	end)
+
+	local dragging, d0, p0
+	top.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			d0 = input.Position
+			p0 = main.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local d = input.Position - d0
+			main.Position = UDim2.new(p0.X.Scale, p0.X.Offset + d.X, p0.Y.Scale, p0.Y.Offset + d.Y)
+		end
+	end)
+
+	local side = Instance.new("Frame")
+	side.Size = UDim2.new(0, 120, 1, -44)
+	side.Position = UDim2.new(0, 8, 0, 40)
+	side.BackgroundColor3 = Library.Theme.Panel
+	side.BorderSizePixel = 0
+	side.Parent = main
+	corner(side, 6)
+	list(side, 4)
+	pad(side, 6, 6, 6, 6)
+
+	local content = Instance.new("Frame")
+	content.Size = UDim2.new(1, -140, 1, -52)
+	content.Position = UDim2.new(0, 136, 0, 44)
+	content.BackgroundTransparency = 1
+	content.Parent = main
+
+	local tabs = {}
+	local current
+
+	local Window = {}
+
+	function Window:Tab(name, iconId)
+		local page = Instance.new("ScrollingFrame")
+		page.Name = name
+		page.Size = UDim2.new(1, 0, 1, 0)
+		page.BackgroundTransparency = 1
+		page.BorderSizePixel = 0
+		page.ScrollBarThickness = 3
+		page.ScrollBarImageColor3 = Library.Theme.Stroke
+		page.CanvasSize = UDim2.new(0, 0, 0, 0)
+		page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		page.Visible = false
+		page.Parent = content
+		local cols = Instance.new("Frame")
+		cols.Size = UDim2.new(1, 0, 0, 0)
+		cols.AutomaticSize = Enum.AutomaticSize.Y
+		cols.BackgroundTransparency = 1
+		cols.Parent = page
+		local leftCol = Instance.new("Frame")
+		leftCol.Size = UDim2.new(0.5, -4, 0, 0)
+		leftCol.AutomaticSize = Enum.AutomaticSize.Y
+		leftCol.BackgroundTransparency = 1
+		leftCol.Parent = cols
+		list(leftCol, 6)
+		local rightCol = Instance.new("Frame")
+		rightCol.Size = UDim2.new(0.5, -4, 0, 0)
+		rightCol.Position = UDim2.new(0.5, 4, 0, 0)
+		rightCol.AutomaticSize = Enum.AutomaticSize.Y
+		rightCol.BackgroundTransparency = 1
+		rightCol.Parent = cols
+		list(rightCol, 6)
+
+		local btn = Instance.new("TextButton")
+		btn.Name = name
+		btn.Size = UDim2.new(1, 0, 0, 30)
+		btn.BackgroundColor3 = Color3.fromRGB(28, 28, 36)
+		btn.Text = name
+		btn.TextColor3 = Library.Theme.Dim
+		btn.Font = Enum.Font.Gotham
+		btn.TextSize = 12
+		btn.BorderSizePixel = 0
+		btn.Parent = side
+		corner(btn, 4)
+
+		local function select()
+			for n, t in pairs(tabs) do
+				t.page.Visible = (n == name)
+				if t.btn then
+					t.btn.BackgroundColor3 = (n == name) and Color3.fromRGB(50, 60, 90) or Color3.fromRGB(28, 28, 36)
+					t.btn.TextColor3 = (n == name) and Library.Theme.Text or Library.Theme.Dim
+				end
+			end
+			current = name
+		end
+		btn.MouseButton1Click:Connect(select)
+		tabs[name] = { page = page, btn = btn, left = leftCol, right = rightCol }
+		if not current then select() end
+
+		local Tab = {}
+		function Tab:Section(secName, sideName)
+			local parent = (sideName == "Right") and rightCol or leftCol
+			local box = Instance.new("Frame")
+			box.Size = UDim2.new(1, 0, 0, 0)
+			box.AutomaticSize = Enum.AutomaticSize.Y
+			box.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+			box.BorderSizePixel = 0
+			box.Parent = parent
+			corner(box, 6)
+			pad(box, 4, 6, 8, 6)
+			local head = Instance.new("TextLabel")
+			head.Size = UDim2.new(1, 0, 0, 20)
+			head.BackgroundTransparency = 1
+			head.Text = secName
+			head.TextColor3 = Library.Theme.Text
+			head.Font = Enum.Font.GothamBold
+			head.TextSize = 12
+			head.TextXAlignment = Enum.TextXAlignment.Left
+			head.Parent = box
+			local body = Instance.new("Frame")
+			body.Name = "Body"
+			body.Size = UDim2.new(1, 0, 0, 0)
+			body.AutomaticSize = Enum.AutomaticSize.Y
+			body.BackgroundTransparency = 1
+			body.Parent = box
+			list(body, 4)
+
+			local Section = {}
+
+			function Section:Toggle(text, flag, default, tooltip, callback)
+				Library.Flags[flag] = default and true or false
+				Library.Defaults[flag] = Library.Flags[flag]
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 26)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(1, -56, 1, 0)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Text
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 12
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = row
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(0, 48, 0, 20)
+				btn.Position = UDim2.new(1, -48, 0.5, -10)
+				btn.BorderSizePixel = 0
+				btn.Font = Enum.Font.GothamBold
+				btn.TextSize = 11
+				btn.Parent = row
+				corner(btn, 4)
+				local function refresh()
+					local on = Library.Flags[flag]
+					btn.Text = on and "ON" or "OFF"
+					btn.BackgroundColor3 = on and Library.Theme.Success or Library.Theme.Off
+					btn.TextColor3 = Color3.new(1, 1, 1)
+				end
+				refresh()
+				local function set(v)
+					Library.Flags[flag] = not not v
+					refresh()
+					if callback then callback(Library.Flags[flag]) end
+				end
+				Library.Signals[flag] = set
+				btn.MouseButton1Click:Connect(function()
+					set(not Library.Flags[flag])
+				end)
+				return { Set = set }
+			end
+
+			function Section:Slider(text, flag, min, max, default, increment, tooltip, callback)
+				min, max = min or 0, max or 100
+				increment = increment or 1
+				default = default or min
+				Library.Flags[flag] = default
+				Library.Defaults[flag] = default
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 40)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(1, -50, 0, 16)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Text
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 12
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = row
+				local val = Instance.new("TextLabel")
+				val.Size = UDim2.new(0, 44, 0, 16)
+				val.Position = UDim2.new(1, -44, 0, 0)
+				val.BackgroundTransparency = 1
+				val.Text = tostring(default)
+				val.TextColor3 = Library.Theme.Dim
+				val.Font = Enum.Font.Gotham
+				val.TextSize = 11
+				val.TextXAlignment = Enum.TextXAlignment.Right
+				val.Parent = row
+				local bar = Instance.new("Frame")
+				bar.Size = UDim2.new(1, 0, 0, 6)
+				bar.Position = UDim2.new(0, 0, 0, 24)
+				bar.BackgroundColor3 = Library.Theme.Off
+				bar.BorderSizePixel = 0
+				bar.Parent = row
+				corner(bar, 3)
+				local fill = Instance.new("Frame")
+				fill.Size = UDim2.new(math.clamp((default - min) / (max - min), 0, 1), 0, 1, 0)
+				fill.BackgroundColor3 = Library.Theme.Accent
+				fill.BorderSizePixel = 0
+				fill.Parent = bar
+				corner(fill, 3)
+				local sliding = false
+				local function apply(v, fire)
+					v = math.clamp(v, min, max)
+					v = math.floor(v / increment + 0.5) * increment
+					Library.Flags[flag] = v
+					fill.Size = UDim2.new((v - min) / (max - min), 0, 1, 0)
+					val.Text = tostring(v)
+					if fire and callback then callback(tostring(v)) end
+				end
+				Library.Signals[flag] = function(v)
+					apply(tonumber(v) or default, true)
+				end
+				bar.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true end
+				end)
+				UserInputService.InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
+				end)
+				UserInputService.InputChanged:Connect(function(input)
+					if sliding and input.UserInputType == Enum.UserInputType.MouseMovement then
+						local rel = math.clamp((input.Position.X - bar.AbsolutePosition.X) / math.max(bar.AbsoluteSize.X, 1), 0, 1)
+						apply(min + (max - min) * rel, true)
+					end
+				end)
+				return row
+			end
+
+			function Section:Dropdown(text, flag, options, default, tooltip, callback)
+				options = options or {}
+				default = default or options[1]
+				Library.Flags[flag] = default
+				Library.Defaults[flag] = default
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 26)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(0.45, 0, 1, 0)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Text
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 12
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = row
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(0.52, 0, 0, 22)
+				btn.Position = UDim2.new(0.48, 0, 0.5, -11)
+				btn.BackgroundColor3 = Library.Theme.Off
+				btn.Text = tostring(default)
+				btn.TextColor3 = Library.Theme.Text
+				btn.Font = Enum.Font.Gotham
+				btn.TextSize = 11
+				btn.BorderSizePixel = 0
+				btn.Parent = row
+				corner(btn, 4)
+				local idx = 1
+				for i, o in ipairs(options) do
+					if o == default then idx = i break end
+				end
+				local function set(v)
+					Library.Flags[flag] = v
+					btn.Text = tostring(v)
+					if callback then callback(v) end
+				end
+				Library.Signals[flag] = set
+				btn.MouseButton1Click:Connect(function()
+					idx = idx % #options + 1
+					set(options[idx])
+				end)
+				return {
+					Set = set,
+					Refresh = function(_, opts, def)
+						options = opts or options
+						if def then set(def) end
+					end,
+					GetSelected = function()
+						return Library.Flags[flag]
+					end,
+				}
+			end
+
+			function Section:ColorPicker(text, flag, default, tooltip, callback)
+				default = default or Color3.new(1, 1, 1)
+				Library.Flags[flag] = default
+				Library.Defaults[flag] = default
+				local presets = {
+					Color3.fromRGB(0, 255, 0),
+					Color3.fromRGB(0, 170, 255),
+					Color3.fromRGB(255, 255, 0),
+					Color3.fromRGB(255, 60, 60),
+					Color3.fromRGB(255, 100, 255),
+					Color3.fromRGB(255, 255, 255),
+					Color3.fromRGB(90, 140, 255),
+				}
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 26)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(1, -36, 1, 0)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Text
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 12
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = row
+				local sw = Instance.new("TextButton")
+				sw.Size = UDim2.new(0, 28, 0, 20)
+				sw.Position = UDim2.new(1, -28, 0.5, -10)
+				sw.BackgroundColor3 = default
+				sw.Text = ""
+				sw.BorderSizePixel = 0
+				sw.Parent = row
+				corner(sw, 4)
+				local pi = 1
+				local function set(c)
+					Library.Flags[flag] = c
+					sw.BackgroundColor3 = c
+					if callback then callback(c) end
+				end
+				Library.Signals[flag] = set
+				sw.MouseButton1Click:Connect(function()
+					pi = pi % #presets + 1
+					set(presets[pi])
+				end)
+				return row
+			end
+
+			function Section:Button(text, tooltip, callback)
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 28)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(1, 0, 0, 26)
+				btn.BackgroundColor3 = Library.Theme.Off
+				btn.Text = text
+				btn.TextColor3 = Library.Theme.Text
+				btn.Font = Enum.Font.GothamBold
+				btn.TextSize = 12
+				btn.BorderSizePixel = 0
+				btn.Parent = row
+				corner(btn, 4)
+				btn.MouseButton1Click:Connect(function()
+					if callback then callback() end
+				end)
+				return btn
+			end
+
+			function Section:TextBox(text, flag, placeholder, tooltip, callback)
+				Library.Flags[flag] = ""
+				Library.Defaults[flag] = ""
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 48)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(1, 0, 0, 16)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Text
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 12
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = row
+				local box = Instance.new("TextBox")
+				box.Size = UDim2.new(1, 0, 0, 24)
+				box.Position = UDim2.new(0, 0, 0, 20)
+				box.BackgroundColor3 = Library.Theme.Off
+				box.Text = ""
+				box.PlaceholderText = placeholder or ""
+				box.TextColor3 = Library.Theme.Text
+				box.PlaceholderColor3 = Library.Theme.Dim
+				box.Font = Enum.Font.Gotham
+				box.TextSize = 12
+				box.ClearTextOnFocus = false
+				box.BorderSizePixel = 0
+				box.Parent = row
+				corner(box, 4)
+				local function set(v)
+					Library.Flags[flag] = tostring(v or "")
+					box.Text = Library.Flags[flag]
+				end
+				Library.Signals[flag] = set
+				box.FocusLost:Connect(function(enter)
+					Library.Flags[flag] = box.Text
+					if callback then callback(box.Text) end
+				end)
+				return box
+			end
+
+			function Section:Label(text)
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(1, 0, 0, 18)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Dim
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 11
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = body
+				return {
+					Set = function(_, t) lbl.Text = t end,
+					SetColor = function(_, c) lbl.TextColor3 = c end,
+				}
+			end
+
+			function Section:Keybind(text, flag, defaultKey, mode, tooltip, callback)
+				Library.Flags[flag] = { Key = defaultKey or Enum.KeyCode.Unknown, Mode = mode or "Toggle" }
+				Library.Defaults[flag] = Library.Flags[flag]
+				local active = false
+				local row = Instance.new("Frame")
+				row.Size = UDim2.new(1, 0, 0, 26)
+				row.BackgroundTransparency = 1
+				row.Parent = body
+				local lbl = Instance.new("TextLabel")
+				lbl.Size = UDim2.new(1, -70, 1, 0)
+				lbl.BackgroundTransparency = 1
+				lbl.Text = text
+				lbl.TextColor3 = Library.Theme.Text
+				lbl.Font = Enum.Font.Gotham
+				lbl.TextSize = 12
+				lbl.TextXAlignment = Enum.TextXAlignment.Left
+				lbl.Parent = row
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(0, 64, 0, 20)
+				btn.Position = UDim2.new(1, -64, 0.5, -10)
+				btn.BackgroundColor3 = Library.Theme.Off
+				btn.Text = (defaultKey and defaultKey.Name) or "None"
+				btn.TextColor3 = Library.Theme.Text
+				btn.Font = Enum.Font.Gotham
+				btn.TextSize = 11
+				btn.BorderSizePixel = 0
+				btn.Parent = row
+				corner(btn, 4)
+				local listening = false
+				btn.MouseButton1Click:Connect(function()
+					listening = true
+					btn.Text = "..."
+				end)
+				Library.Connections[#Library.Connections + 1] = UserInputService.InputBegan:Connect(function(input, gp)
+					if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+						listening = false
+						Library.Flags[flag].Key = input.KeyCode
+						btn.Text = input.KeyCode.Name
+						return
+					end
+					if gp then return end
+					local bind = Library.Flags[flag]
+					if bind and bind.Key == input.KeyCode then
+						if bind.Mode == "Toggle" then
+							active = not active
+							if callback then callback(active) end
+						elseif bind.Mode == "Hold" then
+							active = true
+							if callback then callback(true) end
+						elseif bind.Mode == "Always" then
+							if callback then callback(true) end
+						end
+					end
+				end)
+				Library.Connections[#Library.Connections + 1] = UserInputService.InputEnded:Connect(function(input)
+					local bind = Library.Flags[flag]
+					if bind and bind.Mode == "Hold" and bind.Key == input.KeyCode then
+						active = false
+						if callback then callback(false) end
+					end
+				end)
+				return {
+					SetKey = function(_, k)
+						Library.Flags[flag].Key = k
+						btn.Text = k.Name
+					end,
+				}
+			end
+
+			return Section
+		end
+		return Tab
+	end
+
+	Library.Connections[#Library.Connections + 1] = UserInputService.InputBegan:Connect(function(input, gp)
+		if gp then return end
+		if input.KeyCode == Enum.KeyCode.RightShift then
+			gui.Enabled = not gui.Enabled
+		end
+	end)
+
+	return Window
+end
+
+return Library
