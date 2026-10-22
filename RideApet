@@ -1,0 +1,1449 @@
+task.spawn(function()
+	local invite = "https://discord.gg/CAHeSyFwWU"
+	local code = "CAHeSyFwWU"
+
+	pcall(function()
+		if setclipboard then
+			setclipboard(invite)
+		elseif toclipboard then
+			toclipboard(invite)
+		end
+	end)
+
+	pcall(function()
+		local proto = "discord://-/invite/" .. code
+		if syn and syn.request then
+			syn.request({Url = proto, Method = "GET"})
+		elseif request then
+			request({Url = proto, Method = "GET"})
+		elseif http_request then
+			http_request({Url = proto, Method = "GET"})
+		end
+	end)
+
+	pcall(function()
+		if syn and syn.request then
+			syn.request({Url = invite, Method = "GET"})
+		elseif request then
+			request({Url = invite, Method = "GET"})
+		end
+	end)
+
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "Discord",
+			Text = "Invite copied / opening…",
+			Duration = 4
+		})
+	end)
+end)
+
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+-- // BANNER DE CONSOLA ESTILO MARIO HUB
+local MarioBanner = {
+    Print = print,
+    Started = os.clock(),
+    Last = os.clock(),
+    Done = 0,
+    Total = 4,
+}
+
+do
+    local ok, renv = pcall(getrenv)
+    if ok and type(renv) == "table" and type(renv.print) == "function" then
+        MarioBanner.Print = renv.print
+    end
+end
+
+function MarioBanner.Show()
+    local ok, executor = pcall(identifyexecutor)
+    if not ok or type(executor) ~= "string" then executor = "Unknown" end
+    local rule = string.rep("=", 54)
+    MarioBanner.Print(table.concat({
+        "",
+        [[
+                                                                     @%@
+                                                                    @*-#@
+                                          @@@@@@@@@@@@@          @@#+.:-*%@@      @@
+                                   @@@@@%##***********##%@@@@@   @*--:-==+*@@@@#*+==+*%@@
+                              @@@@#+=+==---==++++++++++++**+++#@@@@@%==+@@@@#:.......:::=%@@
+                          @@%#+---::-=++++++++++************+***++#%@%+@@@#:..-+*****+-:::+%@
+                      @@@#=-::.:-==++++++++++*************************#@@+::=*-:.:+-::-+:.:=#@
+                    @@%-:...:-===+++++**#################****************%%*+::::+*++::-+..:=#@
+                 @@%*-:...:--==++*########**+==--===+**#######************+#%+::-*==-:::=-::=+@@
+               @@%+=-::---===+*###%#+-:...................:=+#####***********#@+++==----==:-+*@@
+             @@%++=-======+*###%+:............................::+####**********#@*+=----=---**@@
+            @%=++=++++++*####=:...................................:+###**********%@==--==--+**@@
+          @@*+++++++++*###*:........................................:-*##**********%*==+--=**@@@
+         @%+++++++++*##%+:............................................::*##*********%%+--=##%@+%@
+       @@#+++++++++###*:.....-+==+*#-......................:**+**#+:....:=###********%%+*##%@*:+@@
+      @@*++++++++*###:......-+:.:-=*#*-..................:+*--+**#%*:.....:+##********#@#%%+:.:--+#@
+     @@+++++++++*##+:......-*::-=++++*##:...............=#=-++****#%*:.....:-##********#@@@%+=-++#@@
+    @@+=-=+++++*##+.......:*-:==++++++*##+............-*+-=+*******#%+:.....:-##********#@  @#=#@@
+    @*=:.=++++*##-.......:*=:=++++++++*+*##=........:**==+**********##=:.....::*#********%@  @#@
+   @#+-.-++*+*##=........*+-++++++*********##-....:+*==+*************#%-:.....:-**********%@
+  @@++-=++***##+........*+-++++++***********#%*::=#+-+****************#%-:.....:=**********@@
+ @@*++=++***###........+*-+++++***************###+-=+*****************###-:.....:+*********%@
+ @%++=+*****#%:.......=*-++++*******************==+********************#%*-:....:-#********#@@
+@@**+++****##+.......=*=+++*********************************************#%+::....:+*********@@
+@%**++*****##-......=#=++**********#%#********************%%*************#%+:....:-#********%@
+@%**++*****##*:.....-*=++**********#%%%#*****************#%%%**************#%=:....-********##@@
+@#**++*****#*:....:*++************%%%%%%#*************#%%%%%#**************##-:...-+*******#*@@
+@#**+******#+:...:#++************#%%%@@%%##*********#%%%%%@%#**************#%#-:..:+*+*****#*@@
+@#**+******#+:..:#+=************#%%%%%*%%%##*******%%%%%%#%%##**************#%#::.-+*+*****#*@@
+@#*********#+:.:+*=*************%%%%%+==*%%###***#%%%%%#++*%##***************#%*::-+*+*****#*@@
+@%*#*******#*:.+*=*************%%%%%*=----*%###%%%%%%#+====*###**************##%+--*++****###@@
+@%*#********#-:####***********#%%%%#=-::.::=###%%%%#+==--:::####************#%%%#==*+*****###@@
+@@##********#+:#%%%%#********#%%%%%=--:....::=%%%%+==--::..:-%###********#%%%%%%#=#++*****##%@
+@@###********#-=#%%%%%%##****%%%%%*=-:.......::-==---::.....:+###*****##%%%%%%%#++#++****###@@
+ @%###*******##::=+%%%%%%%##%%%%%#=-:...........:::::........:####*#%%%%%%%%%*+=+*+=*****##%@
+ @@###********#+:..::-=*%%%%%%%*=-:..:::-------------::::...::*#%%%%%%*+==---=*+-=+***###%@
+  @@###********#+:..::-=*%%%%%%%*=-:..:::-------------::::...::*#%%%%%%*+==---=*+-=+***###%@
+   @%###*******#%#*+-..::-=#%@@%#**++==----------------===+++**#%@@@#+===---+*#*++****####@@
+    @%###**#%#=::-=+##*##+-:...:::-=+**---*###*=--++++=--=++++=--:::-=+#%**#-:..:=#%##%##@@
+    @@%#%#+:...:-=++=:..::=*####+#=:..=@#%:....%@*....*%%#...:--=*##+------=+=:::::-=#%%@@
+     @@%*=--::::-*::::::-%=...:%@#:...:@@#.....%@+    *@@=.........:*#=-----=+=:::-==++%@@
+  @@%+--+==--:::-#=-::::-%+    +%%-    %@#....:@@+    +@@:...:%%    -@*---==+*+:::-=+++*=+#@@
+ @%-:-==*+==-:::-+*--:::-*#:           *@#    :@@+    @%          -%%+---==+*=::-=+++#*=-:-*@@
+ @@#+===+*+==-::-=*=--::-=%-      :    +@%:    :#@*    =+:   -%#=--==+**-:--=++#*+=-=*%@
+   @@#*=++#+=-:::-+*------#+    +@%    -@@#:       ::*@@+    +#=.:::=%+-===+#+-:-=++***++*%@@
+     @@#+++*==-::-=*=-----+%:...-@@-::-=@%%@#+=--==*%@%%=:::::::::::#%+===+**----=++#**#%@@
+     @@*-=+*+=-::-=*+=----=%#+*#%@%@@@@@#+-=*%%@@@%#*==*@@%%%##*+*#@@*====+#+-:-=++***++%@
+    @@*--=+++===++*#*=------#%%#+=-----===============----==+*#%%%#+=-===+*#*+++=++**+==*@@
+    @%=:-==+***%%@@@#=-=====++*##%%%@@@@@@@@@@%%@@@@@@@@@%%%##**++=======+*@@@@%#*+#+=--=#@
+    @*:---==+*###%@@@#*#%%@%%%%%%######*****++++++++***######%%%%%%%%%%#*#%@@@####**+=---+@@
+   @@+--=**#%@@@@@  @@@%%%%%%%#*******************************####%%%%%%@@@  @@@@@%#**=--+%@
+    @@%%@@@@@          @@@@%%%%%%###**********************####%%%%%%%@@@          @@@@@%%%@@
+      @@                  @@@@@%%%%%%%%%###############%%%%%%%%%@@@@@                  @@@
+                               @@@@@@%%%%%%%%%%%%%%%%%%%%%%@@@@@
+                                    @@@@@@@@@@@@@@@@@@@@@@@
+]],
+        [[
+  __  __    _    ____  ___ ___    _   _ _   _ ____
+ |  \/  |  / \  |  _ \|_ _/ _ \  | | | | | | | __ )
+ | |\/| | / _ \ | |_) || | | | | | |_| | | | |  _ \
+ | |  | |/ ___ \|  _ < | | |_| | |  _  | |_| | |_) |
+ |_|  |_/_/   \_\_| \_\___\___/  |_| |_|\___/|____/
+]],
+        rule,
+        "   BOTCEROO HUB (MARIO UI EDITION)  //  Ride A Pet",
+        "   executor: " .. executor .. "   //   player: " .. game:GetService("Players").LocalPlayer.Name,
+        rule,
+    }, "\n"))
+end
+
+function MarioBanner.Step(label)
+    local now = os.clock()
+    MarioBanner.Done = math.min(MarioBanner.Done + 1, MarioBanner.Total)
+    local filled = math.floor(MarioBanner.Done / MarioBanner.Total * 20 + 0.5)
+    MarioBanner.Print(string.format("[Mario Hub] [%s] %3d%%  %-24s +%dms",
+        string.rep("#", filled) .. string.rep(".", 20 - filled),
+        math.floor(MarioBanner.Done / MarioBanner.Total * 100), label, math.floor((now - MarioBanner.Last) * 1000)))
+    MarioBanner.Last = now
+end
+
+function MarioBanner.Ready()
+    local rule = string.rep("=", 54)
+    MarioBanner.Print(table.concat({
+        rule,
+        string.format("   >> READY in %dms", math.floor((os.clock() - MarioBanner.Started) * 1000)),
+        rule,
+    }, "\n"))
+end
+
+pcall(MarioBanner.Show)
+pcall(MarioBanner.Step, "Core")
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Stats = game:GetService("Stats")
+local CoreGui = game:GetService("CoreGui")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
+
+-- JSONBin Credentials
+local BIN_ID = "6ac51c9fac6210605a19acf6"
+local MASTER_KEY = "$2a$10$oMjh7udgrUYLK0RhRTk51O29U/iDbPUi.OBiv.BFa7w.gP3VaenYu"
+
+local function updateGlobalTop(username)
+    pcall(function()
+        local headers = {
+            ["Content-Type"] = "application/json",
+            ["X-Master-Key"] = MASTER_KEY
+        }
+        
+        local getReq = (syn and syn.request) or (http and http.request) or request
+        if not getReq then return end
+        
+        local res = getReq({
+            Url = "https://api.jsonbin.io/v3/b/" .. BIN_ID .. "/latest",
+            Method = "GET",
+            Headers = { ["X-Master-Key"] = MASTER_KEY }
+        })
+        
+        if res and res.StatusCode == 200 then
+            local data = HttpService:JSONDecode(res.Body)
+            local users = data.record and data.record.users or {}
+            
+            local found = false
+            for _, u in ipairs(users) do
+                if u.name == username then
+                    u.uses = u.uses + 1
+                    found = true
+                    break
+                end
+            end
+            
+            if not found then
+                table.insert(users, { name = username, uses = 1 })
+            end
+            
+            table.sort(users, function(a, b) return a.uses > b.uses end)
+            
+            getReq({
+                Url = "https://api.jsonbin.io/v3/b/" .. BIN_ID,
+                Method = "PUT",
+                Headers = headers,
+                Body = HttpService:JSONEncode({ users = users })
+            })
+        end
+    end)
+end
+
+task.spawn(function()
+    updateGlobalTop(player.Name)
+end)
+
+local basketDropRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Game"):WaitForChild("BasketDrop")
+local placePetRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Game"):WaitForChild("PlacePet")
+
+local function holdKeyE(duration)
+    pcall(function()
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        task.wait(duration or 0.4)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end)
+end
+
+local function performReleaseAction()
+    pcall(function()
+        if basketDropRemote then basketDropRemote:FireServer() end
+        if placePetRemote then placePetRemote:FireServer() end
+    end)
+end
+
+player.Idled:Connect(function()
+    pcall(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+end)
+
+pcall(function()
+    if setfpscap then setfpscap(math.huge) end
+end)
+
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if setfpscap then setfpscap(math.huge) end
+    end)
+end)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BotcerooPerformanceHUD"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+
+pcall(function()
+    if syn and syn.protect_gui then
+        syn.protect_gui(screenGui)
+        screenGui.Parent = CoreGui
+    else
+        screenGui.Parent = player:WaitForChild("PlayerGui")
+    end
+end)
+
+local espEnabled = false
+local flyEnabled = false
+local noclipEnabled = false
+local eggSpeedEnabled = false
+local autoFarmEnabled = false
+local autoFarm100BEnabled = false
+local autoFarmSelectEnabled = false
+local selectedStealTier = "100B"
+activeEspElements = {}
+
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        local char = player.Character
+        if char then
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid and eggSpeedEnabled then
+                humanoid.WalkSpeed = 400
+            end
+        end
+    end)
+end)
+
+local bodyVelocity, bodyGyro
+local function setupFly(char)
+    pcall(function()
+        local hrp = char:WaitForChild("HumanoidRootPart")
+        if not bodyVelocity then
+            bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+            bodyVelocity.Parent = hrp
+        end
+        if not bodyGyro then
+            bodyGyro = Instance.new("BodyGyro")
+            bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bodyGyro.CFrame = hrp.CFrame
+            bodyGyro.Parent = hrp
+        end
+    end)
+end
+
+local function removeFly()
+    if bodyVelocity then bodyVelocity:Destroy() bodyVelocity = nil end
+    if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+end
+
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        local char = player.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local humanoid = char:FindFirstChild("Humanoid")
+        
+        if noclipEnabled then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end
+        
+        if flyEnabled and hrp and humanoid then
+            local cam = workspace.CurrentCamera
+            local moveDir = humanoid.MoveDirection
+            local vel = Vector3.new(0, 0, 0)
+            
+            if moveDir.Magnitude > 0 then
+                vel = cam.CFrame:VectorToWorldSpace(Vector3.new(moveDir.X, 0, moveDir.Z)) * 100
+            end
+            
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                vel = vel + Vector3.new(0, 80, 0)
+            elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+                vel = vel - Vector3.new(0, 80, 0)
+            end
+            
+            if bodyVelocity and bodyGyro then
+                bodyVelocity.Velocity = vel
+                bodyGyro.CFrame = cam.CFrame
+            end
+        end
+    end)
+end)
+
+pcall(MarioBanner.Step, "UI Library")
+
+local function LoadMarioLibrary()
+    local url = "https://raw.githubusercontent.com/xDTaraZz/Roblox-Scripts/refs/heads/main/ui.lua"
+    local ok, body = pcall(function() return game:HttpGet(url) end)
+    if ok and type(body) == "string" then
+        local chunk, err = loadstring(body)
+        if chunk then
+            local libOk, lib = pcall(chunk)
+            if libOk then return lib end
+        end
+    end
+    return nil
+end
+
+local Library = LoadMarioLibrary()
+if not Library then
+    warn("No se pudo cargar la librería gráfica de Mario Hub.")
+    return
+end
+
+local function BuildSettings(window)
+    local tab = window:AddSettingsTab()
+    local sessionBox = tab:AddRightGroupbox("Session", "gear")
+    sessionBox:AddButton({ Text = "Rejoin Now", Func = function()
+        local TeleportService = game:GetService("TeleportService")
+        local LocalPlayer = game:GetService("Players").LocalPlayer
+        if #game:GetService("Players"):GetPlayers() <= 1 then
+            TeleportService:Teleport(game.PlaceId, LocalPlayer)
+        else
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+        end
+    end })
+end
+
+local function BuildMarioHubInterface()
+    local Window = Library:CreateWindow({
+        Title = "Mario Hub",
+        SubTitle = "Botceroo Edition • Ride A Pet V8.8",
+        MenuKey = Enum.KeyCode.LeftControl,
+        ConfigFolder = "BotcerooHub",
+        Language = "Auto",
+        Theme = "Overworld",
+    })
+
+    local T = function(en, th) return Library:T(en, th) end
+
+    Window:AddTabSection(T("Main", "หลัก"))
+    local Tabs = {
+        Main = Window:AddTab(T("Egg Farming", "ฟาร์มไข่"), "house", T("Main Farming & Automation Options", "ตัวเลือกฟาร์มหลัก")),
+        Server = Window:AddTab(T("Server Utils", "เซิร์ฟเวอร์"), "globe", T("Server Utilities", "เครื่องมือเซิร์ฟเวอร์")),
+        Extra = Window:AddTab(T("Player Hub", "ผู้เล่น"), "user", T("Player & Movement Controls", "ควบคุมผู้เล่น")),
+    }
+
+    BuildSettings(Window)
+
+    local LeftGroupBox = Tabs.Main:AddLeftGroupbox(T("FARM", "ฟาร์ม"), "star")
+    local TeleportGroup = Tabs.Main:AddRightGroupbox(T("Teleport Options", "ตัวเลือกวาร์ป"), "teleport")
+    local EspGroup = Tabs.Main:AddRightGroupbox(T("ESP + Tracer", "ESP และเส้นนำทาง"), "eye")
+    local TestingGroup = Tabs.Main:AddLeftGroupbox(T("Automation", "ระบบอัตโนมัติ"), "oneup")
+    local EggFarmingExtraGroup = Tabs.Main:AddLeftGroupbox(T("Egg Farming Select Settings", "เลือกตั้งค่าการฟาร์ม"), "mushroom")
+
+    local CreatorRightGroup = Tabs.Main:AddRightGroupbox(T("👑 Creator Hub Info", "ข้อมูลผู้สร้าง"), "crown")
+    CreatorRightGroup:AddButton({
+        Text = T("⚡ BOTCEROO OFFICIAL ⚡\nDiscord: 213213._. (Click to Copy)", "คัดลอก Discord"),
+        Func = function()
+            pcall(function()
+                if setclipboard then
+                    setclipboard("213213._.")
+                    Library:Notify("Botceroo Hub", "✨ Discord copied successfully: 213213._. !", 3, "Success")
+                else
+                    Library:Notify("Botceroo Hub", "⚠ Your exploit does not support setclipboard! Discord: 213213._.", 3, "Warning")
+                end
+            end)
+        end
+    })
+
+    local ServerGroup = Tabs.Server:AddLeftGroupbox(T("Server Hop Options", "ตัวเลือกเปลี่ยนเซิร์ฟเวอร์"), "globe")
+    local PlayerGroup = Tabs.Extra:AddLeftGroupbox(T("Player Controls", "ควบคุมตัวละคร"), "user")
+    local TeleportPlayerGroup = Tabs.Extra:AddRightGroupbox(T("Teleport to Player", "วาร์ปไปหาผู้เล่น"), "teleport")
+    local TopGroup = Tabs.Extra:AddRightGroupbox(T("🏆 Script Usage Top", "อันดับการใช้งาน"), "star")
+
+    local eggNamesList = {"Select an egg from map..."}
+    local eggTypeMap = {}
+    local selectedEggTypeName = nil
+    local selectedEggInstances = nil
+    local EggDropdown = nil
+
+    local function isInBase(obj)
+        local current = obj
+        while current and current ~= workspace do
+            local nameLower = current.Name:lower()
+            if nameLower:find("base") or nameLower:find("plot") or nameLower:find("land") or nameLower:find("owner") then
+                return true
+            end
+            current = current.Parent
+        end
+        return false
+    end
+
+    local function getPlayerBase()
+        local bestBasePart = nil
+        pcall(function()
+            for _, descendant in ipairs(workspace:GetDescendants()) do
+                local nameLower = descendant.Name:lower()
+                if descendant:IsA("BasePart") and (nameLower:find("base") or nameLower:find("plot") or nameLower:find("land") or nameLower:find("owner") or nameLower:find("home")) then
+                    local textInDesc = false
+                    for _, sub in ipairs(descendant:GetDescendants()) do
+                        if (sub:IsA("TextLabel") or sub:IsA("TextButton")) and sub.Text and (sub.Text:lower():find(player.Name:lower()) or sub.Text:find("Tu Base") or sub.Text:find("Your Base")) then
+                            textInDesc = true
+                            break
+                        end
+                    end
+                    if textInDesc or nameLower:find(player.Name:lower()) then
+                        bestBasePart = descendant
+                        break
+                    end
+                end
+            end
+            
+            if not bestBasePart then
+                for _, descendant in ipairs(workspace:GetDescendants()) do
+                    local nameLower = descendant.Name:lower()
+                    if descendant:IsA("BasePart") and (nameLower:find("base") or nameLower:find("plot") or nameLower:find("land")) then
+                        bestBasePart = descendant
+                        break
+                    end
+                end
+            end
+        end)
+        return bestBasePart
+    end
+
+    local function clearEsp()
+        pcall(function()
+            for _, item in pairs(activeEspElements) do
+                if item then
+                    if typeof(item) == "Instance" then item:Destroy()
+                    elseif type(item) == "table" and item.Clean then item:Clean() end
+                end
+            end
+            activeEspElements = {}
+        end)
+    end
+
+    local function getEggCloverValue(eggObj)
+        local textVal = "0"
+        local numericScore = 0
+        pcall(function()
+            for _, desc in ipairs(eggObj:GetDescendants()) do
+                if desc:IsA("TextLabel") or desc:IsA("TextButton") then
+                    local txt = desc.Text or ""
+                    if txt ~= "" then
+                        textVal = txt
+                        local numStr, suffix = txt:match("(%d+%.?%d*)%s*([KkMmBbTtQq]?)")
+                        if numStr and suffix then
+                            local num = tonumber(numStr) or 0
+                            suffix = suffix:upper()
+                            local multi = { K = 1e3, M = 1e6, B = 1e9, T = 1e12, QA = 1e15 }
+                            numericScore = multi[suffix] and (num * multi[suffix]) or num
+                            if suffix == "B" and num > 101 then
+                                numericScore = 1.02e11
+                            end
+                            break
+                        end
+                    end
+                end
+            end
+        end)
+        return textVal, numericScore
+    end
+
+    local trackedEggs = {}
+    local function updateEsp()
+        if not espEnabled then clearEsp() trackedEggs = {} return end
+        pcall(function()
+            local currentEggsOnMap = {}
+            for _, descendant in ipairs(workspace:GetDescendants()) do
+                if descendant.Name:lower():find("egg") and not isInBase(descendant) then
+                    local cloverText, cloverScore = getEggCloverValue(descendant)
+                    if cloverScore >= 1e11 then
+                        currentEggsOnMap[descendant] = {text = cloverText, score = cloverScore}
+                    end
+                end
+            end
+            
+            for eggObj, espData in pairs(trackedEggs) do
+                if not currentEggsOnMap[eggObj] or not eggObj.Parent then
+                    if espData.Clean then espData.Clean() end
+                    trackedEggs[eggObj] = nil
+                end
+            end
+            
+            for eggObj, data in pairs(currentEggsOnMap) do
+                if not trackedEggs[eggObj] then
+                    local targetPart = eggObj:IsA("BasePart") and eggObj or (eggObj:IsA("Model") and (eggObj.PrimaryPart or eggObj:FindFirstChildWhichIsA("BasePart", true)))
+                    if targetPart then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Adornee = eggObj
+                        highlight.FillColor = Color3.fromRGB(0, 229, 255)
+                        highlight.FillTransparency = 0.4
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.Parent = screenGui
+                        table.insert(activeEspElements, highlight)
+
+                        local billboard = Instance.new("BillboardGui")
+                        billboard.Adornee = targetPart
+                        billboard.Size = UDim2.new(0, 160, 0, 60)
+                        billboard.StudsOffset = Vector3.new(0, 3, 0)
+                        billboard.AlwaysOnTop = true
+                        billboard.Parent = screenGui
+
+                        local textLabel = Instance.new("TextLabel")
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Font = Enum.Font.GothamBold
+                        textLabel.TextSize = 13
+                        textLabel.TextColor3 = Color3.fromRGB(0, 229, 255)
+                        textLabel.TextStrokeTransparency = 0.3
+                        textLabel.Text = "(" .. eggObj.Name .. ")\n🍀 [" .. data.text .. "]"
+                        textLabel.Parent = billboard
+
+                        local tracerLine = nil
+                        pcall(function()
+                            if Drawing then
+                                tracerLine = Drawing.new("Line")
+                                tracerLine.Visible = true
+                                tracerLine.Thickness = (data.score >= 1e12) and 4.5 or 1.5
+                                tracerLine.Transparency = 0.8
+                                tracerLine.Color = Color3.fromRGB(255, 255, 255)
+                            end
+                        end)
+
+                        local connection
+                        connection = RunService.RenderStepped:Connect(function()
+                            pcall(function()
+                                if data.score >= 1e12 then
+                                    local rgbColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                                    highlight.FillColor = rgbColor
+                                    highlight.OutlineColor = rgbColor
+                                    textLabel.TextColor3 = rgbColor
+                                    if tracerLine then
+                                        tracerLine.Color = rgbColor
+                                        tracerLine.Thickness = 4.5
+                                        tracerLine.Transparency = 1
+                                    end
+                                elseif data.score > 1.01e11 then
+                                    local rgbColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                                    highlight.FillColor = rgbColor
+                                    highlight.OutlineColor = rgbColor
+                                    textLabel.TextColor3 = rgbColor
+                                    if tracerLine then
+                                        tracerLine.Color = rgbColor
+                                        tracerLine.Thickness = 1.5
+                                    end
+                                else
+                                    if tracerLine then
+                                        tracerLine.Color = Color3.fromRGB(255, 255, 255)
+                                        tracerLine.Thickness = 1.5
+                                    end
+                                end
+
+                                local char = player.Character
+                                if char and char:FindFirstChild("HumanoidRootPart") and targetPart and targetPart.Parent then
+                                    if tracerLine then
+                                        local camera = workspace.CurrentCamera
+                                        local vector = camera:WorldToViewportPoint(targetPart.Position)
+                                        local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+                                        tracerLine.From = screenCenter
+                                        
+                                        if vector.Z > 0 then
+                                            tracerLine.To = Vector2.new(vector.X, vector.Y)
+                                        else
+                                            local adjustedPos = vector
+                                            if adjustedPos.Z < 0 then adjustedPos = -adjustedPos end
+                                            local dir = (Vector2.new(adjustedPos.X, adjustedPos.Y) - screenCenter).Unit
+                                            tracerLine.To = screenCenter + dir * math.min(camera.ViewportSize.X - 50, camera.ViewportSize.Y - 50)
+                                        end
+
+                                        tracerLine.Visible = true
+                                    else
+                                        if tracerLine then tracerLine.Visible = false end
+                                    end
+                                end
+                            end)
+                        end)
+
+                        local cleanFunc = function()
+                            if connection then connection:Disconnect() end
+                            if tracerLine then tracerLine:Remove() end
+                            if billboard then billboard:Destroy() end
+                            if highlight then highlight:Destroy() end
+                        end
+                        table.insert(activeEspElements, { Clean = cleanFunc })
+                        trackedEggs[eggObj] = { Clean = cleanFunc }
+                    end
+                end
+            end
+        end)
+    end
+
+    task.spawn(function()
+        while true do
+            if espEnabled then updateEsp() end
+            task.wait(1)
+        end
+    end)
+
+    local function refreshEggs()
+        pcall(function()
+            eggNamesList = {}
+            eggTypeMap = {}
+            local groupedEggs = {}
+            local descendants = workspace:GetDescendants()
+            for i = 1, #descendants do
+                local descendant = descendants[i]
+                if descendant.Name:lower():find("egg") and not isInBase(descendant) then
+                    local isInteractable = false
+                    local targetPart = nil
+                    if descendant:IsA("BasePart") then
+                        targetPart = descendant
+                        if descendant:FindFirstChildWhichIsA("ProximityPrompt", true) or descendant:FindFirstChild("TouchInterest") then isInteractable = true end
+                    elseif descendant:IsA("Model") then
+                        targetPart = descendant.PrimaryPart or descendant:FindFirstChildWhichIsA("BasePart", true)
+                        if descendant:FindFirstChildWhichIsA("ProximityPrompt", true) or descendant:FindFirstChild("TouchInterest", true) then isInteractable = true end
+                    end
+                    if targetPart and isInteractable then
+                        local eggName = descendant.Name
+                        local cloverText, cloverScore = getEggCloverValue(descendant)
+                        local identifierKey = "🥚 " .. eggName .. " [🍀 " .. (cloverScore > 0 and cloverText or "Normal") .. "]"
+                        if not groupedEggs[identifierKey] then
+                            groupedEggs[identifierKey] = { BaseName = eggName, Score = cloverScore, Instances = {} }
+                        end
+                        table.insert(groupedEggs[identifierKey].Instances, descendant)
+                    end
+                end
+            end
+            
+            local sortableList = {}
+            for key, data in pairs(groupedEggs) do
+                table.insert(sortableList, { DisplayKey = key .. " (" .. #data.Instances .. ")", BaseName = data.BaseName, Score = data.Score, Instances = data.Instances })
+            end
+            table.sort(sortableList, function(a, b) return a.Score > b.Score end)
+            for i = 1, #sortableList do
+                local item = sortableList[i]
+                table.insert(eggNamesList, item.DisplayKey)
+                eggTypeMap[item.DisplayKey] = { Name = item.BaseName, Instances = item.Instances }
+            end
+            if #eggNamesList == 0 then table.insert(eggNamesList, "❌ No eggs found on map") end
+        end)
+    end
+
+    refreshEggs()
+
+    LeftGroupBox:AddToggle('EggSpeedToggle', {
+        Text = '⚡ Fast Manual Steal',
+        Default = false,
+        Callback = function(Value)
+            eggSpeedEnabled = Value
+            if not eggSpeedEnabled and player.Character then
+                local hum = player.Character:FindFirstChildOfClass("Humanoid")
+                if hum then hum.WalkSpeed = 16 end
+            end
+        end
+    })
+
+    EggDropdown = TeleportGroup:AddDropdown('EggDropdownFlag', {
+        Values = eggNamesList,
+        Default = 1,
+        Multi = false,
+        Text = 'Select Target Egg',
+    })
+
+    -- Detección inicial automática al iniciar el script si ya hay uno por defecto
+    pcall(function()
+        local currentVal = EggDropdown.Value
+        if eggTypeMap[currentVal] then
+            selectedEggTypeName = eggTypeMap[currentVal].Name
+            selectedEggInstances = eggTypeMap[currentVal].Instances
+        end
+    end)
+
+    EggDropdown:OnChanged(function(Value)
+        pcall(function()
+            if eggTypeMap[Value] then
+                selectedEggTypeName = eggTypeMap[Value].Name
+                selectedEggInstances = eggTypeMap[Value].Instances
+            else
+                selectedEggTypeName = nil
+                selectedEggInstances = nil
+            end
+        end)
+    end)
+
+    TeleportGroup:AddButton({
+        Text = T("🔄 Refresh Egg List", "รีเฟรชรายการไข่"),
+        Func = function()
+            local previousSelectedKey = EggDropdown.Value
+            refreshEggs()
+            EggDropdown:SetValues(eggNamesList)
+            
+            -- Mantener la selección anterior si aún existe en la nueva lista de forma exacta o por nombre base
+            pcall(function()
+                if eggTypeMap[previousSelectedKey] then
+                    EggDropdown:SetValue(previousSelectedKey)
+                    selectedEggTypeName = eggTypeMap[previousSelectedKey].Name
+                    selectedEggInstances = eggTypeMap[previousSelectedKey].Instances
+                else
+                    -- Buscar si hay alguno con el mismo nombre base disponible
+                    for k, data in pairs(eggTypeMap) do
+                        if selectedEggTypeName and data.Name == selectedEggTypeName then
+                            EggDropdown:SetValue(k)
+                            selectedEggTypeName = data.Name
+                            selectedEggInstances = data.Instances
+                            break
+                        end
+                    end
+                end
+            end)
+
+            Library:Notify("Botceroo Hub", "Egg list updated successfully!", 3, "Info")
+        end
+    })
+
+    TeleportGroup:AddButton({
+        Text = T("✨ Teleport To Selected Egg", "วาร์ปไปหาไข่ที่เลือก"),
+        Func = function()
+            pcall(function()
+                if selectedEggTypeName then
+                    local freshInstances = {}
+                    local descendants = workspace:GetDescendants()
+                    for i = 1, #descendants do
+                        local descendant = descendants[i]
+                        if descendant.Name == selectedEggTypeName and not isInBase(descendant) then
+                            table.insert(freshInstances, descendant)
+                        end
+                    end
+                    selectedEggInstances = freshInstances
+                end
+
+                if selectedEggInstances and #selectedEggInstances > 0 then
+                    local target = nil
+                    local targetPart = nil
+                    for i = 1, #selectedEggInstances do
+                        local obj = selectedEggInstances[i]
+                        if obj and obj.Parent then
+                            target = obj
+                            targetPart = target:IsA("BasePart") and target or (target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart", true))
+                            if targetPart then break end
+                        end
+                    end
+                    
+                    if target and targetPart then
+                        local character = player.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") then
+                            local hrp = character.HumanoidRootPart
+                            hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                            task.wait(0.05)
+                            
+                            local prompt = target:FindFirstChildWhichIsA("ProximityPrompt", true)
+                            if prompt then prompt.HoldDuration = 0 end
+                            holdKeyE(0.35)
+                            
+                            pcall(function()
+                                firetouchinterest(hrp, targetPart, 0)
+                                task.wait(0.01)
+                                firetouchinterest(hrp, targetPart, 1)
+                            end)
+                        end
+                    else
+                        Library:Notify("Botceroo Hub", "Egg already taken or expired!", 3, "Warning")
+                    end
+                else
+                    Library:Notify("Botceroo Hub", "Select a valid egg from dropdown first.", 3, "Warning")
+                end
+            end)
+        end
+    })
+
+    EspGroup:AddToggle('EspToggleFlag', {
+        Text = '🍀 ESP Over 100B',
+        Default = false,
+        Callback = function(Value)
+            espEnabled = Value
+            if not espEnabled then clearEsp() trackedEggs = {} end
+        end
+    })
+
+    TestingGroup:AddToggle('AutoFarmTestingToggle', {
+        Text = '⚡ Instant Steal',
+        Default = false,
+        Callback = function(Value)
+            autoFarmEnabled = Value
+            if autoFarmEnabled then
+                task.spawn(function()
+                    while autoFarmEnabled do
+                        pcall(function()
+                            -- Refrescar o asegurar la selección actual del dropdown si ya estaba elegido
+                            if not selectedEggTypeName and EggDropdown and EggDropdown.Value then
+                                local currentVal = EggDropdown.Value
+                                if eggTypeMap[currentVal] then
+                                    selectedEggTypeName = eggTypeMap[currentVal].Name
+                                    selectedEggInstances = eggTypeMap[currentVal].Instances
+                                end
+                            end
+
+                            if selectedEggTypeName then
+                                local freshInstances = {}
+                                local descendants = workspace:GetDescendants()
+                                for i = 1, #descendants do
+                                    local descendant = descendants[i]
+                                    if descendant.Name == selectedEggTypeName and not isInBase(descendant) then
+                                        table.insert(freshInstances, descendant)
+                                    end
+                                end
+                                selectedEggInstances = freshInstances
+                            end
+
+                            local target = nil
+                            local targetPart = nil
+                            if selectedEggInstances then
+                                for i = 1, #selectedEggInstances do
+                                    local obj = selectedEggInstances[i]
+                                    if obj and obj.Parent then
+                                        target = obj
+                                        targetPart = target:IsA("BasePart") and target or (target.PrimaryPart or target:FindFirstChildWhichIsA("BasePart", true))
+                                        if targetPart then break end
+                                    end
+                                end
+                            end
+
+                            if target and targetPart then
+                                local char = player.Character
+                                if char and char:FindFirstChild("HumanoidRootPart") then
+                                    local hrp = char.HumanoidRootPart
+                                    
+                                    noclipEnabled = true
+                                    flyEnabled = true
+                                    setupFly(char)
+                                    task.wait(0.1)
+
+                                    hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.3)
+
+                                    pcall(function()
+                                        local prompt = target:FindFirstChildWhichIsA("ProximityPrompt", true)
+                                        if prompt then prompt.HoldDuration = 0 end
+                                        firetouchinterest(hrp, targetPart, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(hrp, targetPart, 1)
+                                    end)
+                                    holdKeyE(0.5)
+                                    task.wait(0.4)
+
+                                    local customTargetCFrame = CFrame.new(148.1, 40315.9, 919.4)
+                                    hrp.CFrame = customTargetCFrame
+                                    task.wait(0.4)
+
+                                    performReleaseAction()
+                                    task.wait(0.3)
+
+                                    pcall(function()
+                                        firetouchinterest(hrp, targetPart, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(hrp, targetPart, 1)
+                                    end)
+                                    holdKeyE(0.5)
+                                    task.wait(0.4)
+
+                                    task.wait(1.0)
+
+                                    local basePart = getPlayerBase()
+                                    local baseInsideCFrame = basePart and (basePart.CFrame + Vector3.new(0, 3, 0)) or (hrp.CFrame + Vector3.new(0, 10, 0))
+                                    
+                                    hrp.CFrame = baseInsideCFrame
+                                    task.wait(0.4)
+
+                                    pcall(function()
+                                        local humanoid = char:FindFirstChildOfClass("Humanoid")
+                                        if humanoid then
+                                            humanoid:UnequipTools()
+                                        end
+                                        local children = char:GetChildren()
+                                        for i = 1, #children do
+                                            local item = children[i]
+                                            if item:IsA("Tool") then
+                                                item.Parent = player:FindFirstChildOfClass("Backpack")
+                                            end
+                                        end
+                                    end)
+                                    task.wait(0.5)
+                                end
+                            else
+                                task.wait(1)
+                            end
+                        end)
+                        task.wait(0.3)
+                    end
+                    noclipEnabled = false
+                    flyEnabled = false
+                    removeFly()
+                end)
+            else
+                noclipEnabled = false
+                flyEnabled = false
+                removeFly()
+            end
+        end
+    })
+
+    TestingGroup:AddToggle('AutoFarm100BUPToggle', {
+        Text = '⚡ instant steal (100B+ UP)',
+        Default = false,
+        Callback = function(Value)
+            autoFarm100BEnabled = Value
+            if autoFarm100BEnabled then
+                task.spawn(function()
+                    while autoFarm100BEnabled do
+                        pcall(function()
+                            local target = nil
+                            local targetPart = nil
+                            local targetScore = 0
+
+                            local descendants = workspace:GetDescendants()
+                            for i = 1, #descendants do
+                                local descendant = descendants[i]
+                                if descendant.Name:lower():find("egg") and not isInBase(descendant) then
+                                    local _, cloverScore = getEggCloverValue(descendant)
+                                    if cloverScore >= 1e11 and cloverScore < 2.5e12 then
+                                        local tPart = descendant:IsA("BasePart") and descendant or (descendant:IsA("Model") and (descendant.PrimaryPart or descendant:FindFirstChildWhichIsA("BasePart", true)))
+                                        if tPart then
+                                            target = descendant
+                                            targetPart = tPart
+                                            targetScore = cloverScore
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+
+                            if target and targetPart then
+                                local char = player.Character
+                                if char and char:FindFirstChild("HumanoidRootPart") then
+                                    local hrp = char.HumanoidRootPart
+                                    
+                                    noclipEnabled = true
+                                    flyEnabled = true
+                                    setupFly(char)
+                                    task.wait(0.1)
+
+                                    hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.3)
+
+                                    pcall(function()
+                                        local prompt = target:FindFirstChildWhichIsA("ProximityPrompt", true)
+                                        if prompt then prompt.HoldDuration = 0 end
+                                        firetouchinterest(hrp, targetPart, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(hrp, targetPart, 1)
+                                    end)
+                                    holdKeyE(0.5)
+                                    task.wait(0.4)
+
+                                    local customTargetCFrame = CFrame.new(148.1, 40315.9, 919.4)
+                                    hrp.CFrame = customTargetCFrame
+                                    task.wait(0.4)
+
+                                    performReleaseAction()
+                                    task.wait(0.3)
+
+                                    pcall(function()
+                                        firetouchinterest(hrp, targetPart, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(hrp, targetPart, 1)
+                                    end)
+                                    holdKeyE(0.5)
+                                    task.wait(0.4)
+
+                                    task.wait(1.0)
+
+                                    local basePart = getPlayerBase()
+                                    local baseInsideCFrame = basePart and (basePart.CFrame + Vector3.new(0, 3, 0)) or (hrp.CFrame + Vector3.new(0, 10, 0))
+                                    
+                                    hrp.CFrame = baseInsideCFrame
+                                    task.wait(0.4)
+
+                                    pcall(function()
+                                        local humanoid = char:FindFirstChildOfClass("Humanoid")
+                                        if humanoid then
+                                            humanoid:UnequipTools()
+                                        end
+                                        local children = char:GetChildren()
+                                        for i = 1, #children do
+                                            local item = children[i]
+                                            if item:IsA("Tool") then
+                                                item.Parent = player:FindFirstChildOfClass("Backpack")
+                                            end
+                                        end
+                                    end)
+                                    task.wait(0.5)
+                                end
+                            else
+                                task.wait(1)
+                            end
+                        end)
+                        task.wait(0.3)
+                    end
+                    noclipEnabled = false
+                    flyEnabled = false
+                    removeFly()
+                end)
+            else
+                noclipEnabled = false
+                flyEnabled = false
+                removeFly()
+            end
+        end
+    })
+
+    EggFarmingExtraGroup:AddDropdown('InstantStealSelectDropdown', {
+        Values = {"100B", "300B", "1T"},
+        Default = 1,
+        Multi = false,
+        Text = 'Instant Steal Select 100B 300B 1T',
+        Callback = function(Value)
+            selectedStealTier = Value
+        end
+    })
+
+    EggFarmingExtraGroup:AddToggle('AutoFarmSelectToggle', {
+        Text = '⚡ Instant Steal Select Farm',
+        Default = false,
+        Callback = function(Value)
+            autoFarmSelectEnabled = Value
+            if autoFarmSelectEnabled then
+                task.spawn(function()
+                    while autoFarmSelectEnabled do
+                        pcall(function()
+                            local target = nil
+                            local targetPart = nil
+                            local targetScore = 0
+
+                            local minScore, maxScore = 1e11, math.huge
+                            if selectedStealTier == "100B" then
+                                minScore, maxScore = 1e11, 2.99e11
+                            elseif selectedStealTier == "300B" then
+                                minScore, maxScore = 3e11, 9.99e11
+                            elseif selectedStealTier == "1T" then
+                                minScore, maxScore = 1e12, math.huge
+                            end
+
+                            local descendants = workspace:GetDescendants()
+                            for i = 1, #descendants do
+                                local descendant = descendants[i]
+                                if descendant.Name:lower():find("egg") and not isInBase(descendant) then
+                                    local _, cloverScore = getEggCloverValue(descendant)
+                                    if cloverScore >= minScore and cloverScore <= maxScore then
+                                        local tPart = descendant:IsA("BasePart") and descendant or (descendant:IsA("Model") and (descendant.PrimaryPart or descendant:FindFirstChildWhichIsA("BasePart", true)))
+                                        if tPart then
+                                            target = descendant
+                                            targetPart = tPart
+                                            targetScore = cloverScore
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+
+                            if target and targetPart then
+                                local char = player.Character
+                                if char and char:FindFirstChild("HumanoidRootPart") then
+                                    local hrp = char.HumanoidRootPart
+                                    
+                                    noclipEnabled = true
+                                    flyEnabled = true
+                                    setupFly(char)
+                                    task.wait(0.1)
+
+                                    hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.3)
+
+                                    pcall(function()
+                                        local prompt = target:FindFirstChildWhichIsA("ProximityPrompt", true)
+                                        if prompt then prompt.HoldDuration = 0 end
+                                        firetouchinterest(hrp, targetPart, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(hrp, targetPart, 1)
+                                    end)
+                                    holdKeyE(0.5)
+                                    task.wait(0.4)
+
+                                    local customTargetCFrame = CFrame.new(148.1, 40315.9, 919.4)
+                                    hrp.CFrame = customTargetCFrame
+                                    task.wait(0.4)
+
+                                    performReleaseAction()
+                                    task.wait(0.3)
+
+                                    pcall(function()
+                                        firetouchinterest(hrp, targetPart, 0)
+                                        task.wait(0.01)
+                                        firetouchinterest(hrp, targetPart, 1)
+                                    end)
+                                    holdKeyE(0.5)
+                                    task.wait(0.4)
+
+                                    task.wait(1.0)
+
+                                    local basePart = getPlayerBase()
+                                    local baseInsideCFrame = basePart and (basePart.CFrame + Vector3.new(0, 3, 0)) or (hrp.CFrame + Vector3.new(0, 10, 0))
+                                    
+                                    hrp.CFrame = baseInsideCFrame
+                                    task.wait(0.4)
+
+                                    pcall(function()
+                                        local humanoid = char:FindFirstChildOfClass("Humanoid")
+                                        if humanoid then
+                                            humanoid:UnequipTools()
+                                        end
+                                        local children = char:GetChildren()
+                                        for i = 1, #children do
+                                            local item = children[i]
+                                            if item:IsA("Tool") then
+                                                item.Parent = player:FindFirstChildOfClass("Backpack")
+                                            end
+                                        end
+                                    end)
+                                    task.wait(0.5)
+                                end
+                            else
+                                task.wait(1)
+                            end
+                        end)
+                        task.wait(0.3)
+                    end
+                    noclipEnabled = false
+                    flyEnabled = false
+                    removeFly()
+                end)
+            else
+                noclipEnabled = false
+                flyEnabled = false
+                removeFly()
+            end
+        end
+    })
+
+    PlayerGroup:AddToggle('NoclipToggleFlag', {
+        Text = 'Noclip',
+        Default = false,
+        Callback = function(Value)
+            noclipEnabled = Value
+        end
+    })
+
+    PlayerGroup:AddToggle('FlyToggleFlag', {
+        Text = 'Fly',
+        Default = false,
+        Callback = function(Value)
+            flyEnabled = Value
+            local char = player.Character
+            if char then
+                if flyEnabled then
+                    setupFly(char)
+                else
+                    removeFly()
+                end
+            end
+        end
+    })
+
+    local onlinePlayersList = {"Select a player..."}
+    local selectedTargetPlayer = nil
+
+    local function refreshOnlinePlayers()
+        pcall(function()
+            onlinePlayersList = {}
+            local plist = Players:GetPlayers()
+            for i = 1, #plist do
+                local p = plist[i]
+                if p ~= player then
+                    table.insert(onlinePlayersList, p.Name)
+                end
+            end
+            if #onlinePlayersList == 0 then
+                table.insert(onlinePlayersList, "No other players online")
+            end
+        end)
+    end
+
+    refreshOnlinePlayers()
+
+    local PlayerDropdown = TeleportPlayerGroup:AddDropdown('PlayerDropdownFlag', {
+        Values = onlinePlayersList,
+        Default = 1,
+        Multi = false,
+        Text = 'Online Players',
+    })
+
+    PlayerDropdown:OnChanged(function(Value)
+        pcall(function()
+            selectedTargetPlayer = Value
+        end)
+    end)
+
+    TeleportPlayerGroup:AddButton('Refresh Players', function()
+        refreshOnlinePlayers()
+        PlayerDropdown:SetValues(onlinePlayersList)
+        Library:Notify("Botceroo Hub", "Player list refreshed!", 3, "Info")
+    end)
+
+    TeleportPlayerGroup:AddButton('Teleport to Player', function()
+        pcall(function()
+            if selectedTargetPlayer and selectedTargetPlayer ~= "Select a player..." and selectedTargetPlayer ~= "No other players online" then
+                local targetP = Players:FindFirstChild(selectedTargetPlayer)
+                if targetP and targetP.Character and targetP.Character:FindFirstChild("HumanoidRootPart") then
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        char.HumanoidRootPart.CFrame = targetP.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+                        Library:Notify("Botceroo Hub", "Teleported to " .. targetP.Name, 3, "Success")
+                    end
+                else
+                    Library:Notify("Botceroo Hub", "Target player not found or has no character!", 3, "Warning")
+                end
+            else
+                Library:Notify("Botceroo Hub", "Select a valid player first.", 3, "Warning")
+            end
+        end)
+    end)
+
+    local TopLabel1 = TopGroup:AddLabel('1. [Cargando Top...]')
+    local TopLabel2 = TopGroup:AddLabel('2. [Cargando Top...]')
+    local TopLabel3 = TopGroup:AddLabel('3. [Cargando Top...]')
+
+    TopGroup:AddButton('🔄 Refresh Top', function()
+        pcall(function()
+            local getReq = (syn and syn.request) or (http and http.request) or request
+            if getReq then
+                local res = getReq({
+                    Url = "https://api.jsonbin.io/v3/b/" .. BIN_ID .. "/latest",
+                    Method = "GET",
+                    Headers = { ["X-Master-Key"] = MASTER_KEY }
+                })
+                if res and res.StatusCode == 200 then
+                    local data = HttpService:JSONDecode(res.Body)
+                    local users = data.record and data.record.users or {}
+                    
+                    TopLabel1:SetText(users[1] and ("1. " .. users[1].name .. " - " .. users[1].uses .. " usos") or "1. Ninguno")
+                    TopLabel2:SetText(users[2] and ("2. " .. users[2].name .. " - " .. users[2].uses .. " usos") or "2. Ninguno")
+                    TopLabel3:SetText(users[3] and ("3. " .. users[3].name .. " - " .. users[3].uses .. " usos") or "3. Ninguno")
+                    Library:Notify("Botceroo Hub", "Global top updated successfully!", 3, "Success")
+                end
+            end
+        end)
+    end)
+
+    local ReportLeftGroup = Tabs.Main:AddLeftGroupbox('💬 Send Report or Suggestion')
+    local userDiscordInput = "Ej: usuario#0000"
+    local reportInputText = "Hello! I came to leave a report/suggestion 🚀"
+    local selectedEmoteOption = "⭐ Star"
+    local lastReportTime = 0
+
+    ReportLeftGroup:AddInput('DiscordInputFlag', {
+        Text = '🏷️ Your Discord Username',
+        Default = 'Ej: usuario#0000',
+        Placeholder = 'Type your discord here...',
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value)
+            userDiscordInput = Value
+        end
+    })
+
+    ReportLeftGroup:AddInput('ReportInputFlag', {
+        Text = '💬 Report Message (Large Area)',
+        Default = 'Hello! I came to leave a report/suggestion 🚀',
+        Placeholder = 'Type your message or suggestion here...',
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value)
+            reportInputText = Value
+        end
+    })
+
+    ReportLeftGroup:AddDropdown('EmoteDropdownFlag', {
+        Values = {"⭐ Star", "🔥 Fire", "💎 Diamond", "👑 Crown", "🚀 Rocket", "⚡ Lightning", "💖 Heart"},
+        Default = 1,
+        Multi = false,
+        Text = '🎨 Select Emote',
+        Callback = function(Value)
+            selectedEmoteOption = Value
+        end
+    })
+
+    ReportLeftGroup:AddButton('📤 Send Aesthetic Report', function()
+        pcall(function()
+            local currentTime = tick()
+            local cooldownDuration = 60
+            if currentTime - lastReportTime < cooldownDuration then
+                local remainingTime = math.ceil(cooldownDuration - (currentTime - lastReportTime))
+                Library:Notify("Botceroo Hub", "⏳ Please wait " .. remainingTime .. "s before sending another report!", 3, "Warning")
+                return
+            end
+
+            local emoteMap = {
+                ["⭐ Star"] = "⭐",
+                ["🔥 Fire"] = "🔥",
+                ["💎 Diamond"] = "💎",
+                ["👑 Crown"] = "👑",
+                ["🚀 Rocket"] = "🚀",
+                ["⚡ Lightning"] = "⚡",
+                ["💖 Heart"] = "💖"
+            }
+            local chosenEmote = emoteMap[selectedEmoteOption] or "⭐"
+
+            local data = {
+                ["content"] = "",
+                ["embeds"] = {{
+                    ["title"] = chosenEmote .. " New Report / Suggestion " .. chosenEmote,
+                    ["description"] = "```yaml\n" .. tostring(reportInputText) .. "\n```",
+                    ["color"] = 39423,
+                    ["fields"] = {
+                        {
+                            ["name"] = "🏷️ Discord Contact",
+                            ["value"] = "`" .. tostring(userDiscordInput) .."`",
+                            ["inline"] = false
+                        },
+                        {
+                            ["name"] = "👤 Roblox Player",
+                            ["value"] = "`" .. player.Name .. "`",
+                            ["inline"] = true
+                        },
+                        {
+                            ["name"] = "🆔 User ID",
+                            ["value"] = "`" .. tostring(player.UserId) .. "`",
+                            ["inline"] = true
+                        },
+                        {
+                            ["name"] = "⏰ Status",
+                            ["value"] = "🟢 Successfully sent from Botceroo Hub",
+                            ["inline"] = false
+                        }
+                    },
+                    ["footer"] = {
+                        ["text"] = "Ride A Pet • Botceroo Hub System"
+                    }
+                }}
+            }
+            local body = HttpService:JSONEncode(data)
+            local headers = {["Content-Type"] = "application/json"}
+            local requestFunc = syn and syn.request or http_request or request or HttpPost
+            if requestFunc then
+                requestFunc({
+                    Url = "https://discord.com/api/webhooks/1556774059826487316/19stsgDrUZcEJRqgYOrf-kgObC0F1CmlyLgfx8wdm37DGTyuvJyzK6eJN34QcAvF6aLf",
+                    Method = "POST",
+                    Headers = headers,
+                    Body = body
+                })
+                lastReportTime = tick()
+                Library:Notify("Botceroo Hub", "✨ Report successfully sent to Discord!", 3, "Success")
+            else
+                Library:Notify("Botceroo Hub", "⚠ Http request function not supported by your exploit!", 3, "Warning")
+            end
+        end)
+    end)
+
+    ServerGroup:AddButton('🌐 Change Server', function()
+        pcall(function()
+            Library:Notify("Botceroo Hub", "Searching server...", 3, "Info")
+            local servers = {}
+            local req = game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+            local body = HttpService:JSONDecode(req)
+            if body and body.data then
+                local sdata = body.data
+                for i = 1, #sdata do
+                    local s = sdata[i]
+                    if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                        table.insert(servers, s.id)
+                    end
+                end
+            end
+            if #servers > 0 then
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], player)
+            else
+                Library:Notify("Botceroo Hub", "No other servers found!", 3, "Warning")
+            end
+        end)
+    end)
+end
+
+pcall(MarioBanner.Step, "Interface")
+BuildMarioHubInterface()
+pcall(MarioBanner.Ready)
